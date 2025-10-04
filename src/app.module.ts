@@ -7,6 +7,8 @@ import { UsersModule } from './users/users.module';
 import { AllCodesModule } from './all-codes/all-codes.module';
 import { User } from 'src/users/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { DatabasesModule } from './databases/databases.module';
+import { AllCode } from 'src/all-codes/entities/all-code.entity';
 
 @Module({
   imports: [
@@ -23,13 +25,14 @@ import { AuthModule } from './auth/auth.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User],
+        entities: [User, AllCode],
         synchronize: true,
       }),
     }),
     UsersModule,
     AllCodesModule,
     AuthModule,
+    DatabasesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

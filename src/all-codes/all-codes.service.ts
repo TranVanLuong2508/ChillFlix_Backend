@@ -1,11 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAllCodeDto } from './dto/create-all-code.dto';
 import { UpdateAllCodeDto } from './dto/update-all-code.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AllCode } from 'src/all-codes/entities/all-code.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AllCodesService {
+  constructor(
+    @InjectRepository(AllCode)
+    private allCodeRepository: Repository<AllCode>,
+  ) {}
   create(createAllCodeDto: CreateAllCodeDto) {
-    return 'This action adds a new allCode';
+    const newCode = this.allCodeRepository.create(createAllCodeDto);
+    return this.allCodeRepository.save(newCode);
   }
 
   findAll() {
