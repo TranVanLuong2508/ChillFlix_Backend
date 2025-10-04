@@ -12,5 +12,8 @@ export class User {
   fullName: string;
 
   @Column({ nullable: false })
+  password: string;
+
+  @Column({ nullable: false })
   isActive: boolean;
 }

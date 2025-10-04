@@ -23,6 +23,13 @@ export class UsersService {
     return `This action returns a #${id} user`;
   }
 
+  async findOneByUserName(userName: string) {
+    console.log('hello');
+    return this.usersRepository.findOne({
+      where: { email: userName },
+    });
+  }
+
   update(id: number) {
     return `This action updates a #${id} user`;
   }
