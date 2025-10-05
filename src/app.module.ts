@@ -3,10 +3,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DatabasesModule } from './databases/databases.module';
+import { AllCodesModule } from './all-codes/all-codes.module';
+import { AllCode } from 'src/all-codes/entities/all-code.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -15,12 +18,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         port: +configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        entities: [],
+        database: configService.get('DB_NAME'),
+        entities: [AllCode],
         synchronize: true,
+        autoLoadEntities: true,
       }),
       inject: [ConfigService],
     }),
+    DatabasesModule,
+    AllCodesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
