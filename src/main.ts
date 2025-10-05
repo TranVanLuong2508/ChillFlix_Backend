@@ -4,16 +4,30 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { TransformInterceptor } from 'src/cores/transform.interceptor';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import cookieParser from 'cookie-parser';
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
   const port = configService.get<string>('APP_PORT');
 
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
+  app.useGlobalInterceptors(new TransformInterceptor(reflector));
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-  const reflector = app.get(Reflector);
-  app.useGlobalInterceptors(new TransformInterceptor(reflector));
+  //cookie confi
+  app.use(cookieParser());
+
+  //cors config
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    credentials: true,
+  });
 
   //version config
   app.setGlobalPrefix('api');

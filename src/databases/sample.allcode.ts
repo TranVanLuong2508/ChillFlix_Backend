@@ -99,24 +99,24 @@ export const INIT_ALLCODE = [
     description: 'Quốc gia Canada',
   },
 
-  // ===== MOVIE_TYPE =====
+  // ===== FILM_TYPE =====
   {
-    keyMap: 'MT_ALL',
-    type: 'MOVIE_TYPE',
+    keyMap: 'FT_ALL',
+    type: 'FILM_TYPE',
     valueEn: 'All',
     valueVi: 'Tất cả',
     description: 'Tất cả loại phim',
   },
   {
-    keyMap: 'MT_SINGLE',
-    type: 'MOVIE_TYPE',
+    keyMap: 'FT_SINGLE',
+    type: 'FILM_TYPE',
     valueEn: 'Single',
     valueVi: 'Phim lẻ',
     description: 'Phim lẻ',
   },
   {
-    keyMap: 'MT_SERIES',
-    type: 'MOVIE_TYPE',
+    keyMap: 'FT_SERIES',
+    type: 'FILM_TYPE',
     valueEn: 'Series',
     valueVi: 'Phim bộ',
     description: 'Phim bộ',
@@ -528,24 +528,71 @@ export const INIT_ALLCODE = [
 
   // ===== ROLE =====
   {
-    keyMap: 'R1',
+    keyMap: 'ROLE_ADMIN',
     type: 'ROLE',
     valueEn: 'Admin',
     valueVi: 'Quản trị viên',
     description: 'Có full quyền',
   },
   {
-    keyMap: 'R2',
+    keyMap: 'ROLE_MOD',
     type: 'ROLE',
     valueEn: 'Moderator',
     valueVi: 'Người kiểm duyệt',
     description: 'Kiểm duyệt nội dung',
   },
   {
-    keyMap: 'R3',
+    keyMap: 'ROLE_USER',
     type: 'ROLE',
     valueEn: 'User',
     valueVi: 'Người dùng',
     description: 'Người dùng cơ bản',
+  },
+
+  // ===== USER_STATUS =====
+  {
+    keyMap: 'US_ACTIVE',
+    type: 'USER_STATUS',
+    valueEn: 'Active',
+    valueVi: 'Hoạt động',
+    description: 'Tài khoản người dùng đang hoạt động bình thường',
+  },
+  {
+    keyMap: 'US_INACTIVE',
+    type: 'USER_STATUS',
+    valueEn: 'Inactive',
+    valueVi: 'Không hoạt động',
+    description:
+      'Tài khoản chưa được kích hoạt hoặc đã bị vô hiệu hóa tạm thời',
+  },
+  {
+    keyMap: 'US_BANNED',
+    type: 'USER_STATUS',
+    valueEn: 'Banned',
+    valueVi: 'Đã bị khóa',
+    description: 'Tài khoản vi phạm và bị cấm sử dụng hệ thống',
+  },
+
+  // ===== FILM_STATUS =====
+  {
+    keyMap: 'FS_COMING_SOON',
+    type: 'FILM_STATUS',
+    valueEn: 'Coming Soon',
+    valueVi: 'Sắp chiếu',
+    description: 'Phim đã lên lịch và chuẩn bị công chiếu',
+  },
+  {
+    keyMap: 'FS_SHOWING',
+    type: 'FILM_STATUS',
+    valueEn: 'Now Showing',
+    valueVi: 'Đang chiếu',
+    description: 'Phim hiện đang được chiếu trên hệ thống',
+  },
+  {
+    keyMap: 'FS_STOPPED',
+    type: 'FILM_STATUS',
+    valueEn: 'Stopped',
+    valueVi: 'Ngừng chiếu',
+    description: 'Phim đã ngừng chiếu hoặc bị gỡ khỏi hệ thống',
   },
 ];
