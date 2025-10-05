@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Director } from '../../entities/director.entity';
 import { AllCodes } from 'src/entities/allcodes.entity';
+import { PaginationDto } from '../dto-director/pagination.dto';
+import { DEFAULT_PAGINATION } from 'src/utils/constants';
 
 @Injectable()
 export class DirectorService {
@@ -45,8 +47,13 @@ export class DirectorService {
     return await this.directRepo.save(director);
   }
 
-  async getDirectors(): Promise<Director[]> {
-    return await this.directRepo.find({ relations: ['gender'] });
+  async getDirectors(pagination: PaginationDto): Promise<Director[]> {
+    return await this.directRepo.find({
+      relations: ['gender'],
+      order: { directorId: 'ASC' },
+      skip: pagination.skip,
+      take: pagination.limit ?? DEFAULT_PAGINATION,
+    });
   }
 
   async getDirectorById(id: number): Promise<Director> {

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { DirectorService } from './director.service';
 import { CreateDirectorDto } from '../dto-director/create-director.dto';
+import { PaginationDto } from '../dto-director/pagination.dto';
 @Controller('director')
 export class DirectorController {
   constructor(private readonly director: DirectorService) {}
@@ -19,8 +20,8 @@ export class DirectorController {
     return this.director.createDirector(dto);
   }
   @Get('get-all-directors')
-  async getDirectors() {
-    const directors = await this.director.getDirectors();
+  async getDirectors(@Query() pagination: PaginationDto) {
+    const directors = await this.director.getDirectors(pagination);
     return { data: [...directors] };
   }
   @Get('get-director-by-id')
