@@ -9,6 +9,7 @@ import { User } from 'src/users/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { DatabasesModule } from './databases/databases.module';
 import { AllCode } from 'src/all-codes/entities/all-code.entity';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AllCode } from 'src/all-codes/entities/all-code.entity';
     AllCodesModule,
     AuthModule,
     DatabasesModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
