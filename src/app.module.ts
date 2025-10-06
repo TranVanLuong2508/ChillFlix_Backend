@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabasesModule } from './databases/databases.module';
 import { AllCodesModule } from './all-codes/all-codes.module';
 import { AllCode } from 'src/all-codes/entities/all-code.entity';
+import { FilmsModule } from './films/films.module';
+import { Film } from 'src/films/entities/film.entity';
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { AllCode } from 'src/all-codes/entities/all-code.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [AllCode],
+        entities: [AllCode, Film],
         synchronize: true,
         autoLoadEntities: true,
       }),
@@ -27,6 +29,7 @@ import { AllCode } from 'src/all-codes/entities/all-code.entity';
     }),
     DatabasesModule,
     AllCodesModule,
+    FilmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
