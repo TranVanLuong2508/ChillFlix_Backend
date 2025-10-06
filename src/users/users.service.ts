@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
 import { RegisterUserDto } from 'src/users/dto/register-user.dto';
 import { IUser } from 'src/users/interface/user.interface';
+import { UpdateUserDto } from 'src/users/dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -40,8 +41,8 @@ export class UsersService {
     }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    return await this.usersRepository.find({});
   }
 
   async findOne(id: number) {
@@ -65,8 +66,19 @@ export class UsersService {
     });
   }
 
-  update(id: number) {
-    return `This action updates a #${id} user`;
+  async update(updateUser: UpdateUserDto, user: IUser) {
+    const updated = await this.usersRepository.update(
+      {
+        userId: updateUser.userId,
+      },
+      {
+        ...updateUser,
+        updatedBy: user.userId,
+        updatedAt: new Date(),
+      },
+    );
+
+    return updated;
   }
 
   async remove(id: number, user: IUser) {
