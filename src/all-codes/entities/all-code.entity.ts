@@ -1,7 +1,9 @@
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -11,7 +13,7 @@ export class AllCode {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true })
   keyMap: string;
 
   @Column({ nullable: false })
@@ -31,4 +33,10 @@ export class AllCode {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => User, (user) => user.gender)
+  userGender: User[];
+
+  @OneToMany(() => User, (user) => user.role)
+  userRole: User[];
 }

@@ -4,11 +4,13 @@ import { DatabasesController } from './databases.controller';
 import { AllCodesService } from 'src/all-codes/all-codes.service';
 import { AllCode } from 'src/all-codes/entities/all-code.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersService } from 'src/users/users.service';
+import { User } from 'src/users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AllCode])],
+  imports: [TypeOrmModule.forFeature([AllCode, User])],
   controllers: [DatabasesController],
-  providers: [DatabasesService, AllCodesService],
+  providers: [DatabasesService, AllCodesService, UsersService],
   exports: [AllCodesService],
 })
 export class DatabasesModule {}

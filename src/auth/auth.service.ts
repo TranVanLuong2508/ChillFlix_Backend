@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import ms from 'ms';
 import { Response } from 'express';
+import { RegisterUserDto } from 'src/users/dto/register-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -81,6 +82,14 @@ export class AuthService {
         isVip,
         statusCode,
       },
+    };
+  }
+
+  async register(user: RegisterUserDto) {
+    const newUser = await this.usersService.register(user);
+    return {
+      userId: newUser?.userId,
+      createtedAt: newUser?.createdAt,
     };
   }
 }

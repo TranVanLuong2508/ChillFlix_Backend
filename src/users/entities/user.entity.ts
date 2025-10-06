@@ -1,8 +1,11 @@
 import { Exclude } from 'class-transformer';
+import { AllCode } from 'src/all-codes/entities/all-code.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,25 +24,28 @@ export class User {
   @Column({ select: false })
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   phoneNumber: string;
 
   @Column({ nullable: true })
   avatarUrl: string;
 
-  @Column()
+  @Column({ nullable: true, name: 'gender_code', type: 'varchar' })
   genderCode: string;
 
-  @Column()
+  @Column({ nullable: true })
+  age: number;
+
+  @Column({ nullable: true, name: 'role_code' })
   roleCode: string;
 
   @Column({ type: 'date', nullable: true })
   birthDate: Date;
 
-  @Column()
+  @Column({ nullable: true })
   isVip: boolean;
 
-  @Column()
+  @Column({ nullable: true, name: 'status_code' })
   statusCode: string;
 
   @Column({ nullable: true })
@@ -48,7 +54,7 @@ export class User {
   @Column({ nullable: true })
   refreshToken: string;
 
-  @Column()
+  @Column({ nullable: true })
   isDeleted: boolean;
 
   @CreateDateColumn()
@@ -61,11 +67,19 @@ export class User {
   deletedAt: Date;
 
   @Column({ nullable: true })
-  createdBy: string;
+  createdBy: number;
 
   @Column({ nullable: true })
-  updatedBy: string;
+  updatedBy: number;
 
   @Column({ nullable: true })
-  deletedBy: string;
+  deletedBy: number;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.userGender)
+  @JoinColumn({ name: 'gender_code', referencedColumnName: 'keyMap' })
+  gender: AllCode;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.userRole)
+  @JoinColumn({ name: 'role_code', referencedColumnName: 'keyMap' })
+  role: AllCode;
 }

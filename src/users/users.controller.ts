@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Public, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import type { IUser } from 'src/users/interface/user.interface';
 
 @Controller('users')
@@ -28,9 +28,10 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string, @Req() req, @User() user: IUser) {
-    console.log('req.user', user);
+  @ResponseMessage('Fetch user by id')
+  findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
@@ -40,7 +41,8 @@ export class UsersController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @ResponseMessage('Delete a user')
+  remove(@Param('id') id: string, @User() user: IUser) {
+    return this.usersService.remove(+id, user);
   }
 }

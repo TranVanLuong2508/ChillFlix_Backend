@@ -4,6 +4,8 @@ import { User } from 'src/users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
+import { RegisterUserDto } from 'src/users/dto/register-user.dto';
+import { IUser } from 'src/users/interface/user.interface';
 
 @Injectable()
 export class UsersService {
@@ -45,6 +47,21 @@ export class UsersService {
   async findOne(id: number) {
     return await this.usersRepository.findOne({
       where: { userId: id },
+      relations: ['gender', 'role'],
+      select: {
+        gender: {
+          keyMap: true,
+          valueEn: true,
+          valueVi: true,
+          description: true,
+        },
+        role: {
+          keyMap: true,
+          valueEn: true,
+          valueVi: true,
+          description: true,
+        },
+      },
     });
   }
 
@@ -52,8 +69,34 @@ export class UsersService {
     return `This action updates a #${id} user`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number, user: IUser) {
+    const foundUser = await this.usersRepository.findOne({
+      where: { userId: id },
+    });
+
+    if (!foundUser) {
+      throw new BadRequestException('not found user');
+    }
+
+    if (foundUser && foundUser.email === 'admin@gmail.com') {
+      throw new BadRequestException(
+        'CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com',
+      );
+    }
+
+    const deleted = await this.usersRepository.update(
+      { userId: id },
+      {
+        isDeleted: true,
+        deletedBy: user.userId,
+        deletedAt: new Date(),
+      },
+    );
+
+    return {
+      deletedResult: deleted,
+      EC: 0,
+    };
   }
 
   async findOneByUserName(userName: string) {
@@ -93,5 +136,31 @@ export class UsersService {
       { userId: id },
       { refreshToken: refresh_token },
     );
+  }
+
+  async register(user: RegisterUserDto) {
+    const { email, password, genderCode, phoneNumber, age, fullName } = user;
+    const isUserExist = await this.usersRepository.findOne({
+      where: { email: email },
+    });
+
+    if (isUserExist) {
+      throw new BadRequestException(
+        `Email: ${email} already exists in the system. Please use a different email.`,
+      );
+    }
+    const hashedPassword = this.getHashPassword(password);
+    const newUser = this.usersRepository.create({
+      email,
+      fullName,
+      password: hashedPassword,
+      genderCode,
+      phoneNumber,
+      age,
+    });
+
+    await this.usersRepository.save(newUser);
+
+    return newUser;
   }
 }
