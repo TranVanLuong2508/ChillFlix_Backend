@@ -12,6 +12,7 @@ import {
   GENDER_Other,
   USER_ROLE,
 } from 'src/constants/allcode.constant';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class DatabasesService implements OnModuleInit {
@@ -24,6 +25,7 @@ export class DatabasesService implements OnModuleInit {
     private userRepository: Repository<User>,
 
     private configService: ConfigService,
+    private userService: UsersService,
   ) {}
 
   async onModuleInit() {
@@ -38,13 +40,17 @@ export class DatabasesService implements OnModuleInit {
       }
 
       if (countUser === 0) {
-        const initPassword = this.configService.get<string>('INIT_PASSWORD');
+        const initPassword = this.configService.get<string>(
+          'INIT_PASSWORD',
+        ) as string;
         await this.userRepository.insert([
           {
             email: 'admin@gmail.com',
             fullName: 'admin',
             age: 30,
-            password: initPassword,
+            password: this.userService.getHashPassword(
+              initPassword || 'default123',
+            ),
             phoneNumber: '0768894134',
             genderCode: GENDER_Male,
             roleCode: ADMIN_ROLE,
@@ -56,7 +62,9 @@ export class DatabasesService implements OnModuleInit {
             email: 'user@gmail.com',
             fullName: 'Normal user',
             age: 28,
-            password: initPassword,
+            password: this.userService.getHashPassword(
+              initPassword || 'default123',
+            ),
             phoneNumber: '0768894134',
             genderCode: GENDER_Female,
             roleCode: USER_ROLE,
@@ -68,7 +76,9 @@ export class DatabasesService implements OnModuleInit {
             email: 'user2@gmail.com',
             fullName: 'Trần Mai',
             age: 28,
-            password: initPassword,
+            password: this.userService.getHashPassword(
+              initPassword || 'default123',
+            ),
             phoneNumber: '0768894134',
             genderCode: GENDER_Female,
             roleCode: USER_ROLE,
@@ -80,7 +90,9 @@ export class DatabasesService implements OnModuleInit {
             email: 'user3@gmail.com',
             fullName: 'Phạm Quốc D',
             age: 26,
-            password: initPassword,
+            password: this.userService.getHashPassword(
+              initPassword || 'default123',
+            ),
             phoneNumber: '0717433007',
             genderCode: GENDER_Other,
             roleCode: USER_ROLE,
