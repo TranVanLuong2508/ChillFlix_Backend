@@ -8,6 +8,7 @@ import { AllCodesModule } from './all-codes/all-codes.module';
 import { AllCode } from 'src/all-codes/entities/all-code.entity';
 import { FilmsModule } from './films/films.module';
 import { Film } from 'src/films/entities/film.entity';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { Film } from 'src/films/entities/film.entity';
     DatabasesModule,
     AllCodesModule,
     FilmsModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
