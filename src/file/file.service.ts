@@ -3,8 +3,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryResponse } from './cloudinary/cloudinary-response';
-import * as streamifier from 'streamifier';
-import fs from 'fs';
+import fs, { createReadStream } from 'fs';
 
 @Injectable()
 export class FileService {
@@ -12,7 +11,6 @@ export class FileService {
 
   async uploadFile(file: Express.Multer.File) {
     const filePath = file.path;
-    const fileBuffer = fs.readFileSync(filePath);
 
     try {
       const dataUpload = await new Promise<CloudinaryResponse>(
@@ -41,7 +39,8 @@ export class FileService {
             },
           );
 
-          streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+          const readStream = createReadStream(filePath);
+          readStream.pipe(uploadStream);
         },
       );
 
