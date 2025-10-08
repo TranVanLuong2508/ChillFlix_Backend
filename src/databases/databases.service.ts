@@ -5,6 +5,7 @@ import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 
 import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+import { Director } from 'src/modules/directors/director.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersService } from 'src/modules/users/users.service';
@@ -23,6 +24,9 @@ export class DatabasesService implements OnModuleInit {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
 
+    @InjectRepository(Director)
+    private directorRepository: Repository<Director>,
+
     private configService: ConfigService,
     private userService: UsersService,
   ) {}
@@ -34,9 +38,21 @@ export class DatabasesService implements OnModuleInit {
       const countCode = await this.allCodeRepository.count();
       const countUser = await this.userRepository.count();
       const countPermission = await this.permissionRepository.count();
+      const countDirector = await this.directorRepository.count();
 
       if (countCode === 0) {
         await this.allCodeRepository.insert(INIT_ALLCODE);
+      }
+      if (countDirector === 0) {
+        await this.directorRepository.insert([
+          {
+            directorName: 'Chân đen sì A',
+            genderCode: 'F',
+            story: 'Chồn xanh lè đá đít PSG aaaaaa',
+            avatarUrl: 'image.png',
+            nationalityCode: 'C_US',
+          },
+        ]);
       }
 
       if (countUser === 0) {

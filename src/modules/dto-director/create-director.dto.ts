@@ -6,7 +6,7 @@ export class CreateDirectorDto {
 
   @IsOptional()
   @IsString()
-  gender?: string;
+  genderCode?: string;
 
   @IsOptional()
   @IsString()
