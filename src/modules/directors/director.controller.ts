@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { DirectorService } from './director.service';
-import { CreateDirectorDto } from '../dto-director/create-director.dto';
+import { CreateDirectorDto } from './dto-director/create-director.dto';
 import aqp from 'api-query-params';
-import { PaginationDto } from '../dto-director/pagination.dto';
-import { UpdateDirectorDto } from '../dto-director/update-director.dto';
+import { PaginationDto } from './dto-director/pagination.dto';
+import { UpdateDirectorDto } from './dto-director/update-director.dto';
 
 @Controller('director')
 export class DirectorController {

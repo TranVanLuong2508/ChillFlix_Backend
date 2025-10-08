@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Director } from 'src/modules/directors/director.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
@@ -9,22 +8,6 @@ export class AllCode {
   id: number;
 
   @Column({ nullable: false, unique: true })
-=======
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-
-@Entity()
-export class AllCode {
-  @PrimaryGeneratedColumn('uuid')
-  id: number;
-
-  @Column({ nullable: false })
->>>>>>> dev-Quan
   keyMap: string;
 
   @Column({ nullable: false })
@@ -44,7 +27,6 @@ export class AllCode {
 
   @UpdateDateColumn()
   updatedAt: Date;
-<<<<<<< HEAD
 
   @OneToMany(() => User, (user) => user.gender)
   userGender: User[];
@@ -56,6 +38,4 @@ export class AllCode {
   // directorGender: Director[];
   // @OneToMany(() => Director, (director) => director.nationality)
   // directorNationality: Director[];
-=======
->>>>>>> dev-Quan
 }

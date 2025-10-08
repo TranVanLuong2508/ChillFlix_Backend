@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateDirectorDto } from '../dto-director/create-director.dto';
-import { UpdateDirectorDto } from '../dto-director/update-director.dto';
+import { CreateDirectorDto } from './dto-director/create-director.dto';
+import { UpdateDirectorDto } from './dto-director/update-director.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Director } from './director.entity';

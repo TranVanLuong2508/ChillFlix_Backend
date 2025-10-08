@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { FilmsService } from './films.service';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
@@ -22,11 +13,7 @@ export class FilmsController {
   }
 
   @Get()
-  findAll(
-    @Query('current') page: number,
-    @Query('pageSize') limit: number,
-    @Query() qs: string,
-  ) {
+  findAll(@Query('current') page: number, @Query('pageSize') limit: number, @Query() qs: string) {
     return this.filmsService.findAll(page, limit, qs);
   }
 
