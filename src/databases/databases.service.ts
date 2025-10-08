@@ -7,6 +7,8 @@ import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { User } from 'src/users/entities/user.entity';
 import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
 import { UsersService } from 'src/users/users.service';
+import { Permission } from 'src/permissions/entities/permission.entity';
+import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 
 @Injectable()
 export class DatabasesService implements OnModuleInit {
@@ -18,6 +20,9 @@ export class DatabasesService implements OnModuleInit {
     @InjectRepository(User)
     private userRepository: Repository<User>,
 
+    @InjectRepository(Permission)
+    private permissionRepository: Repository<Permission>,
+
     private configService: ConfigService,
     private userService: UsersService,
   ) {}
@@ -28,6 +33,7 @@ export class DatabasesService implements OnModuleInit {
       console.log('should init if data row count = 0');
       const countCode = await this.allCodeRepository.count();
       const countUser = await this.userRepository.count();
+      const countPermission = await this.permissionRepository.count();
 
       if (countCode === 0) {
         await this.allCodeRepository.insert(INIT_ALLCODE);
@@ -326,7 +332,11 @@ export class DatabasesService implements OnModuleInit {
           },
         ]);
       }
-      if (countCode > 0 && countUser > 0) {
+
+      if (countPermission === 0) {
+        await this.permissionRepository.insert(INIT_PERMISSIONS);
+      }
+      if (countCode > 0 && countUser > 0 && countPermission > 0) {
         this.logger.warn('>>> ALREADY INIT SAMPLE DATA...');
       }
     }

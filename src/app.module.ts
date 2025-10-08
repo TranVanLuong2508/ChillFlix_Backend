@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { DatabasesModule } from './databases/databases.module';
 import { AllCode } from 'src/all-codes/entities/all-code.entity';
 import { PermissionsModule } from './permissions/permissions.module';
+import { RolesModule } from './roles/roles.module';
+import { Permission } from 'src/permissions/entities/permission.entity';
 
 @Module({
   imports: [
@@ -26,7 +28,7 @@ import { PermissionsModule } from './permissions/permissions.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode],
+        entities: [User, AllCode, Permission],
         synchronize: true,
       }),
     }),
@@ -35,6 +37,7 @@ import { PermissionsModule } from './permissions/permissions.module';
     AuthModule,
     DatabasesModule,
     PermissionsModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

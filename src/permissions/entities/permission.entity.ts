@@ -1,1 +1,40 @@
-export class Permission {}
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
+@Entity()
+export class Permission {
+  @PrimaryGeneratedColumn()
+  permissionId: number;
+
+  @Column()
+  name: string;
+
+  @Column()
+  apiPath: string;
+
+  @Column()
+  method: string;
+
+  @Column()
+  module: string;
+
+  @Column({ nullable: true })
+  isDeleted: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @Column({ nullable: true })
+  deletedAt: Date;
+
+  @Column({ nullable: true })
+  createdBy: number;
+
+  @Column({ nullable: true })
+  updatedBy: number;
+
+  @Column({ nullable: true })
+  deletedBy: number;
+}

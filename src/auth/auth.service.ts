@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { IUser } from 'src/users/interface/user.interface';
 import { ConfigService } from '@nestjs/config';

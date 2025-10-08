@@ -1,12 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsString,
-  IsBoolean,
-  IsEmail,
-  IsNotEmpty,
-  MinLength,
-  Length,
-} from 'class-validator';
+import { IsString, IsBoolean, IsEmail, IsNotEmpty, MinLength, Length } from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail({}, { message: 'Email must be EMAIL format' })
