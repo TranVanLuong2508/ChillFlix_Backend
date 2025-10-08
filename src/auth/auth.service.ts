@@ -18,10 +18,7 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOneByUserName(email);
     if (user) {
-      const isValidPassword = this.usersService.isValidPassword(
-        pass,
-        user.password,
-      );
+      const isValidPassword = this.usersService.isValidPassword(pass, user.password);
       if (isValidPassword) {
         const { password, ...result } = user;
         return result;
@@ -33,19 +30,13 @@ export class AuthService {
   generateRefreshToken = (payload: any) => {
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
-      expiresIn:
-        ms(
-          this.configService.get<string>(
-            'REFRESH_TOKEN_expiresIn',
-          ) as ms.StringValue,
-        ) / 1000,
+      expiresIn: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn') as ms.StringValue) / 1000,
     });
     return refreshToken;
   };
 
   async login(user: IUser, response: Response) {
-    const { userId, email, roleCode, fullName, genderCode, isVip, statusCode } =
-      user;
+    const { userId, email, roleCode, fullName, genderCode, isVip, statusCode } = user;
     const payload = {
       iss: 'from server',
       sub: 'token login',
@@ -63,11 +54,7 @@ export class AuthService {
     await this.usersService.updateUserToken(refresh_token, userId);
 
     response.cookie('refresh_token', refresh_token, {
-      maxAge: ms(
-        this.configService.get<string>(
-          'REFRESH_TOKEN_expiresIn',
-        ) as ms.StringValue,
-      ),
+      maxAge: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn') as ms.StringValue),
       httpOnly: true,
     });
 
@@ -91,5 +78,11 @@ export class AuthService {
       userId: newUser?.userId,
       createtedAt: newUser?.createdAt,
     };
+  }
+
+  async handleLogout(respones: Response, user: IUser) {
+    await this.usersService.updateUserToken('', user.userId);
+    respones.clearCookie('refresh_token');
+    return 'logout ok';
   }
 }
