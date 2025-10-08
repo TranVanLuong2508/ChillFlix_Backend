@@ -54,10 +54,9 @@ export class AuthService {
     await this.usersService.updateUserToken(refresh_token, userId);
 
     response.cookie('refresh_token', refresh_token, {
-      maxAge: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn') as ms.StringValue),
       httpOnly: true,
+      maxAge: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn')),
     });
-
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -84,5 +83,62 @@ export class AuthService {
     await this.usersService.updateUserToken('', user.userId);
     respones.clearCookie('refresh_token');
     return 'logout ok';
+  }
+
+  createRefreshToken = (payload: any) => {
+    const refresh_token = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      expiresIn: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn')) / 1000,
+    });
+    return refresh_token;
+  };
+
+  async processNewToken(refreshToken: string, response: Response) {
+    try {
+      this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      });
+
+      const user = await this.usersService.findUserByRefreshToken(refreshToken);
+      if (user) {
+        const { userId, email, roleCode, fullName, genderCode, isVip, statusCode } = user;
+        const payload = {
+          iss: 'from server',
+          sub: 'token login',
+          userId,
+          email,
+          roleCode,
+          fullName,
+          genderCode,
+          isVip,
+          statusCode,
+        };
+        const refresh_token = this.createRefreshToken(payload);
+
+        await this.usersService.updateUserToken(refresh_token, userId);
+
+        response.clearCookie('refresh_token');
+        response.cookie('refresh_token', refresh_token, {
+          httpOnly: true,
+          maxAge: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn')),
+        });
+        return {
+          access_token: this.jwtService.sign(payload),
+          user: {
+            userId,
+            email,
+            roleCode,
+            fullName,
+            genderCode,
+            isVip,
+            statusCode,
+          },
+        };
+      } else {
+        throw new BadRequestException(`Invalid refresh token. Please login.`);
+      }
+    } catch (error) {
+      throw new UnauthorizedException('Authentication failed. Your refresh token is invalid or has expired.');
+    }
   }
 }

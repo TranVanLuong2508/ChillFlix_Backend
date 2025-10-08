@@ -4,7 +4,7 @@ import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import type { IUser } from 'src/users/interface/user.interface';
 import { LocalAuthGuard } from 'src/auth/local-auth.guard';
 import { RegisterUserDto } from 'src/users/dto/register-user.dto';
-import type { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -16,6 +16,13 @@ export class AuthController {
   @ResponseMessage('User Login')
   login(@Req() req, @Res({ passthrough: true }) response) {
     return this.authService.login(req.user, response);
+  }
+
+  @Public()
+  @ResponseMessage('Get User by refresh token')
+  handleRefreshToken(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    const refreshToken = request.cookies['refresh_token'];
+    return this.authService.processNewToken(refreshToken, response);
   }
 
   @Public()
