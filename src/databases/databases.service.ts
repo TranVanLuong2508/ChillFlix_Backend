@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AllCode } from 'src/all-codes/entities/all-code.entity';
 import { INIT_ALLCODE } from 'src/databases/sample.allcode';
+import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
