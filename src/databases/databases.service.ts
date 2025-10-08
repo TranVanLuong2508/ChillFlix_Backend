@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
 import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
@@ -9,6 +10,7 @@ import { Director } from 'src/modules/directors/director.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersService } from 'src/modules/users/users.service';
+
 import { Repository } from 'typeorm';
 
 @Injectable()

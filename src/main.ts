@@ -1,5 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
+<<<<<<< HEAD
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
@@ -37,5 +38,15 @@ async function bootstrap() {
   });
 
   await app.listen(port || 3000);
+=======
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(new ValidationPipe());
+
+  await app.listen(process.env.APP_PORT ?? 3000);
+>>>>>>> dev-Quan
 }
 void bootstrap();

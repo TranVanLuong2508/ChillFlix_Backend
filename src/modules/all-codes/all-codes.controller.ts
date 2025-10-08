@@ -1,4 +1,16 @@
+<<<<<<< HEAD
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+=======
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+>>>>>>> dev-Quan
 import { AllCodesService } from './all-codes.service';
 import { CreateAllCodeDto } from './dto/create-all-code.dto';
 import { UpdateAllCodeDto } from './dto/update-all-code.dto';
