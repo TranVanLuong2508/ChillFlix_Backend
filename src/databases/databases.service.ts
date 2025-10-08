@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AllCodes } from 'src/entities/allcodes.entity';
+import { AllCodes } from 'src/modules/allcodes/entities/allcodes.entity';
 import { Repository } from 'typeorm';
-import { INIT_ALLCODE } from './sample.allcode';
+import { INIT_ALLCODE } from 'src/databases/sample.allcode';
 import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class DatabasesService implements OnModuleInit {

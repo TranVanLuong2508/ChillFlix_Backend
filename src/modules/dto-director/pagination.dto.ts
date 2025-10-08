@@ -1,13 +1,23 @@
-import { IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class PaginationDto {
+  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  @IsOptional()
-  skip: number;
+  page?: number;
 
+  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
+  limit?: number;
+
   @IsOptional()
-  limit: number;
+  @IsString()
+  sort?: string;
+
+  // Cho phép truyền thêm query filter tùy ý
+  [key: string]: any;
 }

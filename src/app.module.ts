@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { DirectorModule } from './modules/directors/director.module';
 import { DatabasesModule } from './databases/databases.module';
+import { AllCodesModule } from './modules/allcodes/allcodes.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -18,6 +19,7 @@ import { DatabasesModule } from './databases/databases.module';
     }),
     DirectorModule,
     DatabasesModule,
+    AllCodesModule,
   ],
   controllers: [],
   providers: [],

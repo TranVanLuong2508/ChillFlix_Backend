@@ -4,12 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateDirectorDto } from '../dto-director/create-director.dto';
+import { UpdateDirectorDto } from '../dto-director/update-director.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Director } from '../../entities/director.entity';
-import { AllCodes } from 'src/entities/allcodes.entity';
-import { PaginationDto } from '../dto-director/pagination.dto';
-import { DEFAULT_PAGINATION } from 'src/utils/constants';
+import { Director } from './director.entity';
+import { AllCodes } from 'src/modules/allcodes/entities/allcodes.entity';
 
 @Injectable()
 export class DirectorService {
@@ -25,15 +24,22 @@ export class DirectorService {
       where: { keyMap: dto.gender, type: 'GENDER' },
     });
     if (!gender) {
-      throw new BadRequestException(
-        `Giá trị gender = ${dto.gender} không hợp lệ!`,
-      );
+      throw new BadRequestException(`${dto.gender} không hợp lệ!`);
+    }
+
+    let nationality = await this.allcodeRepo.findOne({
+      where: { keyMap: dto.nationality, type: 'COUNTRY' },
+    });
+    if (!nationality) {
+      throw new BadRequestException(`Quốc tịch này không hợp lệ!`);
     }
 
     const director = this.directRepo.create({
       directorName: dto.directorName,
-      genderId: gender.id.toString(),
+      gender,
       story: dto.story,
+      avatarUrl: dto.avatarUrl,
+      nationality,
     });
     if (director.directorName === '') {
       throw new BadRequestException('Tên đạo diễn không được để trống!');
@@ -47,13 +53,37 @@ export class DirectorService {
     return await this.directRepo.save(director);
   }
 
-  async getDirectors(pagination: PaginationDto): Promise<Director[]> {
-    return await this.directRepo.find({
+  async getDirectors({ filter, sort, skip, limit }: any) {
+    delete filter.page;
+    delete filter.limit;
+    delete filter.skip;
+    delete filter.sort;
+
+    const order: any = {};
+    for (const key in sort) {
+      order[key] = sort[key] === -1 ? 'DESC' : 'ASC';
+    }
+
+    const [data, total] = await this.directRepo.findAndCount({
       relations: ['gender'],
-      order: { directorId: 'ASC' },
-      skip: pagination.skip,
-      take: pagination.limit ?? DEFAULT_PAGINATION,
+      select: {
+        gender: {
+          keyMap: true,
+          valueEn: true,
+          valueVi: true,
+          description: true,
+        },
+      },
+      where: filter,
+      order,
+      skip,
+      take: limit,
     });
+
+    if (data.length === 0) {
+      throw new NotFoundException('Không tìm thấy đạo diễn nào!');
+    }
+    return { data, total };
   }
 
   async getDirectorById(id: number): Promise<Director> {
@@ -67,8 +97,14 @@ export class DirectorService {
     return director;
   }
 
-  async editDirector(id: number, dto: CreateDirectorDto): Promise<Director> {
-    const director = await this.getDirectorById(id);
+  async editDirector(id: number, dto: UpdateDirectorDto): Promise<Director> {
+    const director = await this.directRepo.findOne({
+      where: { directorId: id },
+      relations: ['gender', 'nationality'],
+    });
+    if (!director) {
+      throw new NotFoundException(`Không tìm thấy đạo diễn với ${id}`);
+    }
 
     if (dto.gender) {
       const gender = await this.allcodeRepo.findOne({
@@ -79,12 +115,33 @@ export class DirectorService {
           `Giá trị gender = ${dto.gender} không hợp lệ!`,
         );
       }
-      director.genderId = gender.id.toString();
       director.gender = gender;
     }
 
-    if (dto.directorName) director.directorName = dto.directorName;
+    if (dto.nationality) {
+      const nationality = await this.allcodeRepo.findOne({
+        where: { keyMap: dto.nationality, type: 'COUNTRY' },
+      });
+      if (!nationality) {
+        throw new BadRequestException(
+          `Quốc tịch ${dto.nationality} không hợp lệ!`,
+        );
+      }
+      director.nationality = nationality;
+    }
+
+    if (dto.directorName) {
+      const exists = await this.directRepo.findOne({
+        where: { directorName: dto.directorName },
+      });
+      if (exists && exists.directorId !== id) {
+        throw new BadRequestException('Tên đạo diễn đã tồn tại!');
+      }
+      director.directorName = dto.directorName;
+    }
+
     if (dto.story) director.story = dto.story;
+    if (dto.avatarUrl) director.avatarUrl = dto.avatarUrl;
 
     return await this.directRepo.save(director);
   }

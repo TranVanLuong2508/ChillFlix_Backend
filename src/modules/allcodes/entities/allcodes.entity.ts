@@ -2,18 +2,20 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { Director } from './director.entity';
+import { Director } from 'src/modules/directors/director.entity';
 
 @Entity({ name: 'allcodes' })
 export class AllCodes {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true })
   keyMap: string;
 
   @Column({ nullable: false })
@@ -35,5 +37,7 @@ export class AllCodes {
   updatedAt: Date;
 
   @OneToMany(() => Director, (director) => director.gender)
-  directors: Director[];
+  directorGender: Director[];
+  @OneToMany(() => Director, (director) => director.nationality)
+  directorNationality: Director[];
 }

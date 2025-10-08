@@ -1,8 +1,9 @@
 import { IsOptional, IsString } from 'class-validator';
 
-export class CreateDirectorDto {
+export class UpdateDirectorDto {
+  @IsOptional()
   @IsString()
-  directorName: string;
+  directorName?: string;
 
   @IsOptional()
   @IsString()
