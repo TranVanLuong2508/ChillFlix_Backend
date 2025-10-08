@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Public, ResponseMessage, User } from 'src/decorators/customize';
@@ -21,6 +13,12 @@ export class UsersController {
   @Public()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Get('get-user-with-pagination')
+  @ResponseMessage('Fetch user with pagination')
+  getUsersWithPagination(@Query('current') currentPage: string, @Query('pageSize') limit: string, @Query() qs: string) {
+    return this.usersService.getUsersWithPagination(+currentPage, +limit, qs);
   }
 
   @Public()

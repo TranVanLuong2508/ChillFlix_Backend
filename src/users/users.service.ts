@@ -7,6 +7,7 @@ import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
 import { RegisterUserDto } from 'src/users/dto/register-user.dto';
 import { IUser } from 'src/users/interface/user.interface';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
+import aqp from 'api-query-params';
 
 @Injectable()
 export class UsersService {
@@ -91,9 +92,7 @@ export class UsersService {
     }
 
     if (foundUser && foundUser.email === 'admin@gmail.com') {
-      throw new BadRequestException(
-        'CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com',
-      );
+      throw new BadRequestException('CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com');
     }
 
     const deleted = await this.usersRepository.update(
@@ -144,10 +143,7 @@ export class UsersService {
   }
 
   async updateUserToken(refresh_token: string, id: number) {
-    return await this.usersRepository.update(
-      { userId: id },
-      { refreshToken: refresh_token },
-    );
+    return await this.usersRepository.update({ userId: id }, { refreshToken: refresh_token });
   }
 
   async register(user: RegisterUserDto) {
@@ -157,9 +153,7 @@ export class UsersService {
     });
 
     if (isUserExist) {
-      throw new BadRequestException(
-        `Email: ${email} already exists in the system. Please use a different email.`,
-      );
+      throw new BadRequestException(`Email: ${email} already exists in the system. Please use a different email.`);
     }
     const hashedPassword = this.getHashPassword(password);
     const newUser = this.usersRepository.create({
@@ -174,5 +168,31 @@ export class UsersService {
     await this.usersRepository.save(newUser);
 
     return newUser;
+  }
+
+  async getUsersWithPagination(currentPage: number, limit: number, qs: string) {
+    const { filter, sort } = aqp(qs);
+    delete filter.current;
+    delete filter.pageSize;
+    const offset = (+currentPage - 1) * +limit;
+    const defaultLimit = +limit ? +limit : 10;
+    const totalItems = (await this.usersRepository.find(filter)).length;
+    const totalPages = Math.ceil(totalItems / defaultLimit);
+    const result = await this.usersRepository.find({
+      where: filter,
+      skip: offset,
+      take: defaultLimit,
+      order: sort,
+    });
+
+    return {
+      metaData: {
+        current: currentPage,
+        pageSize: limit,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      },
+      users: result,
+    };
   }
 }
