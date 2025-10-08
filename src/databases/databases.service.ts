@@ -1,14 +1,26 @@
+// import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+// import { ConfigService } from '@nestjs/config';
+// import { InjectRepository } from '@nestjs/typeorm';
+// import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+// import { Repository } from 'typeorm';
+// import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
+// import { User } from 'src/users/entities/user.entity';
+// import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
+// import { UsersService } from 'src/users/users.service';
+// import { Permission } from 'src/permissions/entities/permission.entity';
+// import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
+
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AllCode } from 'src/all-codes/entities/all-code.entity';
-import { Repository } from 'typeorm';
-import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
-import { User } from 'src/users/entities/user.entity';
 import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
-import { UsersService } from 'src/users/users.service';
-import { Permission } from 'src/permissions/entities/permission.entity';
+import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
+import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { User } from 'src/modules/users/entities/user.entity';
+import { UsersService } from 'src/modules/users/users.service';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class DatabasesService implements OnModuleInit {

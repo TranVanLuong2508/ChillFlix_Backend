@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { DatabasesService } from './databases.service';
 import { DatabasesController } from './databases.controller';
-import { AllCodesService } from 'src/all-codes/all-codes.service';
-import { AllCode } from 'src/all-codes/entities/all-code.entity';
+import { AllCodesService } from 'src/modules/all-codes/all-codes.service';
+import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersService } from 'src/users/users.service';
-import { User } from 'src/users/entities/user.entity';
-import { Permission } from 'src/permissions/entities/permission.entity';
+import { User } from 'src/modules/users/entities/user.entity';
+import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { UsersService } from 'src/modules/users/users.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AllCode, User, Permission])],

@@ -562,8 +562,7 @@ export const INIT_ALLCODE = [
     type: 'USER_STATUS',
     valueEn: 'Inactive',
     valueVi: 'Không hoạt động',
-    description:
-      'Tài khoản chưa được kích hoạt hoặc đã bị vô hiệu hóa tạm thời',
+    description: 'Tài khoản chưa được kích hoạt hoặc đã bị vô hiệu hóa tạm thời',
   },
   {
     keyMap: 'US_BANNED',
