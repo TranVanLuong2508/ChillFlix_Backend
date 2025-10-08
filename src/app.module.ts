@@ -6,8 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabasesModule } from './databases/databases.module';
 import { AllCodesModule } from './all-codes/all-codes.module';
 import { AllCode } from 'src/all-codes/entities/all-code.entity';
-import { FilmsModule } from './films/films.module';
-import { Film } from 'src/films/entities/film.entity';
+import { FilmsModule } from './modules/films/films.module';
+import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './file/file.module';
 
 @Module({

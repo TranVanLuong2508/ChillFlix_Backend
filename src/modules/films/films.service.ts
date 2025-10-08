@@ -7,7 +7,7 @@ import {
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Film } from 'src/films/entities/film.entity';
+import { Film } from 'src/modules/films/entities/film.entity';
 import { Repository } from 'typeorm';
 import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
