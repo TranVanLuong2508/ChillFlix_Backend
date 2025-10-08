@@ -1,15 +1,3 @@
-// import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
-// import { Repository } from 'typeorm';
-// import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
-// import { User } from 'src/users/entities/user.entity';
-// import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
-// import { UsersService } from 'src/users/users.service';
-// import { Permission } from 'src/permissions/entities/permission.entity';
-// import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
-
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
