@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
@@ -23,7 +23,13 @@ export class PermissionsController {
 
   @Get('get-permission-with-pagination')
   @ResponseMessage('Fetch permissions with pagination')
-  getPermissionsWithPagination() {}
+  getPermissionsWithPagination(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+  ) {
+    return this.permissionsService.getPermissionsWithPagination(+currentPage, +limit, qs);
+  }
 
   @Get(':id')
   @ResponseMessage('Fetch a permission by id')

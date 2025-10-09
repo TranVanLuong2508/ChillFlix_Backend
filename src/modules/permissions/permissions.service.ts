@@ -5,6 +5,7 @@ import { IUser } from 'src/modules/users/interface/user.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { Repository } from 'typeorm';
+import aqp from 'api-query-params';
 
 @Injectable()
 export class PermissionsService {
@@ -82,7 +83,7 @@ export class PermissionsService {
       if (!foundPermission) {
         return {
           EC: 0,
-          EM: 'not found permission',
+          EM: 'Permission not found',
         };
       }
 
@@ -116,7 +117,7 @@ export class PermissionsService {
       if (updateResult.affected === 0) {
         return {
           EC: 0,
-          EM: 'not found permission',
+          EM: 'Permission not found',
         };
       }
 
@@ -134,7 +135,65 @@ export class PermissionsService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} permission`;
+  async remove(id: number) {
+    try {
+      const result = await this.permissionRepository.delete({
+        permissionId: id,
+      });
+
+      if (result.affected === 0) {
+        return {
+          EC: 0,
+          EM: 'Permission not found',
+        };
+      } else {
+        return {
+          EC: 1,
+          EM: `permission is deleted`,
+        };
+      }
+    } catch (error: any) {
+      console.error('Error in delete permission:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from delete permission service',
+      });
+    }
+  }
+
+  async getPermissionsWithPagination(currentPage: number, limit: number, qs: string) {
+    try {
+      const { filter, sort } = aqp(qs);
+      delete filter.current;
+      delete filter.pageSize;
+      const offset = (+currentPage - 1) * +limit;
+      const defaultLimit = +limit ? +limit : 10;
+      const totalItems = (await this.permissionRepository.find(filter)).length;
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+      const result = await this.permissionRepository.find({
+        where: filter,
+        skip: offset,
+        take: defaultLimit,
+        order: sort,
+      });
+
+      return {
+        EC: 1,
+        EM: 'Get permissions with pagination success',
+        metaData: {
+          current: currentPage,
+          pageSize: limit,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+        users: result,
+      };
+    } catch (error) {
+      console.error('Error in getPermissionsWithPagination permission:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getPermissionsWithPagination service',
+      });
+    }
   }
 }
