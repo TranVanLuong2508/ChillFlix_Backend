@@ -89,7 +89,7 @@ export class PermissionsService {
 
       return {
         EC: 1,
-        EM: 'Find one user success',
+        EM: 'Find one permission success',
         ...foundPermission,
       };
     } catch (error: any) {
@@ -135,11 +135,18 @@ export class PermissionsService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, user: IUser) {
     try {
-      const result = await this.permissionRepository.delete({
-        permissionId: id,
-      });
+      const result = await this.permissionRepository.update(
+        {
+          permissionId: id,
+        },
+        {
+          deletedAt: new Date(),
+          isDeleted: true,
+          deletedBy: user.userId,
+        },
+      );
 
       if (result.affected === 0) {
         return {
@@ -150,6 +157,7 @@ export class PermissionsService {
         return {
           EC: 1,
           EM: `permission is deleted`,
+          ...result,
         };
       }
     } catch (error: any) {
