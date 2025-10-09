@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,9 +10,7 @@ import aqp from 'api-query-params';
 
 @Injectable()
 export class FilmsService {
-  constructor(
-    @InjectRepository(Film) private filmsRepository: Repository<Film>,
-  ) {}
+  constructor(@InjectRepository(Film) private filmsRepository: Repository<Film>) {}
 
   async create(createFilmDto: CreateFilmDto) {
     const isExist = await this.filmsRepository.findOne({
@@ -26,10 +19,7 @@ export class FilmsService {
     if (isExist) {
       throw new BadRequestException('Film upload has been created');
     }
-    const slug = await SlugUtil.generateUniqueSlug(
-      createFilmDto.slug,
-      this.filmsRepository,
-    );
+    const slug = await SlugUtil.generateUniqueSlug(createFilmDto.slug, this.filmsRepository);
     const newFilm = this.filmsRepository.create({ ...createFilmDto, slug });
     await this.filmsRepository.save(newFilm);
     return {
@@ -99,10 +89,7 @@ export class FilmsService {
 
     if (updateFilmDto.slug) {
       if (filmData.slug !== updateFilmDto.slug) {
-        const slug = await SlugUtil.generateUniqueSlug(
-          updateFilmDto.slug,
-          this.filmsRepository,
-        );
+        const slug = await SlugUtil.generateUniqueSlug(updateFilmDto.slug, this.filmsRepository);
         updateFilmDto.slug = slug;
       } else {
         delete updateFilmDto.slug;

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { IUser } from 'src/modules/users/interface/user.interface';
@@ -14,12 +14,15 @@ export class PermissionsService {
   ) {}
   async create(createPermissionDto: CreatePermissionDto, user: IUser) {
     const { name, apiPath, module, method } = createPermissionDto;
-    const isPermissionExist = await this.permissionRepository.findOne({
+    const isPermissionExist = await this.permissionRepository.exists({
       where: { apiPath: apiPath, method: method },
     });
 
     if (isPermissionExist) {
-      throw new BadRequestException(`Permission with apiPath=${apiPath} , method=${method} is already exist`);
+      return {
+        EC: 1,
+        EM: `Permission with apiPath=${apiPath} , method=${method} is already exist`,
+      };
     }
 
     const newPermission = this.permissionRepository.create({
@@ -30,38 +33,105 @@ export class PermissionsService {
       createdBy: user.userId,
     });
 
-    await this.permissionRepository.save(newPermission);
-
-    return {
-      permissionId: newPermission?.permissionId,
-      createdAt: newPermission?.createdAt,
-    };
+    try {
+      await this.permissionRepository.save(newPermission);
+      return {
+        EC: 1,
+        EM: 'Create a permission successfully',
+        permissionId: newPermission?.permissionId,
+        createdAt: newPermission?.createdAt,
+      };
+    } catch (error: any) {
+      console.error('Error in create permissions:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: `Error from create permission service`,
+      });
+    }
   }
 
   async findAll() {
-    return await this.permissionRepository.find({});
+    try {
+      const permissions = await this.permissionRepository.find({});
+      return {
+        permissions,
+        EC: 1,
+        EM: 'Get all permissions success',
+      };
+    } catch (error: any) {
+      console.error('Error in findAll permissions:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from findAll permisson service',
+      });
+    }
   }
 
   async findOne(id: number) {
-    const foundPermission = await this.permissionRepository.findOne({
-      where: { permissionId: id },
-      select: {
-        permissionId: true,
-        name: true,
-        method: true,
-        module: true,
-        createdBy: true,
-      },
-    });
-    if (!foundPermission) {
-      throw new BadRequestException('not found permission');
-    }
+    try {
+      const foundPermission = await this.permissionRepository.findOne({
+        where: { permissionId: id },
+        select: {
+          permissionId: true,
+          name: true,
+          method: true,
+          module: true,
+          createdBy: true,
+        },
+      });
+      if (!foundPermission) {
+        return {
+          EC: 0,
+          EM: 'not found permission',
+        };
+      }
 
-    return foundPermission;
+      return {
+        EC: 1,
+        EM: 'Find one user success',
+        ...foundPermission,
+      };
+    } catch (error: any) {
+      console.error('Error in findOne permission:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from findOne permission service',
+      });
+    }
   }
 
-  update(id: number, updatePermissionDto: UpdatePermissionDto) {
-    return `This action updates a #${id} permission`;
+  async update(id: number, updatePermissionDto: UpdatePermissionDto, user: IUser) {
+    try {
+      const updateResult = await this.permissionRepository.update(
+        {
+          permissionId: id,
+        },
+        {
+          ...updatePermissionDto,
+          updatedAt: new Date(),
+          updatedBy: user.userId,
+        },
+      );
+
+      if (updateResult.affected === 0) {
+        return {
+          EC: 0,
+          EM: 'not found permission',
+        };
+      }
+
+      return {
+        EC: 1,
+        EM: 'Update permission success',
+        ...updateResult,
+      };
+    } catch (error: any) {
+      console.error('Error in update permission:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from update permission service',
+      });
+    }
   }
 
   remove(id: number) {

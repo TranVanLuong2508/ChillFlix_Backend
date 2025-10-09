@@ -10,7 +10,7 @@ export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 
   @Post()
-  @ResponseMessage('Create a permission')
+  @ResponseMessage('Create a new permission')
   create(@Body() createPermissionDto: CreatePermissionDto, @User() user: IUser) {
     return this.permissionsService.create(createPermissionDto, user);
   }
@@ -21,17 +21,24 @@ export class PermissionsController {
     return this.permissionsService.findAll();
   }
 
+  @Get('get-permission-with-pagination')
+  @ResponseMessage('Fetch permissions with pagination')
+  getPermissionsWithPagination() {}
+
   @Get(':id')
+  @ResponseMessage('Fetch a permission by id')
   findOne(@Param('id') id: string) {
     return this.permissionsService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePermissionDto: UpdatePermissionDto) {
-    return this.permissionsService.update(+id, updatePermissionDto);
+  @ResponseMessage('Update a permission')
+  update(@Param('id') id: string, @Body() updatePermissionDto: UpdatePermissionDto, @User() user: IUser) {
+    return this.permissionsService.update(+id, updatePermissionDto, user);
   }
 
   @Delete(':id')
+  @ResponseMessage('Delete a permission')
   remove(@Param('id') id: string) {
     return this.permissionsService.remove(+id);
   }

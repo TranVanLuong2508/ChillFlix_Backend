@@ -15,7 +15,7 @@ export class AllCodesController {
 
   @Get()
   findAll() {
-    return this.allCodesService.findAll();
+    return this.allCodesService.findAll(); 
   }
 
   @Get(':id')
