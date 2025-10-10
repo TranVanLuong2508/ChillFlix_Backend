@@ -38,4 +38,8 @@ export class RolesController {
   remove(@Param('id') id: string, @User() user: IUser) {
     return this.rolesService.remove(+id, user);
   }
+
+  @Patch(':id/permission/add')
+  @ResponseMessage('Add a permission to role')
+  addPermissions(@Param('id') id: string) {}
 }

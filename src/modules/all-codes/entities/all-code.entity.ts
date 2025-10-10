@@ -1,4 +1,5 @@
 import { Director } from 'src/modules/directors/director.entity';
+import { Role } from 'src/modules/roles/entities/role.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
@@ -33,9 +34,4 @@ export class AllCode {
 
   @OneToMany(() => User, (user) => user.role)
   userRole: User[];
-
-  // @OneToMany(() => Director, (director) => director.gender)
-  // directorGender: Director[];
-  // @OneToMany(() => Director, (director) => director.nationality)
-  // directorNationality: Director[];
 }

@@ -1,11 +1,13 @@
 import { Exclude } from 'class-transformer';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+import { Role } from 'src/modules/roles/entities/role.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';

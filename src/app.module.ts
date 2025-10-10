@@ -19,6 +19,7 @@ import { DirectorModule } from 'src/modules/directors/director.module';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
+import { RolePermission } from './modules/role_permission/entities/role_permission.entity';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { FileModule } from './modules/file/file.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode, Permission, Role, Director, Film],
+        entities: [User, AllCode, Permission, Role, Director, Film, RolePermission],
         synchronize: true,
       }),
     }),

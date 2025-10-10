@@ -9,11 +9,13 @@ import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { UsersService } from 'src/modules/users/users.service';
 import { DirectorService } from 'src/modules/directors/director.service';
 import { Director } from 'src/modules/directors/director.entity';
+import { RolePermissionService } from 'src/modules/role_permission/role_permission.service';
+import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AllCode, User, Permission, Director])],
+  imports: [TypeOrmModule.forFeature([AllCode, User, Permission, Director, RolePermission])],
   controllers: [DatabasesController],
-  providers: [DatabasesService, AllCodesService, UsersService, DirectorService],
+  providers: [DatabasesService, AllCodesService, UsersService, DirectorService, RolePermissionService],
   exports: [AllCodesService],
 })
 export class DatabasesModule {}

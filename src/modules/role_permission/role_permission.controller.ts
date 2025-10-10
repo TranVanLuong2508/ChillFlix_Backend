@@ -2,33 +2,22 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { RolePermissionService } from './role_permission.service';
 import { CreateRolePermissionDto } from './dto/create-role_permission.dto';
 import { UpdateRolePermissionDto } from './dto/update-role_permission.dto';
+import { ResponseMessage, User } from 'src/decorators/customize';
+import type { IUser } from '../users/interface/user.interface';
+import { DeleteRolePermissionDto } from './dto/delete-role_permisson.dto';
 
 @Controller('role-permission')
 export class RolePermissionController {
   constructor(private readonly rolePermissionService: RolePermissionService) {}
 
   @Post()
-  create(@Body() createRolePermissionDto: CreateRolePermissionDto) {
-    return this.rolePermissionService.create(createRolePermissionDto);
+  create(@Body() createRolePermissionDto: CreateRolePermissionDto, @User() user: IUser) {
+    return this.rolePermissionService.create(createRolePermissionDto, user);
   }
 
-  @Get()
-  findAll() {
-    return this.rolePermissionService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rolePermissionService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRolePermissionDto: UpdateRolePermissionDto) {
-    return this.rolePermissionService.update(+id, updateRolePermissionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rolePermissionService.remove(+id);
+  @Delete('/delete')
+  @ResponseMessage('Delete a role permisson')
+  remove(@Body() deleteRolePermissionDto: DeleteRolePermissionDto, @User() user: IUser) {
+    return this.rolePermissionService.remove(deleteRolePermissionDto, user);
   }
 }

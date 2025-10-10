@@ -8,10 +8,12 @@ import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { Director } from 'src/modules/directors/director.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersService } from 'src/modules/users/users.service';
 
 import { Repository } from 'typeorm';
+import { INIT_ROLE_PERMISSION } from './sampleData/role_permission';
 
 @Injectable()
 export class DatabasesService implements OnModuleInit {
@@ -29,6 +31,9 @@ export class DatabasesService implements OnModuleInit {
     @InjectRepository(Director)
     private directorRepository: Repository<Director>,
 
+    @InjectRepository(RolePermission)
+    private role_perm_Repository: Repository<RolePermission>,
+
     private configService: ConfigService,
     private userService: UsersService,
   ) {}
@@ -41,6 +46,7 @@ export class DatabasesService implements OnModuleInit {
       const countUser = await this.userRepository.count();
       const countPermission = await this.permissionRepository.count();
       const countDirector = await this.directorRepository.count();
+      const count_role_perm = await this.role_perm_Repository.count();
 
       if (countCode === 0) {
         await this.allCodeRepository.insert(INIT_ALLCODE);
@@ -353,6 +359,10 @@ export class DatabasesService implements OnModuleInit {
 
       if (countPermission === 0) {
         await this.permissionRepository.insert(INIT_PERMISSIONS);
+      }
+
+      if (count_role_perm === 0) {
+        await this.role_perm_Repository.insert(INIT_ROLE_PERMISSION);
       }
       if (countCode > 0 && countUser > 0 && countPermission > 0) {
         this.logger.warn('>>> ALREADY INIT SAMPLE DATA...');
