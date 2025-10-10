@@ -19,7 +19,7 @@ import { DirectorModule } from 'src/modules/directors/director.module';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
-import { FilmEpisodeSeasonModule } from './film_episode_season/film_episode_season.module';
+import { FilmEpisodeSeasonModule } from './modules/film_episode_season/film_episode_season.module';
 
 @Module({
   imports: [
