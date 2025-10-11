@@ -1,36 +1,31 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
-import { Repository } from 'typeorm';
+import { Any, Repository } from 'typeorm';
 import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
+import { joinWithCommonFields } from 'src/common/utils/join-allcode';
+import { plainToInstance } from 'class-transformer';
+import { FilmResponseDto } from '../all-codes/dto/film-response.dto';
 
 @Injectable()
 export class FilmsService {
-  constructor(
-    @InjectRepository(Film) private filmsRepository: Repository<Film>,
-  ) {}
+  constructor(@InjectRepository(Film) private filmsRepository: Repository<Film>) {}
 
   async create(createFilmDto: CreateFilmDto) {
     const isExist = await this.filmsRepository.findOne({
       where: { filmId: createFilmDto.filmId },
+      withDeleted: true,
     });
     if (isExist) {
       throw new BadRequestException('Film upload has been created');
     }
-    const slug = await SlugUtil.generateUniqueSlug(
-      createFilmDto.slug,
-      this.filmsRepository,
-    );
-    const newFilm = this.filmsRepository.create({ ...createFilmDto, slug });
+    const filmGenres = createFilmDto.genreCodes.map((g: string) => ({ genreCode: g }));
+    const slug = await SlugUtil.generateUniqueSlug(createFilmDto.slug, this.filmsRepository);
+    const newFilm = this.filmsRepository.create({ ...createFilmDto, slug, filmGenres });
     await this.filmsRepository.save(newFilm);
     return {
       id: newFilm.id,
@@ -78,11 +73,24 @@ export class FilmsService {
     if (!isUUID(id)) {
       throw new BadRequestException(`Invalid UUID format: ${id}`);
     }
-    const film = await this.filmsRepository.findOne({ where: { id } });
+
+    const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+    joinWithCommonFields(queryBuilder, 'film.language', 'language');
+    joinWithCommonFields(queryBuilder, 'film.age', 'age');
+    joinWithCommonFields(queryBuilder, 'film.type', 'type');
+    joinWithCommonFields(queryBuilder, 'film.country', 'country');
+    joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus');
+    queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+    joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre');
+
+    const film = await queryBuilder.where('film.id = :id', { id }).getOne();
+
     if (!film) {
       throw new NotFoundException(`Film with id ${id} not found`);
     }
-    return film;
+
+    // return film;
+    return plainToInstance(FilmResponseDto, film);
   }
 
   async update(id: string, updateFilmDto: UpdateFilmDto) {
@@ -99,10 +107,7 @@ export class FilmsService {
 
     if (updateFilmDto.slug) {
       if (filmData.slug !== updateFilmDto.slug) {
-        const slug = await SlugUtil.generateUniqueSlug(
-          updateFilmDto.slug,
-          this.filmsRepository,
-        );
+        const slug = await SlugUtil.generateUniqueSlug(updateFilmDto.slug, this.filmsRepository);
         updateFilmDto.slug = slug;
       } else {
         delete updateFilmDto.slug;
