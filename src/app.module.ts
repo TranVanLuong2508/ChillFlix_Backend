@@ -20,6 +20,7 @@ import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
 import { FilmEpisodeSeasonModule } from './modules/film_episode_season/film_episode_season.module';
+import { FilmGenre } from './modules/films/entities/film_genre.entity';
 
 @Module({
   imports: [
@@ -36,7 +37,7 @@ import { FilmEpisodeSeasonModule } from './modules/film_episode_season/film_epis
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode, Permission, Role, Director, Film],
+        entities: [User, AllCode, Permission, Role, Director, Film, FilmGenre],
         synchronize: true,
       }),
     }),
