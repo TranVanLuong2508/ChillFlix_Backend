@@ -8,7 +8,7 @@ export class SlugUtil {
     let slug = baseSlug;
     let counter = 1;
 
-    while (await repository.exists({ where: { slug } as any })) {
+    while (await repository.exists({ where: { slug } as any, withDeleted: true })) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
@@ -26,8 +26,7 @@ export class SlugUtil {
   }
 
   static slugifyVietnamese(text: string): string {
-    const from =
-      'àáãảạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđùúủũụưừứửữựòóỏõọôồốổỗộơờớởỡợìíỉĩị';
+    const from = 'àáãảạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđùúủũụưừứửữựòóỏõọôồốổỗộơờớởỡợìíỉĩị';
     const to = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeduuuuuuuuuuuoooooooooooooooooiiiii';
 
     let slug = text.toLowerCase();
