@@ -19,18 +19,18 @@ export class AllCodesService {
   }
 
   findAll() {
-    return `This action returns all allCodes`;
+    return { EC: 0, EM: `This action returns all allCodes` };
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} allCode`;
+    return { EC: 0, EM: `This action returns a #${id} allCode` };
   }
 
   update(id: number, updateAllCodeDto: UpdateAllCodeDto) {
-    return `This action updates a #${id} allCode`;
+    return { EC: 0, EM: `This action updates a #${id} allCode` };
   }
 
   remove(id: number) {
-    return `This action removes a #${id} allCode`;
+    return { EC: 0, EM: `This action removes a #${id} allCode` };
   }
 }

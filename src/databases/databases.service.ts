@@ -6,7 +6,7 @@ import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 
 import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
-import { Director } from 'src/modules/directors/director.entity';
+import { Director } from 'src/modules/directors/entities/director.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersService } from 'src/modules/users/users.service';

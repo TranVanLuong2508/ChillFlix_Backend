@@ -3,9 +3,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -77,4 +81,7 @@ export class Film {
 
   @Column({ nullable: true })
   deletedBy: string;
+
+  @OneToMany(() => FilmDirector, (filmDirector) => filmDirector.film)
+  filmDirectors: FilmDirector[];
 }

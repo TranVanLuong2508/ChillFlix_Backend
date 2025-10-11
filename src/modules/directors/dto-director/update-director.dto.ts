@@ -7,7 +7,7 @@ export class UpdateDirectorDto {
 
   @IsOptional()
   @IsString()
-  gender?: string;
+  genderCode?: string;
 
   @IsOptional()
   @IsString()
@@ -19,5 +19,5 @@ export class UpdateDirectorDto {
 
   @IsOptional()
   @IsString()
-  nationality?: string;
+  nationalityCode?: string;
 }

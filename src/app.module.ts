@@ -14,11 +14,13 @@ import { RolesModule } from 'src/modules/roles/roles.module';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersModule } from 'src/modules/users/users.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
-import { Director } from 'src/modules/directors/director.entity';
+import { Director } from 'src/modules/directors/entities/director.entity';
 import { DirectorModule } from 'src/modules/directors/director.module';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
+import { FilmDirectorModule } from './modules/film_director/film_director.module';
+import { FilmDirector } from './modules/film_director/entities/film_director.entity';
 
 @Module({
   imports: [
@@ -35,7 +37,7 @@ import { FileModule } from './modules/file/file.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode, Permission, Role, Director, Film],
+        entities: [User, AllCode, Permission, Role, Director, Film, FilmDirector],
         synchronize: true,
       }),
     }),
@@ -49,6 +51,7 @@ import { FileModule } from './modules/file/file.module';
     DirectorModule,
     FilmsModule,
     FileModule,
+    FilmDirectorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

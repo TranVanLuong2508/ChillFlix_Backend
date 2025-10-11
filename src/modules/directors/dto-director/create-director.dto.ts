@@ -18,5 +18,5 @@ export class CreateDirectorDto {
 
   @IsOptional()
   @IsString()
-  nationality?: string;
+  nationalityCode?: string;
 }
