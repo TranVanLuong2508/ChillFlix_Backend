@@ -1,11 +1,17 @@
+import { Exclude } from 'class-transformer';
+import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { FilmGenre } from './film_genre.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -43,22 +49,50 @@ export class Film {
   view: number;
 
   @Column({ nullable: false })
+  @Exclude({ toPlainOnly: true })
   ageCode: string;
 
+  @ManyToOne(() => AllCode, (allcode) => allcode.filmAge)
+  @JoinColumn({ name: 'ageCode', referencedColumnName: 'keyMap' })
+  age: AllCode;
+
   @Column({ nullable: false })
+  @Exclude({ toPlainOnly: true })
   typeCode: string;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.filmType)
+  @JoinColumn({ name: 'typeCode', referencedColumnName: 'keyMap' })
+  type: AllCode;
 
   @Column({ type: 'text', default: [], array: true })
   genreCodes: string[];
 
+  @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
+  filmGenres: FilmGenre[];
+
   @Column({ nullable: false })
+  @Exclude({ toPlainOnly: true })
   countryCode: string;
 
-  @Column({ nullable: false })
-  langCode: string;
+  @ManyToOne(() => AllCode, (allcode) => allcode.filmCountry)
+  @JoinColumn({ name: 'countryCode', referencedColumnName: 'keyMap' })
+  country: AllCode;
 
   @Column({ nullable: false })
+  @Exclude({ toPlainOnly: true })
+  langCode: string;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.filmLanguage)
+  @JoinColumn({ name: 'langCode', referencedColumnName: 'keyMap' })
+  language: AllCode;
+
+  @Column({ nullable: false })
+  @Exclude({ toPlainOnly: true })
   publicStatusCode: string;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.filmPublicStatus)
+  @JoinColumn({ name: 'publicStatusCode', referencedColumnName: 'keyMap' })
+  publicStatus: AllCode;
 
   @CreateDateColumn()
   createdAt: Date;
