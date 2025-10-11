@@ -1,7 +1,7 @@
 //ROlE constants
-export const ADMIN_ROLE = 'ROLE_ADMIN';
-export const MODERATOR_ROLE = 'ROLE_MOD';
-export const USER_ROLE = 'ROLE_USER';
+export const ADMIN_ROLE = 2;
+export const MODERATOR_ROLE = 4;
+export const USER_ROLE = 5;
 
 //GENDER constants
 

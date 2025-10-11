@@ -31,7 +31,6 @@ export class RolesService {
           description,
           isActive,
           createdBy: user.userId,
-          isDeleted: false,
         });
 
         await this.roleRepository.save(newRole);
@@ -80,6 +79,7 @@ export class RolesService {
           roleName: true,
           description: true,
         },
+        relations: ['rolePermission', 'rolePermission.permission'],
       });
       if (!foundRole) {
         return {

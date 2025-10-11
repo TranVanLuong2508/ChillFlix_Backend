@@ -50,20 +50,6 @@ export class UsersService {
     return await this.usersRepository.findOne({
       where: { userId: id },
       relations: ['gender', 'role'],
-      select: {
-        gender: {
-          keyMap: true,
-          valueEn: true,
-          valueVi: true,
-          description: true,
-        },
-        role: {
-          keyMap: true,
-          valueEn: true,
-          valueVi: true,
-          description: true,
-        },
-      },
     });
   }
 
@@ -117,7 +103,7 @@ export class UsersService {
         email: true,
         password: true,
         userId: true,
-        roleCode: true,
+        roleId: true,
         fullName: true,
         genderCode: true,
         isVip: true,

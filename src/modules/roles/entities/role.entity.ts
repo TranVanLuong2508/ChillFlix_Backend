@@ -1,17 +1,22 @@
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
+import { User } from 'src/modules/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
 export class Role {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'role_id' })
   roleId: number;
 
   @Column()
@@ -20,10 +25,10 @@ export class Role {
   @Column()
   description: string;
 
-  @Column()
+  @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: false })
   isDeleted: boolean;
 
   @CreateDateColumn()
@@ -43,4 +48,10 @@ export class Role {
 
   @Column({ nullable: true })
   deletedBy: number;
+
+  @OneToMany(() => User, (user) => user.role)
+  users: User[];
+
+  @OneToMany(() => RolePermission, (rp) => rp.role)
+  rolePermission: RolePermission[];
 }

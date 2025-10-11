@@ -38,8 +38,8 @@ export class User {
   @Column({ nullable: true })
   age: number;
 
-  @Column({ nullable: true, name: 'role_code' })
-  roleCode: string;
+  @Column({ name: 'role_id' })
+  roleId: number;
 
   @Column({ type: 'date', nullable: true })
   birthDate: Date;
@@ -56,7 +56,7 @@ export class User {
   @Column({ nullable: true })
   refreshToken: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: false })
   isDeleted: boolean;
 
   @CreateDateColumn()
@@ -81,7 +81,7 @@ export class User {
   @JoinColumn({ name: 'gender_code', referencedColumnName: 'keyMap' })
   gender: AllCode;
 
-  @ManyToOne(() => AllCode, (allcode) => allcode.userRole)
-  @JoinColumn({ name: 'role_code', referencedColumnName: 'keyMap' })
-  role: AllCode;
+  @ManyToOne(() => Role, (role) => role.users)
+  @JoinColumn({ name: 'role_id', referencedColumnName: 'roleId' })
+  role: Role;
 }

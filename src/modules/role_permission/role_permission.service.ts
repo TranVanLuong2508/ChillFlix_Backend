@@ -30,6 +30,7 @@ export class RolePermissionService {
         const rolePermission = this.RolePermissionRepository.create({
           ...createRolePermissionDto,
           createdBy: user.userId,
+          isDeleted: false,
         });
 
         await this.RolePermissionRepository.save(rolePermission);
@@ -81,6 +82,44 @@ export class RolePermissionService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: `Error from Delete role-permission service`,
+      });
+    }
+  }
+
+  async getPermissionsByRole(roleId: number) {
+    try {
+      const result = await this.RolePermissionRepository.find({
+        where: { roleId: roleId, isDeleted: false },
+      });
+      return {
+        EC: 1,
+        EM: 'Get all permissinon by role successfully',
+        permissions: result,
+      };
+    } catch (error: any) {
+      console.error('Error in Get all permissinon by role:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: `Error from Get all permissinon by role service`,
+      });
+    }
+  }
+
+  async getRolebyPermission(permissionId: number) {
+    try {
+      const result = await this.RolePermissionRepository.find({
+        where: { permissionId: permissionId, isDeleted: false },
+      });
+      return {
+        EC: 1,
+        EM: 'Get all role by permission successfully',
+        roles: result,
+      };
+    } catch (error: any) {
+      console.error('Error in Get all role by permission:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: `Error from Get all role by permission service`,
       });
     }
   }

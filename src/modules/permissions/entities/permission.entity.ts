@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Permission {
@@ -37,4 +38,7 @@ export class Permission {
 
   @Column({ nullable: true })
   deletedBy: number;
+
+  @OneToMany(() => RolePermission, (rp) => rp.permission)
+  rolePermission: RolePermission[];
 }

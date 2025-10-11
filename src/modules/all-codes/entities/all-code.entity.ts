@@ -31,7 +31,4 @@ export class AllCode {
 
   @OneToMany(() => User, (user) => user.gender)
   userGender: User[];
-
-  @OneToMany(() => User, (user) => user.role)
-  userRole: User[];
 }
