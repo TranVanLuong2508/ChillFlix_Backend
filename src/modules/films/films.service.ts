@@ -8,8 +8,8 @@ import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
-import { plainToInstance } from 'class-transformer';
-import { FilmResponseDto } from '../all-codes/dto/film-response.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
 
 @Injectable()
 export class FilmsService {
@@ -54,6 +54,13 @@ export class FilmsService {
       where: filter,
       order: sort,
       select: projection,
+      relations: {
+        language: true,
+        age: true,
+        filmGenres: {
+          genre: true,
+        },
+      },
       skip: offset,
       take: defaultLimit,
     });
@@ -65,7 +72,7 @@ export class FilmsService {
         pages: totalPages,
         total: totalItems,
       },
-      result,
+      result: plainToInstance(FilmPaginationDto, result),
     };
   }
 

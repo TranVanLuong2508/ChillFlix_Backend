@@ -9,6 +9,7 @@ import {
   Query,
   UseInterceptors,
   ClassSerializerInterceptor,
+  SerializeOptions,
 } from '@nestjs/common';
 import { FilmsService } from './films.service';
 import { CreateFilmDto } from './dto/create-film.dto';
@@ -16,6 +17,7 @@ import { UpdateFilmDto } from './dto/update-film.dto';
 
 @Controller('films')
 @UseInterceptors(ClassSerializerInterceptor)
+@SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmsController {
   constructor(private readonly filmsService: FilmsService) {}
 
