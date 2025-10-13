@@ -1,11 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  SerializeOptions,
+} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { IS_PUBLIC_PERMISSION, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('roles')
+@UseInterceptors(ClassSerializerInterceptor)
+@SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

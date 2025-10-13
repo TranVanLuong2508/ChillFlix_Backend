@@ -5,6 +5,9 @@ import { IUser } from '../users/interface/user.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
+import { joinWithCommonFields } from 'src/common/utils/join-allcode';
+import { plainToInstance } from 'class-transformer';
+import { RoleResponseDto } from './dto/role-response.dto';
 
 @Injectable()
 export class RolesService {
@@ -72,26 +75,26 @@ export class RolesService {
 
   async findOne(id: number) {
     try {
-      const foundRole = await this.roleRepository.findOne({
+      const isExist = this.roleRepository.exists({
         where: { roleId: id },
-        select: {
-          roleId: true,
-          roleName: true,
-          description: true,
-        },
-        relations: ['rolePermission', 'rolePermission.permission', 'rolePermission.role'],
       });
-      if (!foundRole) {
+      if (!isExist) {
         return {
           EC: 0,
           EM: 'Role not found',
         };
       }
 
+      const queryBuilder = this.roleRepository.createQueryBuilder('role');
+      queryBuilder.leftJoinAndSelect('role.rolePermission', 'rolePermission');
+      joinWithCommonFields(queryBuilder, 'rolePermission.permission', 'permission');
+
+      const role = await queryBuilder.where('role.roleId = :roleId', { roleId: id }).getOne();
+      const data = plainToInstance(RoleResponseDto, role);
       return {
         EC: 1,
         EM: 'Find a role success',
-        ...foundRole,
+        role: data,
       };
     } catch (error: any) {
       console.error('Error in findOne role:', error.message);
