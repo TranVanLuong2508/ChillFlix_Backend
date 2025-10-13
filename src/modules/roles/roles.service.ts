@@ -79,7 +79,7 @@ export class RolesService {
           roleName: true,
           description: true,
         },
-        relations: ['rolePermission', 'rolePermission.permission'],
+        relations: ['rolePermission', 'rolePermission.permission', 'rolePermission.role'],
       });
       if (!foundRole) {
         return {
