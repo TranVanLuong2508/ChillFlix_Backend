@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { FilmGenre } from './film_genre.entity';
+import { Part } from 'src/modules/parts/entities/part.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -111,4 +112,7 @@ export class Film {
 
   @Column({ nullable: true })
   deletedBy: string;
+
+  @OneToMany(() => Part, (part) => part.film, { cascade: true })
+  parts: Part[];
 }
