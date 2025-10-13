@@ -133,7 +133,7 @@ export class FilmsService {
     try {
       await this.filmsRepository.save(filmData);
       return {
-        message: 'Update successful',
+        message: 'Update Film successful',
         affectedRows: 1,
       };
     } catch (error) {
