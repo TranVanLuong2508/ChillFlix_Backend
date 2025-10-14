@@ -39,13 +39,13 @@ export class Episode {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   createdBy: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   updatedBy: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   deletedBy: string;
 
   @Column({ nullable: false, type: 'uuid' })
