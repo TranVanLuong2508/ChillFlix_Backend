@@ -1,5 +1,26 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { Episode } from 'src/modules/episodes/entities/episode.entity';
+
+@Exclude()
+export class episodeDto {
+  @Expose()
+  id: string;
+
+  @Expose()
+  title: string;
+
+  @Expose()
+  episodeNumber: number;
+
+  @Expose()
+  duration: number;
+
+  @Expose()
+  videoUrl: string;
+
+  @Expose()
+  thumbUrl: string;
+}
 
 @Exclude()
 export class PartResponseUser {
@@ -19,7 +40,8 @@ export class PartResponseUser {
   filmId: string;
 
   @Expose()
-  episodes: Episode[];
+  @Type(() => episodeDto)
+  episodes: episodeDto[];
 }
 
 export class PartResponseFindAll {

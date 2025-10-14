@@ -24,7 +24,7 @@ export class PartsService {
       throw new NotFoundException(`Film with id ${createPartDto.filmId} not found`);
     }
 
-    if ('title' in createPartDto) {
+    if (!createPartDto.title) {
       createPartDto.title = `Part ${createPartDto.partNumber}`;
     }
     const newPart = this.partRepository.create({ ...createPartDto, createdBy: user.userId.toString() });
@@ -51,6 +51,9 @@ export class PartsService {
     }
 
     const part = await this.partRepository.findOne({ where: { id }, relations: ['episodes'] });
+    if (!part) {
+      throw new NotFoundException(`Part with id: ${id} not found`);
+    }
 
     return plainToInstance(PartResponseUser, part);
   }
@@ -85,7 +88,7 @@ export class PartsService {
 
     const partIsExist = await this.partRepository.exists({ where: { id } });
     if (!partIsExist) {
-      throw new NotFoundException(`Film with id ${id} not found`);
+      throw new NotFoundException(`Part with id ${id} not found`);
     }
 
     await this.partRepository.update(id, { deletedBy: user.userId.toString() });
