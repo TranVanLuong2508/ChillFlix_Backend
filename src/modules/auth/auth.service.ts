@@ -72,11 +72,7 @@ export class AuthService {
   }
 
   async register(user: RegisterUserDto) {
-    const newUser = await this.usersService.register(user);
-    return {
-      userId: newUser?.userId,
-      createtedAt: newUser?.createdAt,
-    };
+    return await this.usersService.register(user);
   }
 
   async handleLogout(respones: Response, user: IUser) {
