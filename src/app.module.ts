@@ -20,6 +20,8 @@ import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
 import { RolePermission } from './modules/role_permission/entities/role_permission.entity';
+import { SubscriptionPlansModule } from './modules/subscription-plans/subscription-plans.module';
+import { MarkdownsModule } from './modules/markdowns/markdowns.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { RolePermission } from './modules/role_permission/entities/role_permissi
     DirectorModule,
     FilmsModule,
     FileModule,
+    SubscriptionPlansModule,
+    MarkdownsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

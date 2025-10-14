@@ -1,18 +1,6 @@
-import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Role {
