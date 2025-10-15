@@ -14,7 +14,7 @@ import { RolesModule } from 'src/modules/roles/roles.module';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersModule } from 'src/modules/users/users.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
-import { Director } from 'src/modules/directors/director.entity';
+import { Director } from 'src/modules/directors/entities/director.entity';
 import { DirectorModule } from 'src/modules/directors/director.module';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
@@ -29,6 +29,9 @@ import { PartsModule } from './modules/parts/parts.module';
 import { EpisodesModule } from './modules/episodes/episodes.module';
 import { Part } from './modules/parts/entities/part.entity';
 import { Episode } from './modules/episodes/entities/episode.entity';
+
+import { FilmDirectorModule } from './modules/film_director/film_director.module';
+import { FilmDirector } from './modules/film_director/entities/film_director.entity';
 
 @Module({
   imports: [
@@ -64,6 +67,8 @@ import { Episode } from './modules/episodes/entities/episode.entity';
     FilmEpisodeSeasonModule,
     PartsModule,
     EpisodesModule,
+    FilmDirectorModule,
+    FilmDirector,
   ],
   controllers: [AppController],
   providers: [AppService],

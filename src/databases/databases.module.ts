@@ -8,7 +8,8 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { UsersService } from 'src/modules/users/users.service';
 import { DirectorService } from 'src/modules/directors/director.service';
-import { Director } from 'src/modules/directors/director.entity';
+
+import { Director } from 'src/modules/directors/entities/director.entity';
 import { RolePermissionService } from 'src/modules/role_permission/role_permission.service';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 

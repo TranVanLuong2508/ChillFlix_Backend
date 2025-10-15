@@ -1,3 +1,4 @@
+import { Director } from 'src/modules/directors/entities/director.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
@@ -49,4 +50,10 @@ export class AllCode {
 
   @OneToMany(() => FilmGenre, (filmGenre) => filmGenre.genre)
   filmGenres: FilmGenre[];
+
+  @OneToMany(() => Director, (director) => director.genderCode)
+  directorGender: Director[];
+
+  @OneToMany(() => Director, (director) => director.nationalityCode)
+  directorNationality: Director[];
 }

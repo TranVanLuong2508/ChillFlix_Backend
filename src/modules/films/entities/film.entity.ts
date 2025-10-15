@@ -7,12 +7,15 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { FilmGenre } from './film_genre.entity';
 import { Part } from 'src/modules/parts/entities/part.entity';
+import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -115,4 +118,7 @@ export class Film {
 
   @OneToMany(() => Part, (part) => part.film, { cascade: true })
   parts: Part[];
+
+  @OneToMany(() => FilmDirector, (filmDirector) => filmDirector.film)
+  filmDirectors: FilmDirector[];
 }
