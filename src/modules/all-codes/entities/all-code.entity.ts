@@ -1,3 +1,4 @@
+import { Actor } from 'src/modules/actor/entities/actor.entity';
 import { Director } from 'src/modules/directors/entities/director.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
@@ -56,4 +57,8 @@ export class AllCode {
 
   @OneToMany(() => Director, (director) => director.nationalityCode)
   directorNationality: Director[];
+  @OneToMany(() => Actor, (actor) => actor.genderCode)
+  actorGender: Actor[];
+  @OneToMany(() => Actor, (actor) => actor.nationalityCode)
+  actorNationality: Actor[];
 }

@@ -6,9 +6,10 @@ import { Film } from 'src/modules/films/entities/film.entity';
 
 import { FilmGenre } from './entities/film_genre.entity';
 import { FilmDirector } from '../film_director/entities/film_director.entity';
+import { FilmActor } from '../film_actor/entities/film_actor.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Film, FilmDirector, FilmGenre])],
+  imports: [TypeOrmModule.forFeature([Film, FilmDirector, FilmGenre, FilmActor])],
   controllers: [FilmsController],
   providers: [FilmsService],
 })

@@ -3,7 +3,7 @@ import { IsOptional, IsString } from 'class-validator';
 export class UpdateDirectorDto {
   @IsOptional()
   @IsString()
-  directorName?: string;
+  directorName: string;
 
   @IsOptional()
   @IsString()
