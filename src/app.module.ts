@@ -23,6 +23,13 @@ import { RolePermission } from './modules/role_permission/entities/role_permissi
 import { SubscriptionPlansModule } from './modules/subscription-plans/subscription-plans.module';
 import { MarkdownsModule } from './modules/markdowns/markdowns.module';
 
+import { FilmEpisodeSeasonModule } from './modules/film_episode_season/film_episode_season.module';
+import { FilmGenre } from './modules/films/entities/film_genre.entity';
+import { PartsModule } from './modules/parts/parts.module';
+import { EpisodesModule } from './modules/episodes/episodes.module';
+import { Part } from './modules/parts/entities/part.entity';
+import { Episode } from './modules/episodes/entities/episode.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,7 +45,7 @@ import { MarkdownsModule } from './modules/markdowns/markdowns.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode, Permission, Role, Director, Film, RolePermission],
+        entities: [User, AllCode, Permission, Role, Director, Film, RolePermission, FilmGenre, Part, Episode],
         synchronize: true,
       }),
     }),
@@ -54,6 +61,9 @@ import { MarkdownsModule } from './modules/markdowns/markdowns.module';
     FileModule,
     SubscriptionPlansModule,
     MarkdownsModule,
+    FilmEpisodeSeasonModule,
+    PartsModule,
+    EpisodesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,7 +1,7 @@
-import { Director } from 'src/modules/directors/director.entity';
-import { Role } from 'src/modules/roles/entities/role.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Film } from 'src/modules/films/entities/film.entity';
+import { FilmGenre } from 'src/modules/films/entities/film_genre.entity';
 
 @Entity()
 export class AllCode {
@@ -31,4 +31,22 @@ export class AllCode {
 
   @OneToMany(() => User, (user) => user.gender)
   userGender: User[];
+
+  @OneToMany(() => Film, (film) => film.language)
+  filmLanguage: Film[];
+
+  @OneToMany(() => Film, (film) => film.publicStatus)
+  filmPublicStatus: Film[];
+
+  @OneToMany(() => Film, (film) => film.country)
+  filmCountry: Film[];
+
+  @OneToMany(() => Film, (film) => film.age)
+  filmAge: Film[];
+
+  @OneToMany(() => Film, (film) => film.type)
+  filmType: Film[];
+
+  @OneToMany(() => FilmGenre, (filmGenre) => filmGenre.genre)
+  filmGenres: FilmGenre[];
 }

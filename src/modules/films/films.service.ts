@@ -3,24 +3,35 @@ import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
-import { Repository } from 'typeorm';
+import { Any, Repository } from 'typeorm';
 import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
+import { joinWithCommonFields } from 'src/common/utils/join-allcode';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
+import { IUser } from '../users/interface/user.interface';
 
 @Injectable()
 export class FilmsService {
   constructor(@InjectRepository(Film) private filmsRepository: Repository<Film>) {}
 
-  async create(createFilmDto: CreateFilmDto) {
+  async create(createFilmDto: CreateFilmDto, user: IUser) {
     const isExist = await this.filmsRepository.findOne({
       where: { filmId: createFilmDto.filmId },
+      withDeleted: true,
     });
     if (isExist) {
       throw new BadRequestException('Film upload has been created');
     }
+    const filmGenres = createFilmDto.genreCodes.map((g: string) => ({ genreCode: g }));
     const slug = await SlugUtil.generateUniqueSlug(createFilmDto.slug, this.filmsRepository);
-    const newFilm = this.filmsRepository.create({ ...createFilmDto, slug });
+    const newFilm = this.filmsRepository.create({
+      ...createFilmDto,
+      slug,
+      filmGenres,
+      createdBy: user.userId.toString(),
+    });
     await this.filmsRepository.save(newFilm);
     return {
       id: newFilm.id,
@@ -49,6 +60,13 @@ export class FilmsService {
       where: filter,
       order: sort,
       select: projection,
+      relations: {
+        language: true,
+        age: true,
+        filmGenres: {
+          genre: true,
+        },
+      },
       skip: offset,
       take: defaultLimit,
     });
@@ -60,7 +78,7 @@ export class FilmsService {
         pages: totalPages,
         total: totalItems,
       },
-      result,
+      result: plainToInstance(FilmPaginationDto, result),
     };
   }
 
@@ -68,14 +86,27 @@ export class FilmsService {
     if (!isUUID(id)) {
       throw new BadRequestException(`Invalid UUID format: ${id}`);
     }
-    const film = await this.filmsRepository.findOne({ where: { id } });
+
+    const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+    joinWithCommonFields(queryBuilder, 'film.language', 'language');
+    joinWithCommonFields(queryBuilder, 'film.age', 'age');
+    joinWithCommonFields(queryBuilder, 'film.type', 'type');
+    joinWithCommonFields(queryBuilder, 'film.country', 'country');
+    joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus');
+    queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+    joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre');
+
+    const film = await queryBuilder.where('film.id = :id', { id }).getOne();
+
     if (!film) {
       throw new NotFoundException(`Film with id ${id} not found`);
     }
-    return film;
+
+    // return film;
+    return plainToInstance(FilmResponseDto, film);
   }
 
-  async update(id: string, updateFilmDto: UpdateFilmDto) {
+  async update(id: string, updateFilmDto: UpdateFilmDto, user: IUser) {
     if (!isUUID(id)) {
       throw new BadRequestException(`Invalid UUID format: ${id}`);
     }
@@ -97,11 +128,12 @@ export class FilmsService {
     }
 
     Object.assign(filmData, updateFilmDto);
+    filmData.updatedBy = user.userId.toString();
 
     try {
       await this.filmsRepository.save(filmData);
       return {
-        message: 'Update successful',
+        message: 'Update Film successful',
         affectedRows: 1,
       };
     } catch (error) {
@@ -109,12 +141,16 @@ export class FilmsService {
     }
   }
 
-  async remove(id: string /*, userId: string*/) {
+  async remove(id: string, user: IUser) {
     if (!isUUID(id)) {
       throw new BadRequestException(`Invalid UUID format: ${id}`);
     }
-    // await this.filmsRepository.update(id, { deletedBy: userId });
-
-    return await this.filmsRepository.softDelete(id);
+    const isExist = await this.filmsRepository.exists({ where: { id } });
+    if (!isExist) {
+      throw new NotFoundException(`Film with id ${id} not found`);
+    }
+    await this.filmsRepository.update(id, { deletedBy: user.userId.toString() });
+    await this.filmsRepository.softDelete(id);
+    return { deleted: 'success' };
   }
 }
