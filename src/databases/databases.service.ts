@@ -6,7 +6,6 @@ import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 
 import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
-import { Director } from 'src/modules/directors/entities/director.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
@@ -28,9 +27,6 @@ export class DatabasesService implements OnModuleInit {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
 
-    @InjectRepository(Director)
-    private directorRepository: Repository<Director>,
-
     @InjectRepository(RolePermission)
     private role_perm_Repository: Repository<RolePermission>,
 
@@ -45,22 +41,10 @@ export class DatabasesService implements OnModuleInit {
       const countCode = await this.allCodeRepository.count();
       const countUser = await this.userRepository.count();
       const countPermission = await this.permissionRepository.count();
-      const countDirector = await this.directorRepository.count();
       const count_role_perm = await this.role_perm_Repository.count();
 
       if (countCode === 0) {
         await this.allCodeRepository.insert(INIT_ALLCODE);
-      }
-      if (countDirector === 0) {
-        await this.directorRepository.insert([
-          {
-            directorName: 'Chân đen sì A',
-            genderCode: 'F',
-            story: 'Chồn xanh lè đá đít PSG aaaaaa',
-            avatarUrl: 'image.png',
-            nationalityCode: 'C_US',
-          },
-        ]);
       }
 
       if (countUser === 0) {
