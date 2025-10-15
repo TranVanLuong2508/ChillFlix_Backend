@@ -2,7 +2,7 @@ import { Actor } from 'src/modules/actor/entities/actor.entity';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('film_actor')
+@Entity('film_actors')
 export class FilmActor {
   @PrimaryGeneratedColumn({ name: 'film_actor_id' })
   id: number;
