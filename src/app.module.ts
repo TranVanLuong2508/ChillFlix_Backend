@@ -22,14 +22,11 @@ import { FileModule } from './modules/file/file.module';
 import { RolePermission } from './modules/role_permission/entities/role_permission.entity';
 import { SubscriptionPlansModule } from './modules/subscription-plans/subscription-plans.module';
 import { MarkdownsModule } from './modules/markdowns/markdowns.module';
-
-import { FilmEpisodeSeasonModule } from './modules/film_episode_season/film_episode_season.module';
 import { FilmGenre } from './modules/films/entities/film_genre.entity';
 import { PartsModule } from './modules/parts/parts.module';
 import { EpisodesModule } from './modules/episodes/episodes.module';
 import { Part } from './modules/parts/entities/part.entity';
 import { Episode } from './modules/episodes/entities/episode.entity';
-
 import { FilmDirectorModule } from './modules/film_director/film_director.module';
 import { FilmDirector } from './modules/film_director/entities/film_director.entity';
 import { ActorModule } from './modules/actor/actor.module';
@@ -82,7 +79,6 @@ import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
     FileModule,
     SubscriptionPlansModule,
     MarkdownsModule,
-    FilmEpisodeSeasonModule,
     PartsModule,
     EpisodesModule,
     FilmDirectorModule,
