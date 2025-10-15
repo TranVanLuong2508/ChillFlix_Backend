@@ -35,8 +35,8 @@ export class AuthService {
     return { EC: 0, EM: 'Create refresh token successfully', refreshToken };
   };
 
-  async login(user: IUser, response: Response) {
-    const { userId, email, roleId, fullName, genderCode, isVip, statusCode } = user;
+  async login(user: any, response: Response) {
+    const { userId, email, roleId, fullName, genderCode, isVip, statusCode } = user.result;
     const payload = {
       iss: 'from server',
       sub: 'token login',
@@ -48,7 +48,6 @@ export class AuthService {
       isVip,
       statusCode,
     };
-
     //generate refresh token
     const refresh_token = this.generateRefreshToken(payload);
     await this.usersService.updateUserToken(refresh_token.refreshToken, userId);
