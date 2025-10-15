@@ -21,6 +21,10 @@ import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
 import { FilmDirectorModule } from './modules/film_director/film_director.module';
 import { FilmDirector } from './modules/film_director/entities/film_director.entity';
+import { ActorModule } from './modules/actor/actor.module';
+import { Actor } from './modules/actor/entities/actor.entity';
+import { FilmActorModule } from './modules/film_actor/film_actor.module';
+import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
 
 @Module({
   imports: [
@@ -37,7 +41,7 @@ import { FilmDirector } from './modules/film_director/entities/film_director.ent
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode, Permission, Role, Director, Film, FilmDirector],
+        entities: [User, AllCode, Permission, Role, Director, Film, FilmDirector, Actor, FilmActor],
         synchronize: true,
       }),
     }),
@@ -52,6 +56,8 @@ import { FilmDirector } from './modules/film_director/entities/film_director.ent
     FilmsModule,
     FileModule,
     FilmDirectorModule,
+    ActorModule,
+    FilmActorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

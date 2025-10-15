@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
+import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -84,4 +85,6 @@ export class Film {
 
   @OneToMany(() => FilmDirector, (filmDirector) => filmDirector.film)
   filmDirectors: FilmDirector[];
+  @OneToMany(() => FilmActor, (filmActor) => filmActor.film)
+  filmActors: FilmActor[];  
 }

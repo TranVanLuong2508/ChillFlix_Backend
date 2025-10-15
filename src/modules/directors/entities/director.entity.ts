@@ -10,7 +10,6 @@ import {
   OneToMany,
 } from 'typeorm';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
-import { Film } from 'src/modules/films/entities/film.entity';
 import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
 
 @Entity({ name: 'directors' })
@@ -18,15 +17,17 @@ export class Director {
   @PrimaryGeneratedColumn({ name: 'director_id' })
   directorId: number;
   @Column({ name: 'director_name', type: 'varchar', length: 100 })
-  directorName?: string;
+  directorName: string;
+  @Column({ name: 'slug', type: 'varchar', length: 120, nullable: true })
+  slug?: string;
   @Column({ name: 'gender_code', type: 'varchar', length: 10 })
-  genderCode: string;
+  genderCode?: string;
   @Column({ name: 'story', type: 'text', nullable: true })
   story?: string;
   @Column({ name: 'avatarUrl', type: 'text', nullable: true })
   avatarUrl?: string;
   @Column({ name: 'nationality_code', type: 'varchar', nullable: true })
-  nationalityCode: string;
+  nationalityCode?: string;
   @CreateDateColumn()
   createdAt: Date;
   @UpdateDateColumn()
