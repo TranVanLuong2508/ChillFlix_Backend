@@ -50,8 +50,6 @@ export class DirectorService {
       });
 
       const result = await this.directorRepo.save(director);
-      if (result.slug) result.slug = `${result.slug}.${result.directorId}`;
-
       return {
         EC: 1,
         EM: 'Create director successfully',
@@ -135,8 +133,9 @@ export class DirectorService {
       });
 
       if (!director) return { EC: 0, EM: `Director ${id} not found!` };
-
-      if (director.slug) director.slug = `${director.slug}.${director.directorId}`;
+      if (director.slug) {
+        director.slug = `${director.slug}.${director.directorId}`;
+      }
       return {
         EC: 1,
         EM: 'Get director successfully',
@@ -188,9 +187,8 @@ export class DirectorService {
         if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
         director.nationalityCodeRL = nationality;
       }
-
       const result = await this.directorRepo.save(director);
-      if (result.slug) result.slug = `${result.slug}.${result.directorId}`;
+
       return {
         EC: 1,
         EM: 'Update director successfully',

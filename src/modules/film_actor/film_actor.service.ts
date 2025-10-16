@@ -29,11 +29,6 @@ export class FilmActorService {
       const actor = await this.actorRepo.findOne({ where: { actorId: dto.actorId } });
       if (!actor) return { EC: 0, EM: `Actor ${dto.actorId} not found!` };
 
-      const exists = await this.filmActorRepo.findOne({
-        where: { film: { filmId: dto.filmId }, actor: { actorId: dto.actorId } },
-      });
-      if (exists) return { EC: 0, EM: 'This actor is already assigned to this film!' };
-
       const filmActor = this.filmActorRepo.create({
         film,
         actor,

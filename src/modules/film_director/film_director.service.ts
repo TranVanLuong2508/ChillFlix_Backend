@@ -77,10 +77,18 @@ export class FilmDirectorService {
       const formatted = data.map((fd) => ({
         id: fd.id,
         isMain: fd.isMain,
-        film: fd.film ? { filmId: fd.film.filmId, title: fd.film.title } : null,
-        director: fd.director ? { directorId: fd.director.directorId, name: fd.director.directorName } : null,
-      }));
+        film: fd.film
+          ? { filmId: fd.film.filmId, title: fd.film.title, slugFilm: fd.film ? fd.film.slug : null }
+          : null,
 
+        director: fd.director
+          ? {
+              directorId: fd.director.directorId,
+              directorName: fd.director.directorName,
+              slugDirector: fd.director ? fd.director.slug : null,
+            }
+          : null,
+      }));
       return {
         EC: 1,
         EM: total > 0 ? 'Get all film-director relations successfully' : 'No film-director relations found',

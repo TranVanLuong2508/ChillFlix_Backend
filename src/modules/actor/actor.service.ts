@@ -37,17 +37,23 @@ export class ActorService {
       if (exists) return { EC: 0, EM: 'Actor name already exists!' };
 
       const slug = dto.actorName.toLowerCase().replace(/\s+/g, '-');
+      let formattedDate: any = dto.birthDate;
+
+      if (typeof dto.birthDate === 'string' && (dto.birthDate as string).includes('/')) {
+        formattedDate = (dto.birthDate as string).split('/').reverse().join('-');
+      }
+
       const actor = this.actorRepo.create({
         actorName: dto.actorName,
         slug,
         genderActor: gender,
         avatarUrl: dto.avatarUrl,
-        birthDate: dto.birthDate,
+        birthDate: dto.birthDate ? new Date(formattedDate) : undefined,
         nationalityActor: nationality,
       });
 
       const result = await this.actorRepo.save(actor);
-      if (actor.slug) actor.slug = `${result.slug}.${result.actorId}`;
+
       return {
         EC: 1,
         EM: 'Create actor successfully',
@@ -97,11 +103,11 @@ export class ActorService {
           EM: 'No actors found',
           meta: { page, limit, total, totalPages: 0 },
         };
-        data.forEach(actor => {
-          if (actor.slug) {
-            actor.slug = `${actor.slug}.${actor.actorId}`;
-          }
-        });
+      data.forEach((actor) => {
+        if (actor.slug) {
+          actor.slug = `${actor.slug}.${actor.actorId}`;
+        }
+      });
       return {
         EC: 1,
         EM: 'Get all actors successfully',
@@ -130,7 +136,6 @@ export class ActorService {
       });
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found` };
       if (actor.slug) actor.slug = `${actor.slug}.${actor.actorId}`;
-
       return { EC: 1, EM: 'Get actor successfully', ...actor };
     } catch (error: any) {
       console.error('Error in getActorById:', error.message);
@@ -176,11 +181,16 @@ export class ActorService {
       }
 
       if (dto.avatarUrl) actor.avatarUrl = dto.avatarUrl;
-      if (dto.birthDate) actor.birthDate = dto.birthDate;
-
+      let formattedDate: any = dto.birthDate;
+      if (dto.birthDate) {
+        if (typeof dto.birthDate === 'string' && (dto.birthDate as string).includes('/')) {
+          formattedDate = (dto.birthDate as string).split('/').reverse().join('-');
+        }
+        actor.birthDate = new Date(formattedDate);
+      }
       const result = await this.actorRepo.save(actor);
-      const fullSlug = `${result.slug}.${result.actorId}`;
-      return { EC: 1, EM: 'Update actor successfully', ...result, fullSlug };
+
+      return { EC: 1, EM: 'Update actor successfully', ...result };
     } catch (error: any) {
       console.error('Error in updateActor:', error.message);
       throw new InternalServerErrorException({
