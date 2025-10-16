@@ -18,9 +18,6 @@ export class AllCodeDto {
 @Exclude()
 export class FilmResponseDto {
   @Expose()
-  id: string;
-
-  @Expose()
   filmId: string;
 
   @Expose()
@@ -93,9 +90,6 @@ export class FilmResponseDto {
 
 @Exclude()
 export class FilmPaginationDto {
-  @Expose()
-  id: string;
-
   @Expose()
   filmId: string;
 

@@ -57,8 +57,10 @@ export class AllCode {
 
   @OneToMany(() => Director, (director) => director.nationalityCode)
   directorNationality: Director[];
+
   @OneToMany(() => Actor, (actor) => actor.genderCode)
   actorGender: Actor[];
+
   @OneToMany(() => Actor, (actor) => actor.nationalityCode)
   actorNationality: Actor[];
 }

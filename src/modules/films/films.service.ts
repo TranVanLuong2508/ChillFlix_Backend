@@ -3,14 +3,15 @@ import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
-import { Any, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
-import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
 import { IUser } from '../users/interface/user.interface';
+import { allcodeCommonFields } from 'src/common/utils/CommonField';
 
 @Injectable()
 export class FilmsService {
@@ -34,7 +35,7 @@ export class FilmsService {
     });
     await this.filmsRepository.save(newFilm);
     return {
-      id: newFilm.id,
+      id: newFilm.filmId,
       createdAt: newFilm.createdAt,
     };
   }
@@ -88,15 +89,15 @@ export class FilmsService {
     }
 
     const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
-    joinWithCommonFields(queryBuilder, 'film.language', 'language');
-    joinWithCommonFields(queryBuilder, 'film.age', 'age');
-    joinWithCommonFields(queryBuilder, 'film.type', 'type');
-    joinWithCommonFields(queryBuilder, 'film.country', 'country');
-    joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus');
+    joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+    joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+    joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+    joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+    joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
     queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
-    joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre');
+    joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
 
-    const film = await queryBuilder.where('film.id = :id', { id }).getOne();
+    const film = await queryBuilder.where('film.filmId = :id', { id }).getOne();
 
     if (!film) {
       throw new NotFoundException(`Film with id ${id} not found`);
@@ -106,16 +107,16 @@ export class FilmsService {
     return plainToInstance(FilmResponseDto, film);
   }
 
-  async update(id: string, updateFilmDto: UpdateFilmDto, user: IUser) {
-    if (!isUUID(id)) {
-      throw new BadRequestException(`Invalid UUID format: ${id}`);
+  async update(filmId: string, updateFilmDto: UpdateFilmDto, user: IUser) {
+    if (!isUUID(filmId)) {
+      throw new BadRequestException(`Invalid UUID format: ${filmId}`);
     }
 
     const filmData = await this.filmsRepository.findOne({
-      where: { id },
+      where: { filmId },
     });
     if (!filmData) {
-      throw new NotFoundException(`Film with id ${id} not found`);
+      throw new NotFoundException(`Film with id ${filmId} not found`);
     }
 
     if (updateFilmDto.slug) {
@@ -141,16 +142,16 @@ export class FilmsService {
     }
   }
 
-  async remove(id: string, user: IUser) {
-    if (!isUUID(id)) {
-      throw new BadRequestException(`Invalid UUID format: ${id}`);
+  async remove(filmId: string, user: IUser) {
+    if (!isUUID(filmId)) {
+      throw new BadRequestException(`Invalid UUID format: ${filmId}`);
     }
-    const isExist = await this.filmsRepository.exists({ where: { id } });
+    const isExist = await this.filmsRepository.exists({ where: { filmId } });
     if (!isExist) {
-      throw new NotFoundException(`Film with id ${id} not found`);
+      throw new NotFoundException(`Film with filmId ${filmId} not found`);
     }
-    await this.filmsRepository.update(id, { deletedBy: user.userId.toString() });
-    await this.filmsRepository.softDelete(id);
+    await this.filmsRepository.update(filmId, { deletedBy: user.userId.toString() });
+    await this.filmsRepository.softDelete(filmId);
     return { deleted: 'success' };
   }
 }
