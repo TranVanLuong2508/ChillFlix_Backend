@@ -18,7 +18,7 @@ export class PartsService {
   ) {}
 
   async create(createPartDto: CreatePartDto, user: IUser) {
-    const filmIsExist = await this.filmRepository.exists({ where: { id: createPartDto.filmId } });
+    const filmIsExist = await this.filmRepository.exists({ where: { filmId: createPartDto.filmId } });
 
     if (!filmIsExist) {
       throw new NotFoundException(`Film with id ${createPartDto.filmId} not found`);
