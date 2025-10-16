@@ -2,7 +2,7 @@ import { RolePermission } from 'src/modules/role_permission/entities/role_permis
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'roles' })
 export class Role {
   @PrimaryGeneratedColumn({ name: 'role_id' })
   roleId: number;
