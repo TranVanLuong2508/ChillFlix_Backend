@@ -12,11 +12,13 @@ import { DirectorService } from 'src/modules/directors/director.service';
 import { Director } from 'src/modules/directors/entities/director.entity';
 import { RolePermissionService } from 'src/modules/role_permission/role_permission.service';
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
+import { RolesService } from 'src/modules/roles/roles.service';
+import { Role } from 'src/modules/roles/entities/role.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AllCode, User, Permission, Director, RolePermission])],
+  imports: [TypeOrmModule.forFeature([AllCode, User, Permission, Director, RolePermission, Role])],
   controllers: [DatabasesController],
-  providers: [DatabasesService, AllCodesService, UsersService, DirectorService, RolePermissionService],
+  providers: [DatabasesService, AllCodesService, UsersService, DirectorService, RolePermissionService, RolesService],
   exports: [AllCodesService],
 })
 export class DatabasesModule {}
