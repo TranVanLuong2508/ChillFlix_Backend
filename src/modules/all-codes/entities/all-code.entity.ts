@@ -34,33 +34,33 @@ export class AllCode {
   @OneToMany(() => User, (user) => user.gender)
   userGender: User[];
 
-  // @OneToMany(() => Film, (film) => film.language)
-  // filmLanguage: Film[];
+  @OneToMany(() => Film, (film) => film.language)
+  filmLanguage: Film[];
 
-  // @OneToMany(() => Film, (film) => film.publicStatus)
-  // filmPublicStatus: Film[];
+  @OneToMany(() => Film, (film) => film.publicStatus)
+  filmPublicStatus: Film[];
 
-  // @OneToMany(() => Film, (film) => film.country)
-  // filmCountry: Film[];
+  @OneToMany(() => Film, (film) => film.country)
+  filmCountry: Film[];
 
-  // @OneToMany(() => Film, (film) => film.age)
-  // filmAge: Film[];
+  @OneToMany(() => Film, (film) => film.age)
+  filmAge: Film[];
 
-  // @OneToMany(() => Film, (film) => film.type)
-  // filmType: Film[];
+  @OneToMany(() => Film, (film) => film.type)
+  filmType: Film[];
 
-  // @OneToMany(() => FilmGenre, (filmGenre) => filmGenre.genre)
-  // filmGenres: FilmGenre[];
+  @OneToMany(() => FilmGenre, (filmGenre) => filmGenre.genre)
+  filmGenres: FilmGenre[];
 
-  // @OneToMany(() => Director, (director) => director.genderCode)
-  // directorGender: Director[];
+  @OneToMany(() => Director, (director) => director.genderCode)
+  directorGender: Director[];
 
-  // @OneToMany(() => Director, (director) => director.nationalityCode)
-  // directorNationality: Director[];
+  @OneToMany(() => Director, (director) => director.nationalityCode)
+  directorNationality: Director[];
 
-  // @OneToMany(() => Actor, (actor) => actor.genderCode)
-  // actorGender: Actor[];
+  @OneToMany(() => Actor, (actor) => actor.genderCode)
+  actorGender: Actor[];
 
-  // @OneToMany(() => Actor, (actor) => actor.nationalityCode)
-  // actorNationality: Actor[];
+  @OneToMany(() => Actor, (actor) => actor.nationalityCode)
+  actorNationality: Actor[];
 }
