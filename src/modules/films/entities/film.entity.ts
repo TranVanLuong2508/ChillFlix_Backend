@@ -7,8 +7,6 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  JoinTable,
-  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -21,9 +19,6 @@ import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
 @Entity({ name: 'films' })
 export class Film {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ unique: true })
   filmId: string;
 
   @Column({ nullable: false })
@@ -68,9 +63,6 @@ export class Film {
   @ManyToOne(() => AllCode, (allcode) => allcode.filmType)
   @JoinColumn({ name: 'typeCode', referencedColumnName: 'keyMap' })
   type: AllCode;
-
-  @Column({ type: 'text', default: [], array: true })
-  genreCodes: string[];
 
   @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
   filmGenres: FilmGenre[];
@@ -122,6 +114,7 @@ export class Film {
 
   @OneToMany(() => FilmDirector, (filmDirector) => filmDirector.film)
   filmDirectors: FilmDirector[];
+
   @OneToMany(() => FilmActor, (filmActor) => filmActor.film)
-  filmActors: FilmActor[];  
+  filmActors: FilmActor[];
 }
