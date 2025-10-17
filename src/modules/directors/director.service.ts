@@ -6,6 +6,7 @@ import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { CreateDirectorDto } from './dto-director/create-director.dto';
 import { UpdateDirectorDto } from './dto-director/update-director.dto';
 import aqp from 'api-query-params';
+import { IUser } from '../users/interface/user.interface';
 
 @Injectable()
 export class DirectorService {
@@ -17,7 +18,7 @@ export class DirectorService {
     private readonly allcodeRepo: Repository<AllCode>,
   ) {}
 
-  async createDirector(dto: CreateDirectorDto): Promise<any> {
+  async createDirector(dto: CreateDirectorDto, user: IUser): Promise<any> {
     try {
       if (!dto.directorName?.trim()) {
         return { EC: 0, EM: 'Director name is required!' };
@@ -45,13 +46,30 @@ export class DirectorService {
         slug,
         story: dto.story,
         avatarUrl: dto.avatarUrl,
+        createdBy: user.userId,
         genderCodeRL: gender,
         nationalityCodeRL: nationality,
       });
 
-      const result = await this.directorRepo.save(director);
-      if (result.slug) result.slug = `${result.slug}.${result.directorId}`;
-
+      const data = await this.directorRepo.save(director);
+      const result = Object.fromEntries(
+        Object.entries(data)
+          .map(([k, v]) =>
+            typeof v === 'object' && v !== null && 'keyMap' in v
+              ? [
+                  k,
+                  {
+                    keyMap: (v as any).keyMap,
+                    type: (v as any).type,
+                    valueEn: (v as any).valueEn,
+                    valueVi: (v as any).valueVi,
+                    description: (v as any).description,
+                  },
+                ]
+              : [k, v],
+          )
+          .filter(([_, v]) => v !== null),
+      );
       return {
         EC: 1,
         EM: 'Create director successfully',
@@ -82,14 +100,6 @@ export class DirectorService {
 
       const [data, total] = await this.directorRepo.findAndCount({
         relations: ['genderCodeRL', 'nationalityCodeRL'],
-        select: {
-          genderCodeRL: {
-            keyMap: true,
-            valueEn: true,
-            valueVi: true,
-            description: true,
-          },
-        },
         where: filter,
         order,
         skip,
@@ -102,10 +112,38 @@ export class DirectorService {
           EM: 'No directors found!',
           meta: { page, limit, total, totalPages: 0 },
         };
-      data.forEach((director) => {
-        if (director.slug) {
-          director.slug = `${director.slug}.${director.directorId}`;
-        }
+      const directors = data.map((d) => {
+        const slug = d.slug;
+        const { createdAt, updatedAt, createdBy, ...newData } = d as any;
+
+        const genderCodeRL = newData.genderCodeRL
+          ? {
+              keyMap: newData.genderCodeRL.keyMap,
+              type: newData.genderCodeRL.type,
+              valueEn: newData.genderCodeRL.valueEn,
+              valueVi: newData.genderCodeRL.valueVi,
+              description: newData.genderCodeRL.description,
+            }
+          : null;
+
+        const nationalityCodeRL = newData.nationalityCodeRL
+          ? {
+              keyMap: newData.nationalityCodeRL.keyMap,
+              type: newData.nationalityCodeRL.type,
+              valueEn: newData.nationalityCodeRL.valueEn,
+              valueVi: newData.nationalityCodeRL.valueVi,
+              description: newData.nationalityCodeRL.description,
+            }
+          : null;
+
+        return Object.fromEntries(
+          Object.entries({
+            ...newData,
+            slug,
+            genderCodeRL,
+            nationalityCodeRL,
+          }).filter(([_, v]) => v !== null),
+        );
       });
       return {
         EC: 1,
@@ -116,7 +154,7 @@ export class DirectorService {
           total,
           totalPages: Math.ceil(total / limit),
         },
-        data,
+        directors,
       };
     } catch (error: any) {
       console.error('Error in getAllDirectors:', error);
@@ -137,10 +175,25 @@ export class DirectorService {
       if (!director) return { EC: 0, EM: `Director ${id} not found!` };
 
       if (director.slug) director.slug = `${director.slug}.${director.directorId}`;
+      const { createdAt, updatedAt, createdBy, ...newData } = director as any;
+      Object.entries(director).forEach(([k, v]) => {
+        if (typeof v === 'object' && v !== null && 'keyMap' in v) {
+          newData[k] = {
+            keyMap: v.keyMap,
+            type: v.type,
+            valueEn: v.valueEn,
+            valueVi: v.valueVi,
+            description: v.description,
+          };
+        }
+      });
+      Object.entries(newData)
+        .filter(([_, v]) => v === null || v === undefined)
+        .forEach(([k]) => delete newData[k]);
       return {
         EC: 1,
         EM: 'Get director successfully',
-        ...director,
+        ...newData,
       };
     } catch (error: any) {
       console.error('Error in getDirectorById:', error);
@@ -151,7 +204,7 @@ export class DirectorService {
     }
   }
 
-  async updateDirector(id: number, dto: UpdateDirectorDto): Promise<any> {
+  async updateDirector(id: number, dto: UpdateDirectorDto, user: IUser): Promise<any> {
     try {
       const director = await this.directorRepo.findOne({
         where: { directorId: id },
@@ -188,9 +241,26 @@ export class DirectorService {
         if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
         director.nationalityCodeRL = nationality;
       }
-
-      const result = await this.directorRepo.save(director);
-      if (result.slug) result.slug = `${result.slug}.${result.directorId}`;
+      director.updatedBy = user.userId;
+      const data = await this.directorRepo.save(director);
+      const result = Object.fromEntries(
+        Object.entries(data)
+          .map(([k, v]) =>
+            typeof v === 'object' && v?.keyMap
+              ? [
+                  k,
+                  {
+                    keyMap: v.keyMap,
+                    type: v.type,
+                    valueEn: v.valueEn,
+                    valueVi: v.valueVi,
+                    description: v.description,
+                  },
+                ]
+              : [k, v],
+          )
+          .filter(([_, v]) => v !== null),
+      );
       return {
         EC: 1,
         EM: 'Update director successfully',
@@ -205,14 +275,14 @@ export class DirectorService {
     }
   }
 
-  async deleteDirectorById(id: number): Promise<any> {
+  async deleteDirectorById(directorId: number, user: IUser): Promise<any> {
     try {
       const director = await this.directorRepo.findOne({
-        where: { directorId: id },
+        where: { directorId },
       });
-      if (!director) return { EC: 0, EM: `Director ${id} not found!` };
-
-      await this.directorRepo.remove(director);
+      if (!director) return { EC: 0, EM: `Director ${directorId} not found!` };
+      await this.directorRepo.update(directorId, { deletedBy: user.userId });
+      await this.directorRepo.softDelete({ directorId });
       return { EC: 1, EM: 'Delete director successfully' };
     } catch (error: any) {
       console.error('Error in deleteDirectorById:', error);

@@ -1,6 +1,15 @@
 import { Actor } from 'src/modules/actor/entities/actor.entity';
 import { Film } from 'src/modules/films/entities/film.entity';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('film_actors')
 export class FilmActor {
@@ -18,6 +27,14 @@ export class FilmActor {
 
   @CreateDateColumn()
   createdAt: Date;
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updatedAt: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
+  @Column({ nullable: true })
+  createdBy: number;
+  @Column({ nullable: true })
+  updatedBy: number;
+  @Column({ nullable: true })
+  deletedBy: number;
 }

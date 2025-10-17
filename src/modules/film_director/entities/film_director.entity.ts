@@ -3,6 +3,7 @@ import { Film } from 'src/modules/films/entities/film.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -12,7 +13,7 @@ import {
 
 @Entity({ name: 'film_directors' })
 export class FilmDirector {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'film_director_id' })
   id: number;
 
   @Column({ name: 'is_main' })
@@ -31,4 +32,12 @@ export class FilmDirector {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
+  @Column({ nullable: true })
+  createdBy: number;
+  @Column({ nullable: true })
+  updatedBy: number;
+  @Column({ nullable: true })
+  deletedBy: number;
 }

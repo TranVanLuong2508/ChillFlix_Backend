@@ -7,6 +7,7 @@ import { Actor } from '../actor/entities/actor.entity';
 import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
 import aqp from 'api-query-params';
+import { IUser } from '../users/interface/user.interface';
 
 @Injectable()
 export class FilmActorService {
@@ -21,12 +22,65 @@ export class FilmActorService {
     private readonly actorRepo: Repository<Actor>,
   ) {}
 
-  async createFilmActor(dto: CreateFilmActorDto) {
+  private formatFilmActor(entity: any) {
+    if (!entity) return null;
+
+    const clean = (obj: any) =>
+      Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null && v !== undefined && v !== ''));
+
+    const film = entity.film
+      ? clean({
+          filmId: entity.film.filmId,
+          originalTitle: entity.film.originalTitle,
+          title: entity.film.title,
+          description: entity.film.description,
+          releaseDate: entity.film.releaseDate,
+          year: entity.film.year,
+          thumbUrl: entity.film.thumbUrl,
+          posterUrl: entity.film.posterUrl,
+          slug: entity.film.slug,
+          age: entity.film.ageCode,
+          type: entity.film.typeCode,
+          country: entity.film.countryCode,
+          language: entity.film.langCode,
+          publicStatus: entity.film.publicStatusCode,
+        })
+      : null;
+
+    const actor = entity.actor
+      ? clean({
+          actorId: entity.actor.actorId,
+          actorName: entity.actor.actorName,
+          slug: entity.actor.slug,
+          genderCode: entity.actor.genderActor?.keyMap,
+          birthDate: entity.actor.birthDate,
+          nationalityCode: entity.actor.nationalityActor?.keyMap,
+          avatarUrl: entity.actor.avatarUrl,
+        })
+      : null;
+
+    const { id, characterName, createdAt, updatedAt, createdBy, updatedBy } = entity;
+
+    return clean({
+      id,
+      film,
+      actor,
+      characterName,
+      createdAt,
+      updatedAt,
+      createdBy,
+      updatedBy,
+    });
+  }
+  async createFilmActor(dto: CreateFilmActorDto, user: IUser) {
     try {
       const film = await this.filmRepo.findOne({ where: { filmId: dto.filmId } });
       if (!film) return { EC: 0, EM: `Film ${dto.filmId} not found!` };
 
-      const actor = await this.actorRepo.findOne({ where: { actorId: dto.actorId } });
+      const actor = await this.actorRepo.findOne({
+        where: { actorId: dto.actorId },
+        relations: ['genderActor', 'nationalityActor'],
+      });
       if (!actor) return { EC: 0, EM: `Actor ${dto.actorId} not found!` };
 
       const exists = await this.filmActorRepo.findOne({
@@ -38,9 +92,12 @@ export class FilmActorService {
         film,
         actor,
         characterName: dto.characterName,
+        createdBy: user.userId,
       });
 
-      const result = await this.filmActorRepo.save(filmActor);
+      const data = await this.filmActorRepo.save(filmActor);
+      const result = this.formatFilmActor(data);
+
       return { EC: 1, EM: 'Create film-actor successfully', result };
     } catch (error: any) {
       console.error('Error in createFilmActor:', error.message);
@@ -50,12 +107,11 @@ export class FilmActorService {
       });
     }
   }
-
   async getAllFilmActors(query: any) {
     try {
       const { filter, sort } = aqp(query);
-      const page = query.page || 1;
-      const limit = query.limit || 5;
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 5;
       const skip = (page - 1) * limit;
 
       delete filter.page;
@@ -77,13 +133,51 @@ export class FilmActorService {
         take: limit,
       });
 
-      if (total === 0) return { EC: 1, EM: 'No film-actor records found', meta: { page, limit, total, totalPages: 0 } };
+      const result = data.map((fa) => ({
+        id: fa.id,
+        film: fa.film
+          ? {
+              filmId: fa.film.filmId,
+              title: fa.film.title,
+              posterUrl: fa.film.posterUrl,
+              thumbUrl: fa.film.thumbUrl,
+              description: fa.film.description,
+              releaseDate: fa.film.releaseDate,
+              year: fa.film.year,
+              slug: fa.film.slug,
+              age: fa.film.ageCode,
+              type: fa.film.typeCode,
+              country: fa.film.countryCode,
+              language: fa.film.langCode,
+              publicStatus: fa.film.publicStatusCode,
+            }
+          : null,
+        actor: fa.actor
+          ? {
+              actorId: fa.actor.actorId,
+              actorName: fa.actor.actorName,
+              slug: fa.actor.slug,
+              birthDate: fa.actor.birthDate,
+              gender: fa.actor.genderCode,
+              nationality: fa.actor.nationalityCode,
+              avatarUrl: fa.actor.avatarUrl,
+            }
+          : null,
+        characterName: fa.characterName,
+        createdAt: fa.createdAt,
+        updatedAt: fa.updatedAt,
+      }));
 
       return {
         EC: 1,
-        EM: 'Get all film-actors successfully',
-        meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
-        data,
+        EM: total > 0 ? 'Get all film-actors successfully' : 'No film-actor records found',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result,
       };
     } catch (error: any) {
       console.error('Error in getAllFilmActors:', error.message);
@@ -98,11 +192,12 @@ export class FilmActorService {
     try {
       const filmActor = await this.filmActorRepo.findOne({
         where: { id },
-        relations: ['film', 'actor'],
+        relations: ['film', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
       });
       if (!filmActor) return { EC: 0, EM: `Film-Actor ${id} not found!` };
 
-      return { EC: 1, EM: 'Get film-actor successfully', result: filmActor };
+      const result = this.formatFilmActor(filmActor);
+      return { EC: 1, EM: 'Get film-actor successfully', result };
     } catch (error: any) {
       console.error('Error in getFilmActorById:', error.message);
       throw new InternalServerErrorException({
@@ -123,11 +218,11 @@ export class FilmActorService {
       }
 
       const result = filmActors.map((fa) => ({
-        id: fa.id,
-        filmId: fa.film.filmId,
-        title: fa.film.title,
         actorId: fa.actor.actorId,
         actorName: fa.actor.actorName,
+        birthDate: fa.actor.birthDate,
+        gender: fa.actor.genderCode,
+        nationality: fa.actor.nationalityCode,
         characterName: fa.characterName,
         avatarUrl: fa.actor.avatarUrl,
       }));
@@ -142,7 +237,41 @@ export class FilmActorService {
     }
   }
 
-  async updateFilmActor(id: number, dto: UpdateFilmActorDto) {
+  async getFilmsByActor(actorId: number) {
+    try {
+      const actor = await this.actorRepo.findOne({
+        where: { actorId },
+        relations: ['filmActors', 'filmActors.film'],
+      });
+      if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
+
+      const films = actor.filmActors.map((fd) => ({
+        filmId: fd.film.filmId,
+        title: fd.film.title,
+        posterUrl: fd.film.posterUrl,
+        thumbUrl: fd.film.thumbUrl,
+        description: fd.film.description,
+        releaseDate: fd.film.releaseDate,
+        year: fd.film.year,
+        slug: fd.film.slug,
+        age: fd.film.ageCode,
+        type: fd.film.typeCode,
+        country: fd.film.countryCode,
+        language: fd.film.langCode,
+        publicStatus: fd.film.publicStatusCode,
+      }));
+
+      return { EC: 1, EM: 'Get films by director successfully', films };
+    } catch (error: any) {
+      console.error('Error in getFilmsByActor:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getFilmsByActor service',
+      });
+    }
+  }
+
+  async updateFilmActor(id: number, dto: UpdateFilmActorDto, user: IUser) {
     try {
       const filmActor = await this.filmActorRepo.findOne({
         where: { id },
@@ -163,8 +292,14 @@ export class FilmActorService {
       }
 
       if (dto.characterName) filmActor.characterName = dto.characterName;
+      filmActor.updatedBy = user.userId;
 
-      const result = await this.filmActorRepo.save(filmActor);
+      await this.filmActorRepo.save(filmActor);
+      const datanew = await this.filmActorRepo.findOne({
+        where: { id },
+        relations: ['film', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
+      });
+      const result = this.formatFilmActor(datanew);
       return { EC: 1, EM: 'Update film-actor successfully', result };
     } catch (error: any) {
       console.error('Error in updateFilmActor:', error.message);
@@ -175,12 +310,14 @@ export class FilmActorService {
     }
   }
 
-  async deleteFilmActorById(id: number) {
+  async deleteFilmActorById(id: number, user: IUser) {
     try {
       const filmActor = await this.filmActorRepo.findOne({ where: { id } });
       if (!filmActor) return { EC: 0, EM: `Film-Actor ${id} not found!` };
 
-      await this.filmActorRepo.remove(filmActor);
+      await this.filmActorRepo.update(id, { deletedBy: user.userId });
+      await this.filmActorRepo.softDelete({ id });
+
       return { EC: 1, EM: 'Delete film-actor successfully' };
     } catch (error: any) {
       console.error('Error in deleteFilmActorById:', error.message);

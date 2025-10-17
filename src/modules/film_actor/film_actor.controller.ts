@@ -2,8 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe 
 import { FilmActorService } from './film_actor.service';
 import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
-import { ResponseMessage } from 'src/decorators/customize';
+import { ResponseMessage, User } from 'src/decorators/customize';
 import { PaginationFaDto } from './dto/pagination-fa.dto';
+import type { IUser } from '../users/interface/user.interface';
 
 @Controller('film-actor')
 export class FilmActorController {
@@ -11,31 +12,19 @@ export class FilmActorController {
 
   @Post('create-film-actor')
   @ResponseMessage('Create relation between film and actor')
-  async create(@Body() dto: CreateFilmActorDto) {
-    return await this.filmActorService.createFilmActor(dto);
+  async createFilmActor(@Body() dto: CreateFilmActorDto, @User() user: IUser) {
+    return await this.filmActorService.createFilmActor(dto, user);
   }
 
   @Get('all-film-actors')
   @ResponseMessage('Get all film-actor relations')
-  async getAll(@Query() query: PaginationFaDto) {
-    const result = await this.filmActorService.getAllFilmActors(query);
-
-    return {
-      success: true,
-      message: result.EM,
-      meta: result.meta,
-      result: result.data?.map((fa) => ({
-        id: fa.id,
-        film: fa.film ? { filmId: fa.film.filmId, title: fa.film.title } : null,
-        actor: fa.actor ? { actorId: fa.actor.actorId, name: fa.actor.actorName } : null,
-        characterName: fa.characterName,
-      })),
-    };
+  async getAllFilmActors(@Query() query: PaginationFaDto) {
+    return await this.filmActorService.getAllFilmActors(query);
   }
 
   @Get('get-film-actor-by-id/:id')
   @ResponseMessage('Get film-actor relation by id')
-  async getById(@Param('id', ParseIntPipe) id: number) {
+  async getFilmActorById(@Param('id', ParseIntPipe) id: number) {
     return await this.filmActorService.getFilmActorById(id);
   }
 
@@ -45,15 +34,21 @@ export class FilmActorController {
     return await this.filmActorService.getActorsByFilm(filmId);
   }
 
+  @Get('get-films-by-actor/:actorId')
+  @ResponseMessage('Get films by actor id')
+  async getFilmsByActor(@Param('actorId', ParseIntPipe) actorId: number) {
+    return await this.filmActorService.getFilmsByActor(actorId);
+  }
+
   @Patch('edit-film-actor/:id')
   @ResponseMessage('Update film-actor relation by id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFilmActorDto) {
-    return await this.filmActorService.updateFilmActor(id, dto);
+  async updateFilmActor(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFilmActorDto, @User() user: IUser) {
+    return await this.filmActorService.updateFilmActor(id, dto, user);
   }
 
   @Delete('delete-film-actor-by-id/:id')
   @ResponseMessage('Delete film-actor relation by id')
-  async deleteById(@Param('id', ParseIntPipe) id: number) {
-    return await this.filmActorService.deleteFilmActorById(id);
+  async deleteFilmActorById(@Param('id', ParseIntPipe) id: number, @User() user: IUser) {
+    return await this.filmActorService.deleteFilmActorById(id, user);
   }
 }

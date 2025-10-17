@@ -2,8 +2,9 @@ import { Controller, Post, Get, Patch, Delete, Param, Body, Query } from '@nestj
 import { FilmDirectorService } from './film_director.service';
 import { CreateFilmDirectorDto } from './dto/create-film_director.dto';
 import { UpdateFilmDirectorDto } from './dto/update-film_director.dto';
-import { ResponseMessage } from 'src/decorators/customize';
+import { ResponseMessage, User } from 'src/decorators/customize';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
+import type { IUser } from '../users/interface/user.interface';
 
 @Controller('film-director')
 export class FilmDirectorController {
@@ -11,14 +12,14 @@ export class FilmDirectorController {
 
   @Post('create-film-director')
   @ResponseMessage('Create relation between film and director')
-  create(@Body() dto: CreateFilmDirectorDto) {
-    return this.filmDirectorService.createFilmDirector(dto);
+  createFilmDirector(@Body() dto: CreateFilmDirectorDto, @User() user: IUser) {
+    return this.filmDirectorService.createFilmDirector(dto, user);
   }
 
   @Get('all-film-directors')
   @ResponseMessage('Get all film-director relations')
   @Get('all-film-directors')
-  findAll(@Query() query: PaginationfdDto) {
+  GetAllFilmDirectors(@Query() query: PaginationfdDto) {
     return this.filmDirectorService.getAllFilmDirectors(query);
   }
 
@@ -42,13 +43,13 @@ export class FilmDirectorController {
 
   @Patch('edit-film-director/:id')
   @ResponseMessage('Update film-director relation')
-  update(@Param('id') id: number, @Body() dto: UpdateFilmDirectorDto) {
-    return this.filmDirectorService.updateFilmDirector(id, dto);
+  updateFilmDirector(@Param('id') id: number, @Body() dto: UpdateFilmDirectorDto, @User() user: IUser) {
+    return this.filmDirectorService.updateFilmDirector(id, dto, user);
   }
 
   @Delete('delete-film-director/:id')
   @ResponseMessage('Delete film-director relation')
-  remove(@Param('id') id: number) {
-    return this.filmDirectorService.deleteFilmDirector(id);
+  deleteFilmDirector(@Param('id') id: number, @User() user: IUser) {
+    return this.filmDirectorService.deleteFilmDirector(id, user);
   }
 }

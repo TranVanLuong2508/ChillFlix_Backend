@@ -4,6 +4,7 @@ import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -37,6 +38,14 @@ export class Actor {
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
+  @Column({ nullable: true })
+  createdBy: number;
+  @Column({ nullable: true })
+  updatedBy: number;
+  @Column({ nullable: true })
+  deletedBy: number;
   @ManyToOne(() => AllCode, (allcode) => allcode.actorGender)
   @JoinColumn({ name: 'gender_code', referencedColumnName: 'keyMap' })
   genderActor: AllCode;

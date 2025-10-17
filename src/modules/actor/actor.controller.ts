@@ -3,7 +3,8 @@ import { ActorService } from './actor.service';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 import { PaginationActorDto } from './dto/pagination-actor.dto';
-import { ResponseMessage } from 'src/decorators/customize';
+import { ResponseMessage, User } from 'src/decorators/customize';
+import type { IUser } from '../users/interface/user.interface';
 
 @Controller('actor')
 export class ActorController {
@@ -11,8 +12,8 @@ export class ActorController {
 
   @Post('create-actor')
   @ResponseMessage('Create a new actor')
-  async createActor(@Body() dto: CreateActorDto) {
-    return await this.actorService.createActor(dto);
+  async createActor(@Body() dto: CreateActorDto, @User() user: IUser) {
+    return await this.actorService.createActor(dto, user);
   }
 
   @Get('all-actors')
@@ -29,13 +30,13 @@ export class ActorController {
 
   @Patch('update-actor/:actorId')
   @ResponseMessage('Update actor by ID')
-  async updateActor(@Param('actorId') actorId: number, @Body() update: UpdateActorDto) {
-    return await this.actorService.updateActor(actorId, update);
+  async updateActor(@Param('actorId') actorId: number, @Body() update: UpdateActorDto, @User() user: IUser) {
+    return await this.actorService.updateActor(actorId, update, user);
   }
 
   @Delete('delete-actor-by-id/:actorId')
   @ResponseMessage('Delete actor by ID')
-  async deleteActorById(@Param('actorId') actorId: number) {
-    return await this.actorService.deleteActorById(actorId);
+  async deleteActorById(@Param('actorId') actorId: number, @User() user: IUser) {
+    return await this.actorService.deleteActorById(actorId, user);
   }
 }

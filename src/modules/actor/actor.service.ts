@@ -6,6 +6,7 @@ import { AllCode } from '../all-codes/entities/all-code.entity';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 import aqp from 'api-query-params';
+import { IUser } from '../users/interface/user.interface';
 
 @Injectable()
 export class ActorService {
@@ -17,7 +18,7 @@ export class ActorService {
     private readonly allcodeRepo: Repository<AllCode>,
   ) {}
 
-  async createActor(dto: CreateActorDto): Promise<any> {
+  async createActor(dto: CreateActorDto, user: IUser): Promise<any> {
     try {
       const gender = await this.allcodeRepo.findOne({
         where: { keyMap: dto.genderCode, type: 'GENDER' },
@@ -44,14 +45,31 @@ export class ActorService {
         avatarUrl: dto.avatarUrl,
         birthDate: dto.birthDate,
         nationalityActor: nationality,
+        createdBy: user.userId,
       });
-
-      const result = await this.actorRepo.save(actor);
-      if (actor.slug) actor.slug = `${result.slug}.${result.actorId}`;
+      const data = await this.actorRepo.save(actor);
+      const result = Object.fromEntries(
+        Object.entries(data)
+          .map(([k, v]) =>
+            typeof v === 'object' && v !== null && 'keyMap' in v
+              ? [
+                  k,
+                  {
+                    keyMap: (v as any).keyMap,
+                    type: (v as any).type,
+                    valueEn: (v as any).valueEn,
+                    valueVi: (v as any).valueVi,
+                    description: (v as any).description,
+                  },
+                ]
+              : [k, v],
+          )
+          .filter(([_, v]) => v !== null),
+      );
       return {
         EC: 1,
         EM: 'Create actor successfully',
-        ...result,
+        result,
       };
     } catch (error: any) {
       console.error('Error in createActor:', error.message);
@@ -97,11 +115,39 @@ export class ActorService {
           EM: 'No actors found',
           meta: { page, limit, total, totalPages: 0 },
         };
-        data.forEach(actor => {
-          if (actor.slug) {
-            actor.slug = `${actor.slug}.${actor.actorId}`;
-          }
-        });
+      const actors = data.map((a) => {
+        const slug = a.slug;
+        const { createdAt, updatedAt, createdBy, ...newData } = a as any;
+
+        const genderCodeActor = newData.genderCodeActor
+          ? {
+              keyMap: newData.genderCodeActor.keyMap,
+              type: newData.genderCodeActor.type,
+              valueEn: newData.genderCodeActor.valueEn,
+              valueVi: newData.genderCodeActor.valueVi,
+              description: newData.genderCodeActor.description,
+            }
+          : null;
+
+        const nationalityActor = newData.nationalityActor
+          ? {
+              keyMap: newData.nationalityActor.keyMap,
+              type: newData.nationalityActor.type,
+              valueEn: newData.nationalityActor.valueEn,
+              valueVi: newData.nationalityActor.valueVi,
+              description: newData.nationalityActor.description,
+            }
+          : null;
+
+        return Object.fromEntries(
+          Object.entries({
+            ...newData,
+            slug,
+            genderCodeActor,
+            nationalityActor,
+          }).filter(([_, v]) => v !== null),
+        );
+      });
       return {
         EC: 1,
         EM: 'Get all actors successfully',
@@ -111,7 +157,7 @@ export class ActorService {
           total,
           totalPages: Math.ceil(total / limit),
         },
-        data,
+        actors,
       };
     } catch (error: any) {
       console.error('Error in getAllActors:', error.message);
@@ -130,8 +176,23 @@ export class ActorService {
       });
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found` };
       if (actor.slug) actor.slug = `${actor.slug}.${actor.actorId}`;
+      const { createdAt, updatedAt, createdBy, ...newData } = actor as any;
+      Object.entries(actor).forEach(([k, v]) => {
+        if (typeof v === 'object' && v !== null && 'keyMap' in v) {
+          newData[k] = {
+            keyMap: v.keyMap,
+            type: v.type,
+            valueEn: v.valueEn,
+            valueVi: v.valueVi,
+            description: v.description,
+          };
+        }
+      });
+      Object.entries(newData)
+        .filter(([_, v]) => v === null || v === undefined)
+        .forEach(([k]) => delete newData[k]);
 
-      return { EC: 1, EM: 'Get actor successfully', ...actor };
+      return { EC: 1, EM: 'Get actor successfully', ...newData };
     } catch (error: any) {
       console.error('Error in getActorById:', error.message);
       throw new InternalServerErrorException({
@@ -141,7 +202,7 @@ export class ActorService {
     }
   }
 
-  async updateActor(actorId: number, dto: UpdateActorDto): Promise<any> {
+  async updateActor(actorId: number, dto: UpdateActorDto, user: IUser): Promise<any> {
     try {
       const actor = await this.actorRepo.findOne({
         where: { actorId },
@@ -177,10 +238,31 @@ export class ActorService {
 
       if (dto.avatarUrl) actor.avatarUrl = dto.avatarUrl;
       if (dto.birthDate) actor.birthDate = dto.birthDate;
-
-      const result = await this.actorRepo.save(actor);
-      const fullSlug = `${result.slug}.${result.actorId}`;
-      return { EC: 1, EM: 'Update actor successfully', ...result, fullSlug };
+      actor.updatedBy = user.userId;
+      const data = await this.actorRepo.save(actor);
+      const result = Object.fromEntries(
+        Object.entries(data)
+          .map(([k, v]) =>
+            typeof v === 'object' && v?.keyMap
+              ? [
+                  k,
+                  {
+                    keyMap: v.keyMap,
+                    type: v.type,
+                    valueEn: v.valueEn,
+                    valueVi: v.valueVi,
+                    description: v.description,
+                  },
+                ]
+              : [k, v],
+          )
+          .filter(([_, v]) => v !== null),
+      );
+      return {
+        EC: 1,
+        EM: 'Update director successfully',
+        ...result,
+      };
     } catch (error: any) {
       console.error('Error in updateActor:', error.message);
       throw new InternalServerErrorException({
@@ -190,12 +272,12 @@ export class ActorService {
     }
   }
 
-  async deleteActorById(actorId: number) {
+  async deleteActorById(actorId: number, user: IUser): Promise<any> {
     try {
       const actor = await this.actorRepo.findOne({ where: { actorId } });
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
-
-      await this.actorRepo.remove(actor);
+      await this.actorRepo.update(actorId, { deletedBy: user.userId });
+      await this.actorRepo.softDelete({ actorId });
       return { EC: 1, EM: 'Delete actor successfully' };
     } catch (error: any) {
       console.error('Error in deleteActorById:', error.message);

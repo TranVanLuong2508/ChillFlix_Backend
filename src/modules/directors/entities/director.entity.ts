@@ -6,8 +6,8 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  ManyToMany,
   OneToMany,
+  DeleteDateColumn,
 } from 'typeorm';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
@@ -32,7 +32,14 @@ export class Director {
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
-
+  @DeleteDateColumn()
+  deletedAt?: Date;
+  @Column({ nullable: true })
+  createdBy: number;
+  @Column({ nullable: true })
+  updatedBy: number;
+  @Column({ nullable: true })
+  deletedBy: number;
   @ManyToOne(() => AllCode, (allcode) => allcode.directorGender)
   @JoinColumn({ name: 'gender_code', referencedColumnName: 'keyMap' })
   genderCodeRL: AllCode;

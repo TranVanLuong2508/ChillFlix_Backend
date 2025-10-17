@@ -7,6 +7,8 @@ import { FilmDirector } from './entities/film_director.entity';
 import { Film } from '../films/entities/film.entity';
 import { Director } from '../directors/entities/director.entity';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
+import { IUser } from '../users/interface/user.interface';
+import { create } from 'domain';
 
 @Injectable()
 export class FilmDirectorService {
@@ -18,11 +20,63 @@ export class FilmDirectorService {
     @InjectRepository(Director)
     private readonly directorRepo: Repository<Director>,
   ) {}
+  private formatFilmDirector(entity: any) {
+    if (!entity) return null;
 
-  async createFilmDirector(dto: CreateFilmDirectorDto) {
+    const clean = (obj: any) =>
+      Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null && v !== undefined && v !== ''));
+
+    const film = entity.film
+      ? clean({
+          filmId: entity.film.filmId,
+          originalTitle: entity.film.originalTitle,
+          title: entity.film.title,
+          description: entity.film.description,
+          releaseDate: entity.film.releaseDate,
+          year: entity.film.year,
+          thumbUrl: entity.film.thumbUrl,
+          posterUrl: entity.film.posterUrl,
+          slug: entity.film.slug,
+          age: entity.film.ageCode,
+          type: entity.film.typeCode,
+          country: entity.film.countryCode,
+          language: entity.film.langCode,
+          publicStatus: entity.film.publicStatusCode,
+        })
+      : null;
+
+    const director = entity.director
+      ? clean({
+          directorId: entity.director.directorId,
+          directorName: entity.director.directorName,
+          slug: entity.director.slug,
+          avatarUrl: entity.director.avatarUrl,
+          genderCode: entity.director.genderCodeRL?.keyMap,
+          nationalityCode: entity.director.nationalityCodeRL?.keyMap,
+        })
+      : null;
+
+    const { id, isMain, createdAt, updatedAt, createdBy, updatedBy } = entity;
+
+    return clean({
+      id,
+      isMain,
+      film,
+      director,
+      createdAt,
+      updatedAt,
+      createdBy,
+      updatedBy,
+    });
+  }
+
+  async createFilmDirector(dto: CreateFilmDirectorDto, user: IUser) {
     try {
       const film = await this.filmRepo.findOne({ where: { filmId: dto.filmId } });
-      const director = await this.directorRepo.findOne({ where: { directorId: dto.directorId } });
+      const director = await this.directorRepo.findOne({
+        where: { directorId: dto.directorId },
+        relations: ['genderCodeRL', 'nationalityCodeRL'],
+      });
 
       if (!film || !director) {
         return { EC: 0, EM: 'Film or Director not found!' };
@@ -47,10 +101,12 @@ export class FilmDirectorService {
         film,
         director,
         isMain: dto.isMain || false,
+        createdBy: user.userId,
       });
-
       const savedFilmDirector = await this.filmDirectorRepo.save(newFilmDirector);
-      return { EC: 1, EM: 'Create film director successfully', result: savedFilmDirector };
+      const result = this.formatFilmDirector(savedFilmDirector);
+
+      return { EC: 1, EM: 'Create film director successfully', result };
     } catch (error: any) {
       console.error('Error in createFilmDirector:', error.message);
       throw new InternalServerErrorException({
@@ -74,11 +130,37 @@ export class FilmDirectorService {
         take: limit,
       });
 
-      const formatted = data.map((fd) => ({
+      const result = data.map((fd) => ({
         id: fd.id,
         isMain: fd.isMain,
-        film: fd.film ? { filmId: fd.film.filmId, title: fd.film.title } : null,
-        director: fd.director ? { directorId: fd.director.directorId, name: fd.director.directorName } : null,
+        film: fd.film
+          ? {
+              filmId: fd.film.filmId,
+              title: fd.film.title,
+              posterUrl: fd.film.posterUrl,
+              thumbUrl: fd.film.thumbUrl,
+              description: fd.film.description,
+              releaseDate: fd.film.releaseDate,
+              year: fd.film.year,
+              slug: fd.film.slug,
+              age: fd.film.ageCode,
+              type: fd.film.typeCode,
+              country: fd.film.countryCode,
+              language: fd.film.langCode,
+              publicStatus: fd.film.publicStatusCode,
+            }
+          : null,
+        director: fd.director
+          ? {
+              directorId: fd.director.directorId,
+              name: fd.director.directorName,
+              slug: fd.director.slug,
+              gender: fd.director.genderCode,
+              nationality: fd.director.nationalityCode,
+            }
+          : null,
+        createdAt: fd.createdAt,
+        updatedAt: fd.updatedAt,
       }));
 
       return {
@@ -90,7 +172,7 @@ export class FilmDirectorService {
           total,
           totalPages: Math.ceil(total / limit),
         },
-        result: formatted,
+        result,
       };
     } catch (error: any) {
       console.error('Error in getAllFilmDirectors:', error.message);
@@ -105,12 +187,12 @@ export class FilmDirectorService {
     try {
       const filmDirector = await this.filmDirectorRepo.findOne({
         where: { id },
-        relations: ['film', 'director'],
+        relations: ['film', 'director', 'director.genderCodeRL', 'director.nationalityCodeRL'],
       });
 
       if (!filmDirector) return { EC: 0, EM: `FilmDirector ${id} not found!` };
-
-      return { EC: 1, EM: 'Get filmDirector successfully', filmDirector };
+      const result = this.formatFilmDirector(filmDirector);
+      return { EC: 1, EM: 'Get filmDirector successfully', result };
     } catch (error: any) {
       console.error('Error in getFilmDirectorById:', error.message);
       throw new InternalServerErrorException({
@@ -131,7 +213,11 @@ export class FilmDirectorService {
       const directors = film.filmDirectors.map((fd) => ({
         directorId: fd.director.directorId,
         directorName: fd.director.directorName,
+        slug: fd.director.slug,
+        avatarUrl: fd.director.avatarUrl,
         isMain: fd.isMain,
+        gender: fd.director.genderCode,
+        nationality: fd.director.nationalityCode,
       }));
 
       return { EC: 1, EM: 'Get directors by film successfully', directors };
@@ -155,7 +241,17 @@ export class FilmDirectorService {
       const films = director.filmDirectors.map((fd) => ({
         filmId: fd.film.filmId,
         title: fd.film.title,
-        isMain: fd.isMain,
+        posterUrl: fd.film.posterUrl,
+        thumbUrl: fd.film.thumbUrl,
+        description: fd.film.description,
+        releaseDate: fd.film.releaseDate,
+        year: fd.film.year,
+        slug: fd.film.slug,
+        age: fd.film.ageCode,
+        type: fd.film.typeCode,
+        country: fd.film.countryCode,
+        language: fd.film.langCode,
+        publicStatus: fd.film.publicStatusCode,
       }));
 
       return { EC: 1, EM: 'Get films by director successfully', films };
@@ -168,11 +264,12 @@ export class FilmDirectorService {
     }
   }
 
-  async updateFilmDirector(id: number, dto: UpdateFilmDirectorDto) {
+  async updateFilmDirector(id: number, dto: UpdateFilmDirectorDto, user: IUser) {
     try {
       const relation = await this.filmDirectorRepo.findOne({
         where: { id },
         relations: ['film', 'director'],
+        select: ['id', 'isMain'],
       });
       if (!relation) return { EC: 0, EM: `Relation ${id} not found!` };
 
@@ -216,13 +313,16 @@ export class FilmDirectorService {
 
       if (dto.isMain !== undefined) relation.isMain = dto.isMain;
 
+      relation.updatedBy = user.userId;
+
       await this.filmDirectorRepo.save(relation);
 
-      const result = await this.filmDirectorRepo.findOne({
+      const data = await this.filmDirectorRepo.findOne({
         where: { id },
-        relations: ['film', 'director'],
+        relations: ['film', 'director', 'director.genderCodeRL', 'director.nationalityCodeRL'],
       });
 
+      const result = this.formatFilmDirector(data);
       return { EC: 1, EM: 'Update film director successfully', result };
     } catch (error: any) {
       console.error('Error in updateFilmDirector:', error.message);
@@ -233,12 +333,13 @@ export class FilmDirectorService {
     }
   }
 
-  async deleteFilmDirector(id: number) {
+  async deleteFilmDirector(id: number, user: IUser) {
     try {
       const deleteFilmDirector = await this.filmDirectorRepo.findOne({ where: { id } });
       if (!deleteFilmDirector) return { EC: 0, EM: `FilmDirector ${id} not found!` };
 
-      await this.filmDirectorRepo.remove(deleteFilmDirector);
+      await this.filmDirectorRepo.update(id, { deletedBy: user.userId });
+      await this.filmDirectorRepo.softDelete({ id });
       return { EC: 1, EM: 'Delete film director successfully' };
     } catch (error: any) {
       console.error('Error in deleteFilmDirector:', error.message);
