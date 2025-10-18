@@ -479,4 +479,10 @@ export const INIT_PERMISSIONS = [
     method: 'DELETE',
     module: 'SUBSCRIPTION-PLANS',
   },
+  {
+    name: 'Get films by actor',
+    apiPath: '/api/v1/film-actor/get-films-by-actor/:actorId',
+    method: 'GET',
+    module: 'FILM-ACTOR',
+  },
 ];
