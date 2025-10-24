@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateAllCodeDto } from './dto/create-all-code.dto';
 import { UpdateAllCodeDto } from './dto/update-all-code.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -32,5 +32,39 @@ export class AllCodesService {
 
   remove(id: number) {
     return { EC: 0, EM: `This action removes a #${id} allCode` };
+  }
+
+  async getAllCodeDataByType(type: string) {
+    try {
+      const result = await this.allCodeRepository.find({
+        where: { type: type },
+        select: {
+          id: true,
+          keyMap: true,
+          valueEn: true,
+          valueVi: true,
+          description: true,
+        },
+      });
+
+      if (result) {
+        return {
+          EC: 1,
+          EM: 'Get gender success',
+          [type]: result,
+        };
+      } else {
+        return {
+          EC: 0,
+          EM: 'Get gender failed',
+        };
+      }
+    } catch (error) {
+      console.error('Error in get by type allcode:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from get by type allcode service',
+      });
+    }
   }
 }
