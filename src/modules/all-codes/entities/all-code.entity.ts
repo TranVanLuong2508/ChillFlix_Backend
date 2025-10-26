@@ -34,6 +34,9 @@ export class AllCode {
   @OneToMany(() => User, (user) => user.gender)
   userGender: User[];
 
+  @OneToMany(() => User, (user) => user.status)
+  userStatus: User[];
+
   @OneToMany(() => Film, (film) => film.language)
   filmLanguage: Film[];
 

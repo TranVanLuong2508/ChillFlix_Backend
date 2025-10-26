@@ -1,21 +1,33 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity({ name: 'subscriptionPlans' })
-export class SubscriptionPlan {
+@Entity({ name: 'subscriptions' })
+export class Subscription {
   @PrimaryGeneratedColumn()
+  subscriptionId: number;
+
+  @Column()
+  userId: number;
+
+  @Column()
   planId: number;
 
   @Column()
-  planName: string;
+  startDate: Date;
 
   @Column()
-  planDuration: number;
+  endDate: Date;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column()
+  statusCode: string;
+
+  @Column()
+  autoRenew: boolean;
+
+  @Column()
+  paymentId: string;
 
   @CreateDateColumn({ nullable: true })
-  createdAt?: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ nullable: true })
   updatedAt?: Date;

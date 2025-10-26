@@ -81,6 +81,10 @@ export class User {
   @JoinColumn({ name: 'gender_code', referencedColumnName: 'keyMap' })
   gender: AllCode;
 
+  @ManyToOne(() => AllCode, (allcode) => allcode.userStatus)
+  @JoinColumn({ name: 'status_code', referencedColumnName: 'keyMap' })
+  status: AllCode;
+
   @ManyToOne(() => Role, (role) => role.users)
   @JoinColumn({ name: 'role_id', referencedColumnName: 'roleId' })
   role: Role;
