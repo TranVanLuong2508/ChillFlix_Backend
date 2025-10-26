@@ -3,9 +3,25 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsDate,
+  IsEnum,
   IsNotEmpty,
   IsString,
+  IsUrl,
+  Validate,
+  ValidateNested,
 } from 'class-validator';
+
+export class CreateFilmImageDto {
+  @IsEnum(['poster', 'horizontal', 'backdrop'], {
+    message: 'type must be one of: poster, horizontal, backdrop',
+  })
+  @IsNotEmpty({ message: 'imageType must not be empty' })
+  type: 'poster' | 'horizontal' | 'backdrop';
+
+  @IsUrl({}, { message: 'url must be a valid URL' })
+  @IsNotEmpty({ message: 'imageUrl must not be empty' })
+  url: string;
+}
 
 export class CreateFilmDto {
   @IsNotEmpty({ message: 'filmId must not be empty' })
@@ -33,13 +49,13 @@ export class CreateFilmDto {
   @IsString({ message: 'year must be STRING format' })
   year: string;
 
+  @IsNotEmpty({ message: 'filmUrl must not be empty' })
+  @IsString({ message: 'filmUrl must be STRING format' })
+  filmUrl: string;
+
   @IsNotEmpty({ message: 'thumbUrl must not be empty' })
   @IsString({ message: 'thumbUrl must be STRING format' })
   thumbUrl: string;
-
-  @IsNotEmpty({ message: 'posterUrl must not be empty' })
-  @IsString({ message: 'posterUrl must be STRING format' })
-  posterUrl: string;
 
   @IsNotEmpty({ message: 'slug must not be empty' })
   @IsString({ message: 'slug must be STRING format' })
@@ -55,6 +71,11 @@ export class CreateFilmDto {
   @ArrayNotEmpty({ message: 'genreCodes must not be empty' })
   @IsString({ each: true, message: 'genreCode must not be empty' })
   genreCodes: string[];
+
+  @IsArray({ message: 'filmImages must be ARRAY format' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateFilmImageDto)
+  filmImages: CreateFilmImageDto[];
 
   @IsNotEmpty({ message: 'countryCode must not be empty' })
   countryCode: string;

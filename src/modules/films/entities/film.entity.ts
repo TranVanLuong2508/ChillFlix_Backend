@@ -15,6 +15,7 @@ import { FilmGenre } from './film_genre.entity';
 import { Part } from 'src/modules/parts/entities/part.entity';
 import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
 import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
+import { FilmImage } from './film_image.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -37,16 +38,22 @@ export class Film {
   year: string;
 
   @Column({ nullable: false })
-  thumbUrl: string;
+  filmUrl: string;
 
   @Column({ nullable: false })
-  posterUrl: string;
+  thumbUrl: string;
 
   @Column({ unique: true, nullable: false })
   slug: string;
 
   @Column({ type: 'int', default: 0 })
   view: number;
+
+  @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
+  filmGenres: FilmGenre[];
+
+  @OneToMany(() => FilmImage, (filmimage) => filmimage.film, { cascade: true })
+  filmImages: FilmImage[];
 
   @Column({ nullable: false })
   @Exclude({ toPlainOnly: true })
@@ -63,9 +70,6 @@ export class Film {
   @ManyToOne(() => AllCode, (allcode) => allcode.filmType)
   @JoinColumn({ name: 'typeCode', referencedColumnName: 'keyMap' })
   type: AllCode;
-
-  @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
-  filmGenres: FilmGenre[];
 
   @Column({ nullable: false })
   @Exclude({ toPlainOnly: true })
