@@ -1,19 +1,34 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Markdown {
   @PrimaryGeneratedColumn()
-  id: number;
+  markdownId: number;
 
-  @Column({ nullable: false })
-  planId: number;
+  @Column({ type: 'text', nullable: true })
+  markdownContent: string;
 
-  @Column({ type: 'text' })
-  HTMLContent: string;
+  @Column({ type: 'text', nullable: true })
+  htmlContent: string;
 
-  @Column({ type: 'text' })
-  MarkdownContent: string;
+  @Column({ type: 'text', nullable: true })
+  shortDescription: string;
 
-  @Column({ type: 'text' })
-  description: string;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
+
+  @Column({ nullable: true })
+  createdBy?: number;
+
+  @Column({ nullable: true })
+  updatedBy?: number;
+
+  @Column({ nullable: true })
+  deletedBy?: number;
 }

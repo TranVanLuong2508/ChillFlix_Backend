@@ -34,6 +34,7 @@ export class SubscriptionPlansController {
   }
 
   @Delete(':id')
+  @ResponseMessage('Delete a subscription plan')
   remove(@Param('id') id: string, @User() user: IUser) {
     return this.subscriptionPlansService.remove(+id, user);
   }
