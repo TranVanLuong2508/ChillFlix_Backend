@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateAllCodeDto } from './dto/create-all-code.dto';
 import { UpdateAllCodeDto } from './dto/update-all-code.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,9 +13,35 @@ export class AllCodesService {
     @InjectRepository(AllCode)
     private allCodeRepository: Repository<AllCode>,
   ) {}
-  create(createAllCodeDto: CreateAllCodeDto) {
-    const newCode = this.allCodeRepository.create(createAllCodeDto);
-    return this.allCodeRepository.save(newCode);
+  async create(createAllCodeDto: CreateAllCodeDto) {
+    try {
+      const isUserExist = await this.allCodeRepository.findOne({
+        where: { keyMap: createAllCodeDto.keyMap, type: createAllCodeDto.type },
+      });
+
+      if (isUserExist) {
+        return {
+          EC: 0,
+          EM: `KeyMap: ${createAllCodeDto.keyMap} in Type: ${createAllCodeDto.type} already exists in the system.`,
+        };
+      } else {
+        const newCode = this.allCodeRepository.create({
+          ...createAllCodeDto,
+        });
+        await this.allCodeRepository.save(newCode);
+        return {
+          EC: 1,
+          EM: 'Create code success',
+          createdAt: newCode?.createdAt,
+        };
+      }
+    } catch (error) {
+      console.error('Error in create code:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from create code service',
+      });
+    }
   }
 
   findAll() {

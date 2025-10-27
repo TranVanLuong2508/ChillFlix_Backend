@@ -17,8 +17,6 @@ import { IS_PUBLIC_PERMISSION, ResponseMessage, SkipCheckPermission, User } from
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('roles')
-@UseInterceptors(ClassSerializerInterceptor)
-@SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
@@ -30,11 +28,14 @@ export class RolesController {
 
   @Get()
   @ResponseMessage('Get all roles')
+  @SkipCheckPermission()
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Get(':id')
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
   @ResponseMessage('Get a role by id')
   findOne(@Param('id') id: string) {
     return this.rolesService.findOne(+id);

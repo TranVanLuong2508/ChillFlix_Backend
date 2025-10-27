@@ -1,4 +1,14 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'subscriptionPlans' })
 export class SubscriptionPlan {
@@ -11,6 +21,12 @@ export class SubscriptionPlan {
   @Column()
   planDuration: number;
 
+  @Column({ name: 'durationType_code' })
+  durationTypeCode: string;
+
+  @Column()
+  price: string;
+
   @Column({ default: true })
   isActive: boolean;
 
@@ -20,7 +36,7 @@ export class SubscriptionPlan {
   @UpdateDateColumn({ nullable: true })
   updatedAt?: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ nullable: true })
   deletedAt?: Date;
 
   @Column({ nullable: true })
@@ -31,4 +47,8 @@ export class SubscriptionPlan {
 
   @Column({ nullable: true })
   deletedBy?: number;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.planDuration)
+  @JoinColumn({ name: 'durationType_code', referencedColumnName: 'keyMap' })
+  durationInfo: AllCode;
 }

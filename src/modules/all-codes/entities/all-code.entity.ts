@@ -4,6 +4,7 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FilmGenre } from 'src/modules/films/entities/film_genre.entity';
+import { SubscriptionPlan } from 'src/modules/subscription-plans/entities/subscription-plan.entity';
 
 @Entity()
 export class AllCode {
@@ -66,4 +67,7 @@ export class AllCode {
 
   @OneToMany(() => Actor, (actor) => actor.nationalityCode)
   actorNationality: Actor[];
+
+  @OneToMany(() => SubscriptionPlan, (plan) => plan.durationInfo)
+  planDuration: SubscriptionPlan[];
 }

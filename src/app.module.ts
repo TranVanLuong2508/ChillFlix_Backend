@@ -37,6 +37,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { PaymentsModule } from './modules/payments/payments.module';
 import { Subscription } from './modules/subscriptions/entities/subscription.entity';
 import { Markdown } from './modules/markdowns/entities/markdown.entity';
+import { SubscriptionPlan } from './modules/subscription-plans/entities/subscription-plan.entity';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { Markdown } from './modules/markdowns/entities/markdown.entity';
           SubscriptionPlansModule,
           Subscription,
           Markdown,
+          SubscriptionPlan,
         ],
         synchronize: true,
       }),

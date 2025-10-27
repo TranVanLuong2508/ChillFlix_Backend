@@ -3,7 +3,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { IUser } from '../users/interface/user.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository, TreeLevelColumn } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
 import { plainToInstance } from 'class-transformer';
@@ -56,7 +56,9 @@ export class RolesService {
 
   async findAll() {
     try {
-      const result = await this.roleRepository.find({});
+      const result = await this.roleRepository.find({
+        where: { isActive: true, isDeleted: false },
+      });
       if (result) {
         return {
           EC: 1,
@@ -75,8 +77,8 @@ export class RolesService {
 
   async findOne(id: number) {
     try {
-      const isExist = this.roleRepository.exists({
-        where: { roleId: id },
+      const isExist = await this.roleRepository.exists({
+        where: { roleId: id, isActive: true, isDeleted: false },
       });
       if (!isExist) {
         return {
