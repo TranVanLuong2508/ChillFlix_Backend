@@ -56,7 +56,6 @@ export class Film {
   filmImages: FilmImage[];
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   ageCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmAge)
@@ -64,7 +63,6 @@ export class Film {
   age: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   typeCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmType)
@@ -72,7 +70,6 @@ export class Film {
   type: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   countryCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmCountry)
@@ -80,7 +77,6 @@ export class Film {
   country: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   langCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmLanguage)
@@ -88,7 +84,6 @@ export class Film {
   language: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   publicStatusCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmPublicStatus)
