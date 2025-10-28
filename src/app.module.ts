@@ -34,10 +34,11 @@ import { Actor } from './modules/actor/entities/actor.entity';
 import { FilmActorModule } from './modules/film_actor/film_actor.module';
 import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
-import { PaymentsModule } from './modules/payments/payments.module';
 import { Subscription } from './modules/subscriptions/entities/subscription.entity';
 import { Markdown } from './modules/markdowns/entities/markdown.entity';
 import { SubscriptionPlan } from './modules/subscription-plans/entities/subscription-plan.entity';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { Payment } from './modules/payments/entities/payment.entity';
 
 @Module({
   imports: [
@@ -68,10 +69,10 @@ import { SubscriptionPlan } from './modules/subscription-plans/entities/subscrip
           FilmDirector,
           Actor,
           FilmActor,
-          SubscriptionPlansModule,
           Subscription,
           Markdown,
           SubscriptionPlan,
+          Payment,
         ],
         synchronize: true,
       }),
@@ -96,7 +97,6 @@ import { SubscriptionPlan } from './modules/subscription-plans/entities/subscrip
     FilmDirector,
     SubscriptionsModule,
     PaymentsModule,
-    SubscriptionPlansModule,
   ],
   controllers: [AppController],
   providers: [AppService],

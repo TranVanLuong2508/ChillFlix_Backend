@@ -17,8 +17,8 @@ export class Subscription {
   @Column()
   endDate: Date;
 
-  @Column()
-  statusCode: string;
+  @Column({ nullable: true, default: 'PENDING' })
+  subStatusCode: string;
 
   @Column()
   autoRenew: boolean;
