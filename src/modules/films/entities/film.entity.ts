@@ -47,6 +47,9 @@ export class Film {
   slug: string;
 
   @Column({ type: 'int', default: 0 })
+  duration: number;
+
+  @Column({ type: 'int', default: 0 })
   view: number;
 
   @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })

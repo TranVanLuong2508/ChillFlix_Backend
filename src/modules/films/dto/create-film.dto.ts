@@ -10,6 +10,8 @@ import {
   Validate,
   ValidateNested,
 } from 'class-validator';
+import { CreateFilmActorDto } from 'src/modules/film_actor/dto/create-film_actor.dto';
+import { CreateFilmDirectorDto } from 'src/modules/film_director/dto/create-film_director.dto';
 
 export class CreateFilmImageDto {
   @Expose()
@@ -98,4 +100,16 @@ export class CreateFilmDto {
   @Expose()
   @IsNotEmpty({ message: 'publicStatusCode must not be empty' })
   publicStatusCode: string;
+
+  @Expose()
+  @IsArray({ message: 'Directors must be ARRAY format' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateFilmDirectorDto)
+  directors: CreateFilmDirectorDto[];
+
+  @Expose()
+  @IsArray({ message: 'Actors must be ARRAY format' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateFilmActorDto)
+  actors: CreateFilmActorDto[];
 }

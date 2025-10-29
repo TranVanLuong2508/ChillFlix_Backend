@@ -14,6 +14,10 @@ import { IUser } from '../users/interface/user.interface';
 import { allcodeCommonFields } from 'src/common/utils/CommonField';
 import { FilmGenre } from './entities/film_genre.entity';
 import { FilmImage } from './entities/film_image.entity';
+import { FilmDirector } from '../film_director/entities/film_director.entity';
+import { FilmActor } from '../film_actor/entities/film_actor.entity';
+import { FilmDirectorService } from '../film_director/film_director.service';
+import { FilmActorService } from '../film_actor/film_actor.service';
 
 @Injectable()
 export class FilmsService {
@@ -21,6 +25,10 @@ export class FilmsService {
     @InjectRepository(Film) private filmsRepository: Repository<Film>,
     @InjectRepository(FilmGenre) private filmGenreRepository: Repository<FilmGenre>,
     @InjectRepository(FilmImage) private filmImageRepository: Repository<FilmImage>,
+    @InjectRepository(FilmDirector) private filmDirectorRepository: Repository<FilmDirector>,
+    @InjectRepository(FilmActor) private filmActorRepository: Repository<FilmActor>,
+    private filmDirectorService: FilmDirectorService,
+    private filmActorService: FilmActorService,
   ) {}
 
   async create(createFilmDto: CreateFilmDto, user: IUser) {
@@ -116,15 +124,13 @@ export class FilmsService {
     const filmDataRaw = await this.filmsRepository.findOne({
       where: { filmId },
       relations: ['filmGenres', 'filmImages'],
-      // , 'filmDirectors', 'filmActors'
     });
-    console.log('>>Raw: ', filmDataRaw);
 
     if (!filmDataRaw) {
       throw new NotFoundException(`Film with id ${filmId} not found`);
     }
 
-    const { filmImages, genreCodes, slug, ...otherFilmData } = updateFilmDto;
+    const { actors, directors, filmImages, genreCodes, slug, ...otherFilmData } = updateFilmDto;
 
     // Handle Film_Genre
     let filmGenres: FilmGenre[] | undefined = undefined;
@@ -152,16 +158,22 @@ export class FilmsService {
       filmDataRaw.filmGenres = filmGenres;
     }
 
-    console.log('Check data updated: ', filmDataRaw);
-
     filmDataRaw.updatedBy = user.userId.toString();
 
     try {
-      this.filmsRepository.save(filmDataRaw);
+      await this.filmsRepository.save(filmDataRaw);
 
       // Handle FIlm_Image
       if (filmImages) {
         await this.updateFilmImage(filmId, filmImages);
+      }
+
+      if (directors) {
+        await this.updateFilmDirector(filmId, directors, user);
+      }
+
+      if (actors) {
+        await this.updateFilmActor(filmId, actors, user);
       }
 
       return {
@@ -184,6 +196,46 @@ export class FilmsService {
       } else {
         const newImg = this.filmImageRepository.create({ filmId, ...img });
         await this.filmImageRepository.save(newImg);
+      }
+    }
+  }
+
+  async updateFilmDirector(
+    filmId: string,
+    directors: { filmId: string; directorId: number; isMain?: boolean }[],
+    user: IUser,
+  ) {
+    const existDirector = await this.filmDirectorRepository.find({
+      where: { film: { filmId } },
+      relations: ['film', 'director'],
+    });
+
+    for (const director of directors) {
+      const found = existDirector.find((d) => d.director.directorId === director.directorId);
+      if (found) {
+        await this.filmDirectorService.updateFilmDirector(found.id, director, user);
+      } else {
+        await this.filmDirectorService.createFilmDirector(director, user);
+      }
+    }
+  }
+
+  async updateFilmActor(
+    filmId: string,
+    actors: { filmId: string; actorId: number; characterName: string }[],
+    user: IUser,
+  ) {
+    const existActor = await this.filmActorRepository.find({
+      where: { film: { filmId } },
+      relations: ['film', 'actor'],
+    });
+
+    for (const actor of actors) {
+      const found = existActor.find((d) => d.actor.actorId === actor.actorId);
+      if (found) {
+        await this.filmActorService.updateFilmActor(found.id, actor, user);
+      } else {
+        await this.filmActorService.createFilmActor(actor, user);
       }
     }
   }
