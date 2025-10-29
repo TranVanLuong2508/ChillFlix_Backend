@@ -13,12 +13,14 @@ import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
 import { IUser } from '../users/interface/user.interface';
 import { allcodeCommonFields } from 'src/common/utils/CommonField';
 import { FilmGenre } from './entities/film_genre.entity';
+import { FilmImage } from './entities/film_image.entity';
 
 @Injectable()
 export class FilmsService {
   constructor(
     @InjectRepository(Film) private filmsRepository: Repository<Film>,
     @InjectRepository(FilmGenre) private filmGenreRepository: Repository<FilmGenre>,
+    @InjectRepository(FilmImage) private filmImageRepository: Repository<FilmImage>,
   ) {}
 
   async create(createFilmDto: CreateFilmDto, user: IUser) {
@@ -110,18 +112,21 @@ export class FilmsService {
       throw new BadRequestException(`Invalid UUID format: ${filmId}`);
     }
 
+    // Data Raw
     const filmDataRaw = await this.filmsRepository.findOne({
       where: { filmId },
-      relations: ['filmGenres'],
-      // 'filmImages', 'filmDirectors', 'filmActors'
+      relations: ['filmGenres', 'filmImages'],
+      // , 'filmDirectors', 'filmActors'
     });
+    console.log('>>Raw: ', filmDataRaw);
 
     if (!filmDataRaw) {
       throw new NotFoundException(`Film with id ${filmId} not found`);
     }
 
-    const { genreCodes, slug, ...otherFilmData } = updateFilmDto;
+    const { filmImages, genreCodes, slug, ...otherFilmData } = updateFilmDto;
 
+    // Handle Film_Genre
     let filmGenres: FilmGenre[] | undefined = undefined;
     if (genreCodes) {
       await this.filmGenreRepository.delete({ filmId });
@@ -134,22 +139,10 @@ export class FilmsService {
       });
     }
 
-    // console.log('Check dto: ', updateFilmDto);
-
-    // const film = await this.filmsRepository.preload({
-    //   filmId: filmId,
-    //   ...updateFilmDto,
-    //   filmGenres: updateFilmDto.genreCodes?.map((g: string) => ({ genreCode: g, filmId })),
-    // });
-
-    // console.log('Check data updated: ', film);
-
-    // if (!film) {
-    //   throw new NotFoundException();
-    // }
-
+    // Merge Data with Data Update
     this.filmsRepository.merge(filmDataRaw, otherFilmData);
 
+    // Handle Slug
     if (slug !== '' && slug !== filmDataRaw.slug) {
       const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
       filmDataRaw.slug = slug;
@@ -161,40 +154,37 @@ export class FilmsService {
 
     console.log('Check data updated: ', filmDataRaw);
 
-    // const genreCodes = filmData.filmGenres.map((item) => item.genreCode);
-    // filmData['genreCodes'] = genreCodes;
-
-    // const rawData = instanceToPlain(filmData, { exposeUnsetFields: true });
-    // const data = plainToInstance(UpdateFilmDto, rawData, { excludeExtraneousValues: true });
-
-    // if (updateFilmDto.slug) {
-    //   if (data.slug !== updateFilmDto.slug) {
-    //     const slug = await SlugUtil.generateUniqueSlug(updateFilmDto.slug, this.filmsRepository);
-    //     updateFilmDto.slug = slug;
-    //   } else {
-    //     delete updateFilmDto.slug;
-    //   }
-    // }
-
-    // if (updateFilmDto.genreCodes) {
-    //   const filmGenres = updateFilmDto.genreCodes.map((g: string) => ({ genreCode: g }));
-    //   delete updateFilmDto.genreCodes;
-    //   updateFilmDto['filmGenres'] = filmGenres;
-    // }
-
-    // Object.assign(data, updateFilmDto);
-    // console.log('Check data new: ', data);
-
     filmDataRaw.updatedBy = user.userId.toString();
 
     try {
       this.filmsRepository.save(filmDataRaw);
+
+      // Handle FIlm_Image
+      if (filmImages) {
+        await this.updateFilmImage(filmId, filmImages);
+      }
+
       return {
         message: 'Update Film successful',
         affectedRows: 1,
       };
     } catch (error) {
       throw new InternalServerErrorException(error || error.message);
+    }
+  }
+
+  async updateFilmImage(filmId: string, images: { type: 'poster' | 'horizontal' | 'backdrop'; url: string }[]) {
+    const existImages = await this.filmImageRepository.find({ where: { filmId } });
+
+    for (const img of images) {
+      const found = existImages.find((i) => i.type === img.type);
+      if (found) {
+        found.url = img.url;
+        await this.filmImageRepository.save(found);
+      } else {
+        const newImg = this.filmImageRepository.create({ filmId, ...img });
+        await this.filmImageRepository.save(newImg);
+      }
     }
   }
 
