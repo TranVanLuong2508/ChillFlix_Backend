@@ -2,7 +2,7 @@ import { Controller, Post, Get, Patch, Delete, Param, Body, Query } from '@nestj
 import { FilmDirectorService } from './film_director.service';
 import { CreateFilmDirectorDto } from './dto/create-film_director.dto';
 import { UpdateFilmDirectorDto } from './dto/update-film_director.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
 import type { IUser } from '../users/interface/user.interface';
 
@@ -30,9 +30,10 @@ export class FilmDirectorController {
   }
 
   @Get('by-film/:filmId')
+  @Public()
   @ResponseMessage('Get directors by film')
-  getDirectorsByFilm(@Param('filmId') filmId: string) {
-    return this.filmDirectorService.getDirectorsByFilm(filmId);
+  getDirectorsByFilm(@Param('filmId') filmId: string, @Query() query: PaginationfdDto) {
+    return this.filmDirectorService.getDirectorsByFilm(filmId, query);
   }
 
   @Get('by-director/:directorId')

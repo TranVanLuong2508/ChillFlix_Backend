@@ -237,7 +237,9 @@ export class ActorService {
       }
 
       if (dto.avatarUrl) actor.avatarUrl = dto.avatarUrl;
-      if (dto.birthDate) actor.birthDate = dto.birthDate;
+      const d = dto.birthDate as any;
+      actor.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+
       actor.updatedBy = user.userId;
       const data = await this.actorRepo.save(actor);
       const result = Object.fromEntries(

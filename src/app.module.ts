@@ -33,6 +33,12 @@ import { ActorModule } from './modules/actor/actor.module';
 import { Actor } from './modules/actor/entities/actor.entity';
 import { FilmActorModule } from './modules/film_actor/film_actor.module';
 import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
+import { CommentModule } from './modules/comment/comment.module';
+import { Comment } from './modules/comment/entities/comment.entity';
+import { CommentReactionModule } from './modules/comment-reaction/comment-reaction.module';
+import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
+import { RatingModule } from './modules/rating/rating.module';
+import { Rating } from './modules/rating/entities/rating.entity';
 
 @Module({
   imports: [
@@ -63,6 +69,9 @@ import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
           FilmDirector,
           Actor,
           FilmActor,
+          Comment,
+          CommentReaction,
+          Rating,
         ],
         synchronize: true,
       }),
@@ -85,6 +94,9 @@ import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
     ActorModule,
     FilmActorModule,
     FilmDirector,
+    CommentModule,
+    CommentReactionModule,
+    RatingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

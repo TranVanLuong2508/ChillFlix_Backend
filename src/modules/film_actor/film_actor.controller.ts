@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe 
 import { FilmActorService } from './film_actor.service';
 import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import { PaginationFaDto } from './dto/pagination-fa.dto';
 import type { IUser } from '../users/interface/user.interface';
 
@@ -29,15 +29,16 @@ export class FilmActorController {
   }
 
   @Get('get-actors-by-film/:filmId')
+  @Public()
   @ResponseMessage('Get actors by film id')
-  async getActorsByFilm(@Param('filmId') filmId: string) {
-    return await this.filmActorService.getActorsByFilm(filmId);
+  async getActorsByFilm(@Param('filmId') filmId: string, query: PaginationFaDto) {
+    return await this.filmActorService.getActorsByFilm(filmId, query);
   }
 
   @Get('get-films-by-actor/:actorId')
   @ResponseMessage('Get films by actor id')
-  async getFilmsByActor(@Param('actorId', ParseIntPipe) actorId: number) {
-    return await this.filmActorService.getFilmsByActor(actorId);
+  async getFilmsByActor(@Param('actorId', ParseIntPipe) actorId: number, query: PaginationFaDto) {
+    return await this.filmActorService.getFilmsByActor(actorId, query);
   }
 
   @Patch('edit-film-actor/:id')

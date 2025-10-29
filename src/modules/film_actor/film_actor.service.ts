@@ -206,64 +206,123 @@ export class FilmActorService {
       });
     }
   }
-  async getActorsByFilm(filmId: string) {
+  async getActorsByFilm(filmId: string, query: any = {}) {
     try {
-      const filmActors = await this.filmActorRepo.find({
-        where: { film: { filmId: filmId } },
-        relations: ['film', 'actor'],
+      query = query || {};
+      const { filter, sort } = aqp(query);
+
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'ASC' };
+
+      const [data, total] = await this.filmActorRepo.findAndCount({
+        where: { film: { filmId }, ...filter },
+        relations: ['actor', 'film'],
+        order,
+        skip,
+        take: limit,
       });
 
-      if (!filmActors || filmActors.length === 0) {
-        return { EC: 0, EM: `No actors found for film ID ${filmId}` };
+      if (total === 0) {
+        return {
+          EC: 1,
+          EM: 'No actors found for this film!',
+          meta: { page, limit, total, totalPages: 0 },
+          data: [],
+        };
       }
 
-      const result = filmActors.map((fa) => ({
-        actorId: fa.actor.actorId,
-        actorName: fa.actor.actorName,
-        birthDate: fa.actor.birthDate,
-        gender: fa.actor.genderCode,
-        nationality: fa.actor.nationalityCode,
-        characterName: fa.characterName,
-        avatarUrl: fa.actor.avatarUrl,
+      const actors = data.map((item) => ({
+        actorId: item.actor.actorId,
+        actorName: item.actor.actorName,
+        avatarUrl: item.actor.avatarUrl,
+        slug: item.actor.slug,
+        nationalityCode: item.actor.nationalityCode,
+        genderCode: item.actor.genderCode,
+        characterName: item.characterName,
       }));
 
-      return { EC: 1, EM: 'Get actors by film successfully', result };
-    } catch (error: any) {
-      console.error('Error in getActorsByFilm:', error.message);
+      return {
+        EC: 1,
+        EM: 'Get actors by film successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: actors,
+      };
+    } catch (error) {
+      console.error('Error in getActorsByFilm:', error);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from getActorsByFilm service',
       });
     }
   }
-
-  async getFilmsByActor(actorId: number) {
+  async getFilmsByActor(actorId: number, query: any = {}) {
     try {
-      const actor = await this.actorRepo.findOne({
-        where: { actorId },
-        relations: ['filmActors', 'filmActors.film'],
-      });
-      if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
+      query = query || {};
+      const { filter, sort } = aqp(query);
 
-      const films = actor.filmActors.map((fd) => ({
-        filmId: fd.film.filmId,
-        title: fd.film.title,
-        posterUrl: fd.film.posterUrl,
-        thumbUrl: fd.film.thumbUrl,
-        description: fd.film.description,
-        releaseDate: fd.film.releaseDate,
-        year: fd.film.year,
-        slug: fd.film.slug,
-        age: fd.film.ageCode,
-        type: fd.film.typeCode,
-        country: fd.film.countryCode,
-        language: fd.film.langCode,
-        publicStatus: fd.film.publicStatusCode,
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'DESC' };
+
+      const [data, total] = await this.filmActorRepo.findAndCount({
+        where: { actor: { actorId }, ...filter },
+        relations: ['film', 'actor'],
+        order,
+        skip,
+        take: limit,
+      });
+
+      if (total === 0) {
+        return {
+          EC: 1,
+          EM: 'No films found for this actor!',
+          meta: { page, limit, total, totalPages: 0 },
+          data: [],
+        };
+      }
+
+      const films = data.map((item) => ({
+        filmId: item.film.filmId,
+        filmName: item.film.title,
+        posterUrl: item.film.posterUrl,
+        releaseDate: item.film.releaseDate,
+        slug: item.film.slug,
+        characterName: item.characterName,
       }));
 
-      return { EC: 1, EM: 'Get films by director successfully', films };
-    } catch (error: any) {
-      console.error('Error in getFilmsByActor:', error.message);
+      return {
+        EC: 1,
+        EM: 'Get films by actor successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: films,
+      };
+    } catch (error) {
+      console.error('Error in getFilmsByActor:', error);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from getFilmsByActor service',

@@ -15,6 +15,8 @@ import { FilmGenre } from './film_genre.entity';
 import { Part } from 'src/modules/parts/entities/part.entity';
 import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
 import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
+import { Comment } from 'src/modules/comment/entities/comment.entity';
+import { Rating } from 'src/modules/rating/entities/rating.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -117,4 +119,9 @@ export class Film {
 
   @OneToMany(() => FilmActor, (filmActor) => filmActor.film)
   filmActors: FilmActor[];
+
+  @OneToMany(() => Comment, (comment) => comment.film)
+  comments: Comment[];
+  @OneToMany(() => Rating, (rating) => rating.film)
+  ratings: Rating[];
 }

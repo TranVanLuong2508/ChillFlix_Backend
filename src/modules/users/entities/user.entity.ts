@@ -1,16 +1,20 @@
 import { Exclude } from 'class-transformer';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { Role } from 'src/modules/roles/entities/role.entity';
+import { Comment } from 'src/modules/comment/entities/comment.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CommentReaction } from 'src/modules/comment-reaction/entities/comment-reaction.entity';
+import { Rating } from 'src/modules/rating/entities/rating.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -84,4 +88,12 @@ export class User {
   @ManyToOne(() => Role, (role) => role.users)
   @JoinColumn({ name: 'role_id', referencedColumnName: 'roleId' })
   role: Role;
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
+
+  @OneToMany(() => CommentReaction, (reaction) => reaction.user)
+  commentReactions: CommentReaction[];
+  @OneToMany(() => Rating, (rating) => rating.user)
+  ratings: Rating[];
 }

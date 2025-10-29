@@ -9,6 +9,7 @@ import { Director } from '../directors/entities/director.entity';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
 import { IUser } from '../users/interface/user.interface';
 import { create } from 'domain';
+import aqp from 'api-query-params';
 
 @Injectable()
 export class FilmDirectorService {
@@ -201,26 +202,62 @@ export class FilmDirectorService {
       });
     }
   }
-
-  async getDirectorsByFilm(filmId: string) {
+  async getDirectorsByFilm(filmId: string, query: any = {}) {
     try {
+      query = query || {};
+      const { filter, sort } = aqp(query);
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { directorName: 'ASC' };
+
       const film = await this.filmRepo.findOne({
         where: { filmId },
         relations: ['filmDirectors', 'filmDirectors.director'],
       });
-      if (!film) return { EC: 0, EM: `Film ${filmId} not found!` };
 
-      const directors = film.filmDirectors.map((fd) => ({
+      if (!film) {
+        return { EC: 0, EM: `Film ${filmId} not found!` };
+      }
+
+      let directors = film.filmDirectors.map((fd) => ({
         directorId: fd.director.directorId,
         directorName: fd.director.directorName,
         slug: fd.director.slug,
         avatarUrl: fd.director.avatarUrl,
         isMain: fd.isMain,
-        gender: fd.director.genderCode,
-        nationality: fd.director.nationalityCode,
+        genderCode: fd.director.genderCode,
+        nationalityCode: fd.director.nationalityCode,
       }));
 
-      return { EC: 1, EM: 'Get directors by film successfully', directors };
+      if (order) {
+        const [key, dir] = Object.entries(order)[0];
+        const director = String(dir).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        directors = directors.sort((a, b) =>
+          director === 'ASC' ? a[key]?.localeCompare(b[key]) : b[key]?.localeCompare(a[key]),
+        );
+      }
+
+      const total = directors.length;
+      const paginated = directors.slice(skip, skip + limit);
+
+      return {
+        EC: 1,
+        EM: 'Get directors by film successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: paginated,
+      };
     } catch (error: any) {
       console.error('Error in getDirectorsByFilm:', error.message);
       throw new InternalServerErrorException({
@@ -229,16 +266,31 @@ export class FilmDirectorService {
       });
     }
   }
-
-  async getFilmsByDirector(directorId: number) {
+  async getFilmsByDirector(directorId: number, query: any = {}) {
     try {
+      query = query || {};
+      const { filter, sort } = aqp(query);
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { title: 'ASC' };
+
       const director = await this.directorRepo.findOne({
         where: { directorId },
         relations: ['filmDirectors', 'filmDirectors.film'],
       });
-      if (!director) return { EC: 0, EM: `Director ${directorId} not found!` };
 
-      const films = director.filmDirectors.map((fd) => ({
+      if (!director) {
+        return { EC: 0, EM: `Director ${directorId} not found!` };
+      }
+
+      let films = director.filmDirectors.map((fd) => ({
         filmId: fd.film.filmId,
         title: fd.film.title,
         posterUrl: fd.film.posterUrl,
@@ -247,14 +299,37 @@ export class FilmDirectorService {
         releaseDate: fd.film.releaseDate,
         year: fd.film.year,
         slug: fd.film.slug,
-        age: fd.film.ageCode,
-        type: fd.film.typeCode,
-        country: fd.film.countryCode,
-        language: fd.film.langCode,
-        publicStatus: fd.film.publicStatusCode,
+        ageCode: fd.film.ageCode,
+        typeCode: fd.film.typeCode,
+        countryCode: fd.film.countryCode,
+        langCode: fd.film.langCode,
+        publicStatusCode: fd.film.publicStatusCode,
       }));
 
-      return { EC: 1, EM: 'Get films by director successfully', films };
+      if (order) {
+        const [key, dir] = Object.entries(order)[0];
+        const direction = String(dir).toUpperCase();
+        films = films.sort((a, b) =>
+          direction === 'ASC'
+            ? String(a[key])?.localeCompare(String(b[key]))
+            : String(b[key])?.localeCompare(String(a[key])),
+        );
+      }
+
+      const total = films.length;
+      const paginated = films.slice(skip, skip + limit);
+
+      return {
+        EC: 1,
+        EM: 'Get films by director successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: paginated,
+      };
     } catch (error: any) {
       console.error('Error in getFilmsByDirector:', error.message);
       throw new InternalServerErrorException({
