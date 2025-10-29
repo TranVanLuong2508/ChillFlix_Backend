@@ -130,7 +130,7 @@ export class PaymentsService {
       if (secureHash === signed) {
         //add logic
         console.log('chekc', vnp_Params);
-        // res.redirect(`${frontendURL}`);
+        res.redirect(`${frontendURL}`);
 
         // return res.status(200).json({
         //   message: 'success',
