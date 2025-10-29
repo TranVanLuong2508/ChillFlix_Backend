@@ -3,6 +3,7 @@ import { PaymentsService } from './payments.service';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import type { Request, Response } from 'express';
 import { Public, SkipCheckPermission } from 'src/decorators/customize';
+import type { RefundRequestDto } from './dto/refund-vnpay.dto';
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
@@ -19,6 +20,20 @@ export class PaymentsController {
   @Public()
   vnpayReturn(@Req() req: Request, @Res() res: Response) {
     return this.paymentsService.verifyReturn(req, res);
+  }
+
+  @Post('querydr')
+  @SkipCheckPermission()
+  @Public()
+  async queryTransaction(@Req() req: Request, @Body('transDate') transDate: string) {
+    return await this.paymentsService.handleQueryTransaction(req, transDate);
+  }
+
+  @Post('refund')
+  @SkipCheckPermission()
+  @Public()
+  async refund(@Req() req: Request, @Body() body: RefundRequestDto) {
+    return this.paymentsService.handleRefund(req, body);
   }
 
   @Get()

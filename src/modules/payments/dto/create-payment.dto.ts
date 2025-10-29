@@ -8,5 +8,5 @@ export class CreatePaymentDto {
 
   @IsNotEmpty()
   @IsString()
-  orderId: string; // mã đơn hàng do bạn tạo
+  orderId: string;
 }
