@@ -56,7 +56,7 @@ export class PaymentsService {
       let secretKey = this.configService.get<string>('VNP_HASH_SECRET');
       let returnUrl = this.configService.get<string>('VNP_RETURN_URL');
       let orderId = moment(currentDate).format('DDHHmmss');
-      let amount = 49000;
+      let amount = +req.body.amount;
       let locale = 'vn';
       let currCode = 'VND';
       let orederInfor = 'Thanh toan qua VNPay cho don hang dang ky goi vip tren ChillFlix voi ma GD: ' + orderId;
@@ -130,7 +130,7 @@ export class PaymentsService {
       if (secureHash === signed) {
         //add logic
         console.log('chekc', vnp_Params);
-        res.redirect(`${frontendURL}`);
+        res.redirect(`${frontendURL}/user/upgrade_vip`);
 
         // return res.status(200).json({
         //   message: 'success',
