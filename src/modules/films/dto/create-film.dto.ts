@@ -5,6 +5,7 @@ import {
   IsDate,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsString,
   IsUrl,
   Validate,
@@ -53,6 +54,11 @@ export class CreateFilmDto {
   @IsNotEmpty({ message: 'year must not be empty' })
   @IsString({ message: 'year must be STRING format' })
   year: string;
+
+  @Expose()
+  @IsNotEmpty({ message: 'duration must not be empty' })
+  @IsNumber({}, { message: 'duration must be Number format' })
+  duration: number;
 
   @Expose()
   @IsNotEmpty({ message: 'filmUrl must not be empty' })

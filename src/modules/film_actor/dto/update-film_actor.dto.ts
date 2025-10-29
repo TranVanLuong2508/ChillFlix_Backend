@@ -1,13 +1,13 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateFilmActorDto } from './create-film_actor.dto';
-import { IsInt, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class UpdateFilmActorDto {
-  @IsOptional()
+  @IsNotEmpty()
   filmId: string;
-  @IsOptional()
-  @IsInt()
+
+  @IsNotEmpty()
   actorId: number;
-  @IsOptional()
-  characterName?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  characterName: string;
 }
