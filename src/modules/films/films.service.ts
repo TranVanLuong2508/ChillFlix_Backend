@@ -110,34 +110,29 @@ export class FilmsService {
       throw new BadRequestException(`Invalid UUID format: ${filmId}`);
     }
 
-    const filmDataOld = await this.filmsRepository.findOne({
+    const filmDataRaw = await this.filmsRepository.findOne({
       where: { filmId },
       relations: ['filmGenres'],
       // 'filmImages', 'filmDirectors', 'filmActors'
     });
 
-    if (!filmDataOld) {
+    if (!filmDataRaw) {
       throw new NotFoundException(`Film with id ${filmId} not found`);
     }
 
     const { genreCodes, slug, ...otherFilmData } = updateFilmDto;
 
-    console.log('Check genreCode: ', genreCodes);
-
-    let newFilmGenre: FilmGenre[] | undefined = undefined;
+    let filmGenres: FilmGenre[] | undefined = undefined;
     if (genreCodes) {
-      newFilmGenre = genreCodes.map((g: string) => {
-        const existingFilmGenre = filmDataOld.filmGenres?.find((fg) => fg.genreCode === g);
+      await this.filmGenreRepository.delete({ filmId });
 
+      filmGenres = genreCodes.map((g: string) => {
         return this.filmGenreRepository.manager.create(FilmGenre, {
-          id: existingFilmGenre?.id,
           genreCode: g,
           filmId,
         });
       });
     }
-
-    console.log('Check new: ', newFilmGenre);
 
     // console.log('Check dto: ', updateFilmDto);
 
@@ -153,20 +148,18 @@ export class FilmsService {
     //   throw new NotFoundException();
     // }
 
-    this.filmsRepository.merge(filmDataOld, otherFilmData);
+    this.filmsRepository.merge(filmDataRaw, otherFilmData);
 
-    if (slug !== '' && slug !== filmDataOld.slug) {
-      const slug = await SlugUtil.generateUniqueSlug(filmDataOld.slug, this.filmsRepository);
-      filmDataOld.slug = slug;
+    if (slug !== '' && slug !== filmDataRaw.slug) {
+      const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
+      filmDataRaw.slug = slug;
     }
 
-    if (newFilmGenre !== undefined) {
-      filmDataOld.filmGenres = newFilmGenre;
+    if (filmGenres !== undefined) {
+      filmDataRaw.filmGenres = filmGenres;
     }
 
-    console.log('Check data updated: ', filmDataOld);
-
-    return this.filmsRepository.save(filmDataOld);
+    console.log('Check data updated: ', filmDataRaw);
 
     // const genreCodes = filmData.filmGenres.map((item) => item.genreCode);
     // filmData['genreCodes'] = genreCodes;
@@ -192,18 +185,17 @@ export class FilmsService {
     // Object.assign(data, updateFilmDto);
     // console.log('Check data new: ', data);
 
-    // filmData.updatedBy = user.userId.toString();
+    filmDataRaw.updatedBy = user.userId.toString();
 
-    // return data;
-    // try {
-    //   await this.filmsRepository.save(filmData);
-    //   return {
-    //     message: 'Update Film successful',
-    //     affectedRows: 1,
-    //   };
-    // } catch (error) {
-    //   throw new InternalServerErrorException(error || error.message);
-    // }
+    try {
+      this.filmsRepository.save(filmDataRaw);
+      return {
+        message: 'Update Film successful',
+        affectedRows: 1,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error || error.message);
+    }
   }
 
   async remove(filmId: string, user: IUser) {
