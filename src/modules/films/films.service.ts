@@ -34,7 +34,7 @@ export class FilmsService {
   async create(createFilmDto: CreateFilmDto, user: IUser) {
     const filmGenres = createFilmDto.genreCodes.map((g: string) => ({ genreCode: g }));
     const slug = await SlugUtil.generateUniqueSlug(createFilmDto.slug, this.filmsRepository);
-    const { genreCodes, ...dataCreate } = createFilmDto;
+    const { directors, actors, genreCodes, ...dataCreate } = createFilmDto;
     const newFilm = this.filmsRepository.create({
       ...dataCreate,
       slug,
@@ -42,6 +42,19 @@ export class FilmsService {
       createdBy: user.userId.toString(),
     });
     await this.filmsRepository.save(newFilm);
+
+    if (directors) {
+      for (const director of directors) {
+        await this.filmDirectorService.createFilmDirector({ ...director, filmId: newFilm.filmId }, user);
+      }
+    }
+
+    if (actors) {
+      for (const actor of actors) {
+        await this.filmActorService.createFilmActor({ ...actor, filmId: newFilm.filmId }, user);
+      }
+    }
+
     return {
       id: newFilm.filmId,
       createdAt: newFilm.createdAt,
@@ -202,7 +215,7 @@ export class FilmsService {
 
   async updateFilmDirector(
     filmId: string,
-    directors: { filmId: string; directorId: number; isMain?: boolean }[],
+    directors: { filmId: string; directorId: number; isMain: boolean }[],
     user: IUser,
   ) {
     const existDirector = await this.filmDirectorRepository.find({
