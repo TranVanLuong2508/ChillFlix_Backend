@@ -44,7 +44,8 @@ export class PartResponseUser {
   episodes: episodeDto[];
 }
 
-export class PartResponseFindAll {
+@Exclude()
+export class PartResponseFindAllByFilmId {
   @Expose()
   id: string;
 
@@ -58,5 +59,6 @@ export class PartResponseFindAll {
   description: string;
 
   @Expose()
+  @Type(() => episodeDto)
   episodes: Episode[];
 }

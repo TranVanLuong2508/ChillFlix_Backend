@@ -57,6 +57,8 @@ export class FilmsService {
       }
 
       return {
+        EC: 0,
+        EM: 'Create new film success',
         id: newFilm.filmId,
         createdAt: newFilm.createdAt,
       };
@@ -253,9 +255,9 @@ export class FilmsService {
       }
 
       return {
-        message: 'Update Film successful',
         EC: 0,
         EM: 'Update film success',
+        message: 'Update Film successful',
         affectedRows: 1,
       };
     } catch (error) {
