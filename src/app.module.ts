@@ -39,6 +39,7 @@ import { Markdown } from './modules/markdowns/entities/markdown.entity';
 import { SubscriptionPlan } from './modules/subscription-plans/entities/subscription-plan.entity';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { Payment } from './modules/payments/entities/payment.entity';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { Payment } from './modules/payments/entities/payment.entity';
     FilmDirector,
     SubscriptionsModule,
     PaymentsModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
