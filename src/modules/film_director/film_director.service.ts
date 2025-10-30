@@ -9,6 +9,8 @@ import { Director } from '../directors/entities/director.entity';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
 import { IUser } from '../users/interface/user.interface';
 import { create } from 'domain';
+import { plainToInstance } from 'class-transformer';
+import { ListFilm } from '../films/dto/list-film.dto';
 
 @Injectable()
 export class FilmDirectorService {
@@ -103,12 +105,12 @@ export class FilmDirectorService {
         isMain: dto.isMain || false,
         createdBy: user.userId,
       });
+
       const savedFilmDirector = await this.filmDirectorRepo.save(newFilmDirector);
       const result = this.formatFilmDirector(savedFilmDirector);
 
       return { EC: 1, EM: 'Create film director successfully', result };
     } catch (error: any) {
-      console.error('Error in createFilmDirector:', error.message);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from createFilmDirector service',
@@ -137,16 +139,10 @@ export class FilmDirectorService {
           ? {
               filmId: fd.film.filmId,
               title: fd.film.title,
-              posterUrl: fd.film.posterUrl,
-              thumbUrl: fd.film.thumbUrl,
-              description: fd.film.description,
-              releaseDate: fd.film.releaseDate,
               year: fd.film.year,
               slug: fd.film.slug,
               age: fd.film.ageCode,
               type: fd.film.typeCode,
-              country: fd.film.countryCode,
-              language: fd.film.langCode,
               publicStatus: fd.film.publicStatusCode,
             }
           : null,
@@ -214,10 +210,7 @@ export class FilmDirectorService {
         directorId: fd.director.directorId,
         directorName: fd.director.directorName,
         slug: fd.director.slug,
-        avatarUrl: fd.director.avatarUrl,
         isMain: fd.isMain,
-        gender: fd.director.genderCode,
-        nationality: fd.director.nationalityCode,
       }));
 
       return { EC: 1, EM: 'Get directors by film successfully', directors };
@@ -234,25 +227,20 @@ export class FilmDirectorService {
     try {
       const director = await this.directorRepo.findOne({
         where: { directorId },
-        relations: ['filmDirectors', 'filmDirectors.film'],
+        relations: [
+          'filmDirectors',
+          'filmDirectors.film',
+          'filmDirectors.film.filmGenres',
+          'filmDirectors.film.filmGenres.genre',
+          'filmDirectors.film.filmImages',
+          'filmDirectors.film.age',
+        ],
       });
       if (!director) return { EC: 0, EM: `Director ${directorId} not found!` };
 
-      const films = director.filmDirectors.map((fd) => ({
-        filmId: fd.film.filmId,
-        title: fd.film.title,
-        posterUrl: fd.film.posterUrl,
-        thumbUrl: fd.film.thumbUrl,
-        description: fd.film.description,
-        releaseDate: fd.film.releaseDate,
-        year: fd.film.year,
-        slug: fd.film.slug,
-        age: fd.film.ageCode,
-        type: fd.film.typeCode,
-        country: fd.film.countryCode,
-        language: fd.film.langCode,
-        publicStatus: fd.film.publicStatusCode,
-      }));
+      const filmDataRaw = director.filmDirectors.map((i) => i.film);
+
+      const films = plainToInstance(ListFilm, filmDataRaw);
 
       return { EC: 1, EM: 'Get films by director successfully', films };
     } catch (error: any) {

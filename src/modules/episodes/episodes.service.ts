@@ -79,7 +79,6 @@ export class EpisodesService {
     }
 
     const episode = await this.episodeRepository.findOne({ where: { id }, relations: ['part'] });
-    console.log('>>>Check: ', episode);
 
     if (!episode) {
       throw new NotFoundException(`Episode with id: ${id} not found`);
