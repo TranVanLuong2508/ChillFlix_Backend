@@ -35,6 +35,9 @@ export class FilmResponseDto {
   title: string;
 
   @Expose()
+  duration?: number;
+
+  @Expose()
   description: string;
 
   @Expose()
@@ -109,7 +112,7 @@ export class FilmPaginationDto {
   originalTitle: string;
 
   @Expose()
-  duration: number;
+  duration?: number;
 
   @Expose()
   title: string;

@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   IsUrl,
   Validate,
@@ -56,9 +57,9 @@ export class CreateFilmDto {
   year: string;
 
   @Expose()
-  @IsNotEmpty({ message: 'duration must not be empty' })
+  @IsOptional()
   @IsNumber({}, { message: 'duration must be Number format' })
-  duration: number;
+  duration?: number;
 
   @Expose()
   @IsNotEmpty({ message: 'thumbUrl must not be empty' })

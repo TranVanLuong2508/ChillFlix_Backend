@@ -44,7 +44,7 @@ export class Film {
   slug: string;
 
   @Column({ type: 'int', default: 0 })
-  duration: number;
+  duration?: number;
 
   @Column({ type: 'int', default: 0 })
   view: number;

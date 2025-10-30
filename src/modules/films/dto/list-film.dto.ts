@@ -13,7 +13,7 @@ export class ListFilm {
   title: string;
 
   @Expose()
-  duration: number;
+  duration?: number;
 
   @Expose()
   view: number;
