@@ -21,6 +21,9 @@ export class Episode {
   @Column({ nullable: false })
   title: string;
 
+  @Column({ nullable: false })
+  slug: string;
+
   @Column({ type: 'int', nullable: false })
   duration: number;
 

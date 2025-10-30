@@ -14,7 +14,7 @@ import {
 import { EpisodesService } from './episodes.service';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
 import { UpdateEpisodeDto } from './dto/update-episode.dto';
-import { User } from 'src/decorators/customize';
+import { Public, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('episodes')
@@ -26,6 +26,11 @@ export class EpisodesController {
   @Post()
   create(@Body() createEpisodeDto: CreateEpisodeDto, @User() user: IUser) {
     return this.episodesService.create(createEpisodeDto, user);
+  }
+
+  @Post('create-list')
+  createMany(@Body() createListEpisodeDto: CreateEpisodeDto[], @User() user: IUser) {
+    return this.episodesService.createListEpisode(createListEpisodeDto, user);
   }
 
   @Get()

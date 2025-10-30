@@ -18,6 +18,19 @@ export class EpisodesService {
     @InjectRepository(Part) private partRepository: Repository<Part>,
   ) {}
 
+  async createListEpisode(createListEpisodeDto: CreateEpisodeDto[], user: IUser) {
+    try {
+      createListEpisodeDto.forEach(async (item) => await this.create(item, user));
+      return { EC: 0, EM: 'Create List Episode Success' };
+    } catch (error) {
+      console.error('Error in episode service create list episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in episode service create list episode',
+      });
+    }
+  }
+
   async create(createEpisodeDto: CreateEpisodeDto, user: IUser) {
     try {
       const partIsExist = await this.partRepository.exists({ where: { id: createEpisodeDto.partId } });
