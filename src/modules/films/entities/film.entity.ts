@@ -38,9 +38,6 @@ export class Film {
   year: string;
 
   @Column({ nullable: false })
-  filmUrl: string;
-
-  @Column({ nullable: false })
   thumbUrl: string;
 
   @Column({ unique: true, nullable: false })

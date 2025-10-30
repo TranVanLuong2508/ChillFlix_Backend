@@ -44,9 +44,6 @@ export class FilmResponseDto {
   year: string;
 
   @Expose()
-  filmUrl: string;
-
-  @Expose()
   thumbUrl: string;
 
   @Expose()

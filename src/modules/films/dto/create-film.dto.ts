@@ -61,11 +61,6 @@ export class CreateFilmDto {
   duration: number;
 
   @Expose()
-  @IsNotEmpty({ message: 'filmUrl must not be empty' })
-  @IsString({ message: 'filmUrl must be STRING format' })
-  filmUrl: string;
-
-  @Expose()
   @IsNotEmpty({ message: 'thumbUrl must not be empty' })
   @IsString({ message: 'thumbUrl must be STRING format' })
   thumbUrl: string;
