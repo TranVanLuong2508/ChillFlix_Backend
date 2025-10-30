@@ -15,6 +15,14 @@ export class AllCodeDto {
   description?: string;
 }
 
+export class FilmImageDto {
+  @Expose()
+  url: string;
+
+  @Expose()
+  type: 'poster' | 'horizontal' | 'backdrop';
+}
+
 @Exclude()
 export class FilmResponseDto {
   @Expose()
