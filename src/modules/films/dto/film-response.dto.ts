@@ -112,13 +112,10 @@ export class FilmPaginationDto {
   originalTitle: string;
 
   @Expose()
-  posterUrl: string;
+  duration: number;
 
   @Expose()
   title: string;
-
-  @Expose()
-  description: string;
 
   @Expose()
   year: string;
@@ -136,6 +133,10 @@ export class FilmPaginationDto {
   @Expose()
   @Type(() => AllCodeDto)
   language: AllCodeDto;
+
+  @Expose()
+  @Type(() => FilmImageDto)
+  filmImages: FilmImageDto[];
 
   @Expose()
   @Transform(
