@@ -8,6 +8,8 @@ import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { plainToInstance } from 'class-transformer';
+import { ListFilm } from '../films/dto/list-film.dto';
 
 @Injectable()
 export class FilmActorService {
@@ -37,7 +39,7 @@ export class FilmActorService {
           releaseDate: entity.film.releaseDate,
           year: entity.film.year,
           thumbUrl: entity.film.thumbUrl,
-          posterUrl: entity.film.posterUrl,
+          // posterUrl: entity.film.posterUrl,
           slug: entity.film.slug,
           age: entity.film.ageCode,
           type: entity.film.typeCode,
@@ -139,7 +141,7 @@ export class FilmActorService {
           ? {
               filmId: fa.film.filmId,
               title: fa.film.title,
-              posterUrl: fa.film.posterUrl,
+              // posterUrl: fa.film.posterUrl,
               thumbUrl: fa.film.thumbUrl,
               description: fa.film.description,
               releaseDate: fa.film.releaseDate,
@@ -217,17 +219,15 @@ export class FilmActorService {
         return { EC: 0, EM: `No actors found for film ID ${filmId}` };
       }
 
-      const result = filmActors.map((fa) => ({
+      const actors = filmActors.map((fa) => ({
         actorId: fa.actor.actorId,
         actorName: fa.actor.actorName,
-        birthDate: fa.actor.birthDate,
-        gender: fa.actor.genderCode,
-        nationality: fa.actor.nationalityCode,
         characterName: fa.characterName,
         avatarUrl: fa.actor.avatarUrl,
+        slug: fa.actor.slug,
       }));
 
-      return { EC: 1, EM: 'Get actors by film successfully', result };
+      return { EC: 1, EM: 'Get actors by film successfully', actors };
     } catch (error: any) {
       console.error('Error in getActorsByFilm:', error.message);
       throw new InternalServerErrorException({
@@ -241,25 +241,21 @@ export class FilmActorService {
     try {
       const actor = await this.actorRepo.findOne({
         where: { actorId },
-        relations: ['filmActors', 'filmActors.film'],
+        relations: [
+          'filmActors',
+          'filmActors.film',
+          'filmActors.film.filmGenres',
+          'filmActors.film.filmGenres.genre',
+          'filmActors.film.filmImages',
+          'filmActors.film.age',
+        ],
       });
+
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
 
-      const films = actor.filmActors.map((fd) => ({
-        filmId: fd.film.filmId,
-        title: fd.film.title,
-        posterUrl: fd.film.posterUrl,
-        thumbUrl: fd.film.thumbUrl,
-        description: fd.film.description,
-        releaseDate: fd.film.releaseDate,
-        year: fd.film.year,
-        slug: fd.film.slug,
-        age: fd.film.ageCode,
-        type: fd.film.typeCode,
-        country: fd.film.countryCode,
-        language: fd.film.langCode,
-        publicStatus: fd.film.publicStatusCode,
-      }));
+      const filmDataRaw = actor.filmActors.map((i) => i.film);
+
+      const films = plainToInstance(ListFilm, filmDataRaw);
 
       return { EC: 1, EM: 'Get films by director successfully', films };
     } catch (error: any) {
