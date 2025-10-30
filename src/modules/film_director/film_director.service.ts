@@ -213,11 +213,11 @@ export class FilmDirectorService {
         isMain: fd.isMain,
       }));
 
-      return { EC: 1, EM: 'Get directors by film successfully', directors };
+      return { EC: 0, EM: 'Get directors by film successfully', directors };
     } catch (error: any) {
       console.error('Error in getDirectorsByFilm:', error.message);
       throw new InternalServerErrorException({
-        EC: 0,
+        EC: 1,
         EM: 'Error from getDirectorsByFilm service',
       });
     }

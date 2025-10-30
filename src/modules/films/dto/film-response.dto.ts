@@ -44,6 +44,9 @@ export class FilmResponseDto {
   year: string;
 
   @Expose()
+  filmUrl: string;
+
+  @Expose()
   thumbUrl: string;
 
   @Expose()
@@ -54,6 +57,10 @@ export class FilmResponseDto {
 
   @Expose()
   view: string;
+
+  @Expose()
+  @Type(() => FilmImageDto)
+  filmImages: FilmImageDto[];
 
   @Expose()
   genreCodes: string[];

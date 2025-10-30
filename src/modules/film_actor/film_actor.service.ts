@@ -227,11 +227,11 @@ export class FilmActorService {
         slug: fa.actor.slug,
       }));
 
-      return { EC: 1, EM: 'Get actors by film successfully', actors };
+      return { EC: 0, EM: 'Get actors by film successfully', actors };
     } catch (error: any) {
       console.error('Error in getActorsByFilm:', error.message);
       throw new InternalServerErrorException({
-        EC: 0,
+        EC: 1,
         EM: 'Error from getActorsByFilm service',
       });
     }
