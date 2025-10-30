@@ -18,6 +18,19 @@ export class ActorService {
     private readonly allcodeRepo: Repository<AllCode>,
   ) {}
 
+  async createListActor(listData: CreateActorDto[], user: IUser) {
+    try {
+      listData.forEach(async (item) => await this.createActor(item, user));
+      return { EC: 0, EM: 'Create List Actor Success' };
+    } catch (error) {
+      console.error('Error in actor service create list actor:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in actor service create list actor',
+      });
+    }
+  }
+
   async createActor(dto: CreateActorDto, user: IUser): Promise<any> {
     try {
       const gender = await this.allcodeRepo.findOne({

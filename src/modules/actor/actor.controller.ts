@@ -16,6 +16,12 @@ export class ActorController {
     return await this.actorService.createActor(dto, user);
   }
 
+  @Post('create-list-actor')
+  @ResponseMessage('Create a new actor')
+  async createListActor(@Body() dto: CreateActorDto[], @User() user: IUser) {
+    return await this.actorService.createListActor(dto, user);
+  }
+
   @Get('all-actors')
   @ResponseMessage('Get all actors with pagination, filtering, and sorting')
   async getAllActors(@Query() query: PaginationActorDto) {
