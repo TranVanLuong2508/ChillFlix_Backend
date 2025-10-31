@@ -28,6 +28,11 @@ export class EpisodesController {
     return this.episodesService.create(createEpisodeDto, user);
   }
 
+  @Post('create-list')
+  createMany(@Body() createListEpisodeDto: CreateEpisodeDto[], @User() user: IUser) {
+    return this.episodesService.createListEpisode(createListEpisodeDto, user);
+  }
+
   @Get()
   findAll(@Query('current') page: number, @Query('pageSize') limit: number, @Query() qs: string) {
     return this.episodesService.findAll(page, limit, qs);

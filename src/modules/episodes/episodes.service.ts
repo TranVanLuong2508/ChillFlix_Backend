@@ -18,112 +18,173 @@ export class EpisodesService {
     @InjectRepository(Part) private partRepository: Repository<Part>,
   ) {}
 
+  async createListEpisode(createListEpisodeDto: CreateEpisodeDto[], user: IUser) {
+    try {
+      for (const item of createListEpisodeDto) {
+        await this.create(item, user);
+      }
+
+      return { EC: 0, EM: 'Create List Episode Success' };
+    } catch (error) {
+      console.error('Error in episode service create list episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in episode service create list episode',
+      });
+    }
+  }
+
   async create(createEpisodeDto: CreateEpisodeDto, user: IUser) {
-    const partIsExist = await this.partRepository.exists({ where: { id: createEpisodeDto.partId } });
+    try {
+      const partIsExist = await this.partRepository.exists({ where: { id: createEpisodeDto.partId } });
 
-    if (!partIsExist) {
-      throw new NotFoundException(`Part with id ${createEpisodeDto.partId} not found`);
+      if (!partIsExist) {
+        throw new NotFoundException({ EC: 1, EM: `Part with id ${createEpisodeDto.partId} not found` });
+      }
+
+      if (!createEpisodeDto.title) {
+        createEpisodeDto.title = `Tập ${createEpisodeDto.episodeNumber}`;
+      }
+
+      const newEpisode = this.episodeRepository.create({ ...createEpisodeDto, createdBy: user.userId.toString() });
+      await this.episodeRepository.save(newEpisode);
+      return {
+        EC: 0,
+        EM: 'Create new episode success',
+        id: newEpisode.id,
+        createdAt: newEpisode.createdAt,
+      };
+    } catch (error) {
+      console.error('Error in episode service create new episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in episode service create new episode',
+      });
     }
-
-    if (!createEpisodeDto.title) {
-      createEpisodeDto.title = `Tập ${createEpisodeDto.episodeNumber}`;
-    }
-
-    const newEpisode = this.episodeRepository.create({ ...createEpisodeDto, createdBy: user.userId.toString() });
-    await this.episodeRepository.save(newEpisode);
-    return {
-      id: newEpisode.id,
-      createdAt: newEpisode.createdAt,
-    };
   }
 
   async findAll(page: number, limit: number, qs: string) {
-    const { filter, projection } = aqp(qs);
-    let { sort } = aqp(qs);
+    try {
+      const { filter, projection } = aqp(qs);
+      let { sort } = aqp(qs);
 
-    delete filter.current;
-    delete filter.pageSize;
+      delete filter.current;
+      delete filter.pageSize;
 
-    if (isEmpty(sort)) {
-      sort = { createdAt: -1 };
+      if (isEmpty(sort)) {
+        sort = { createdAt: -1 };
+      }
+
+      const offset = (page - 1) * limit;
+      const defaultLimit = limit ? limit : 10;
+
+      const totalItems = await this.episodeRepository.count({ where: filter });
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+
+      const result = await this.episodeRepository.find({
+        where: filter,
+        order: sort,
+        select: projection,
+        skip: offset,
+        take: defaultLimit,
+      });
+
+      return {
+        EC: 0,
+        EM: 'Get all data episode',
+        meta: {
+          current: page,
+          pageSize: limit,
+          pages: totalPages,
+          total: totalItems,
+        },
+        result: plainToInstance(EpisodeFindOne, result),
+      };
+    } catch (error) {
+      console.error('Error in episode service find all episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in episode service find all episode',
+      });
     }
-
-    const offset = (page - 1) * limit;
-    const defaultLimit = limit ? limit : 10;
-
-    const totalItems = await this.episodeRepository.count({ where: filter });
-    const totalPages = Math.ceil(totalItems / defaultLimit);
-
-    const result = await this.episodeRepository.find({
-      where: filter,
-      order: sort,
-      select: projection,
-      skip: offset,
-      take: defaultLimit,
-    });
-
-    return {
-      meta: {
-        current: page,
-        pageSize: limit,
-        pages: totalPages,
-        total: totalItems,
-      },
-      result: plainToInstance(EpisodeFindOne, result),
-    };
   }
 
   async findOne(id: string) {
-    if (!isUUID(id)) {
-      throw new BadRequestException(`Wrong format episode id!`);
+    try {
+      if (!isUUID(id)) {
+        throw new BadRequestException({ EC: 1, EM: 'Wrong format episode id!' });
+      }
+
+      const episode = await this.episodeRepository.findOne({ where: { id }, relations: ['part'] });
+      if (!episode) {
+        throw new NotFoundException({ EC: 2, EM: `Episode with id: ${id} not found` });
+      }
+
+      return {
+        EC: 0,
+        EM: 'Get data episode success',
+        episode: plainToInstance(EpisodeFindOne, episode),
+      };
+    } catch (error) {
+      console.error('Error in episode service find one episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 3,
+        EM: 'Error in episode service find one episode',
+      });
     }
-
-    const episode = await this.episodeRepository.findOne({ where: { id }, relations: ['part'] });
-    console.log('>>>Check: ', episode);
-
-    if (!episode) {
-      throw new NotFoundException(`Episode with id: ${id} not found`);
-    }
-
-    return plainToInstance(EpisodeFindOne, episode);
   }
 
   async update(id: string, updateEpisodeDto: UpdateEpisodeDto, user: IUser) {
-    if (!isUUID(id)) {
-      throw new BadRequestException('Wrong format episode id!');
-    }
-
-    const episodeData = await this.episodeRepository.findOneBy({ id });
-    if (!episodeData) {
-      throw new NotFoundException(`Episode with id: ${id} not found`);
-    }
-
-    Object.assign(episodeData, updateEpisodeDto);
-    episodeData.updatedBy = user.userId.toString();
-
     try {
+      if (!isUUID(id)) {
+        throw new BadRequestException({ EC: 1, EM: 'Wrong format episode id!' });
+      }
+
+      const episodeData = await this.episodeRepository.findOneBy({ id });
+      if (!episodeData) {
+        throw new NotFoundException({ EC: 2, EM: `Episode with id: ${id} not found` });
+      }
+
+      Object.assign(episodeData, updateEpisodeDto);
+      episodeData.updatedBy = user.userId.toString();
+
       await this.episodeRepository.save(episodeData);
       return {
-        message: 'Update Episode successful',
+        EC: 0,
+        EM: 'Update apisode success',
+        message: 'Update Episode success',
         affectedRows: 1,
       };
     } catch (error) {
-      throw new InternalServerErrorException(error || error.message);
+      console.error('Error in episode service update episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 3,
+        EM: 'Error in episode service update episode',
+      });
     }
   }
 
   async remove(id: string, user: IUser) {
-    if (!isUUID(id)) {
-      throw new BadRequestException(`Wrong format episode id!`);
-    }
+    try {
+      if (!isUUID(id)) {
+        throw new BadRequestException({ EC: 1, EM: `Wrong format episode id!` });
+      }
 
-    const episodeIsExist = await this.episodeRepository.exists({ where: { id } });
-    if (!episodeIsExist) {
-      throw new NotFoundException(`Episode with id ${id} not found`);
-    }
+      const episodeIsExist = await this.episodeRepository.exists({ where: { id } });
+      if (!episodeIsExist) {
+        throw new NotFoundException({ EC: 2, EM: `Episode with id ${id} not found` });
+      }
 
-    await this.episodeRepository.update(id, { deletedBy: user.userId.toString() });
-    await this.episodeRepository.softDelete(id);
-    return { deleted: 'success' };
+      await this.episodeRepository.update(id, { deletedBy: user.userId.toString() });
+      await this.episodeRepository.softDelete(id);
+
+      return { EC: 0, EM: 'Delete episode success', deleted: 'success' };
+    } catch (error) {
+      console.error('Error in episode service delete episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 3,
+        EM: 'Error in episode service delete episode',
+      });
+    }
   }
 }

@@ -33,12 +33,15 @@ import { ActorModule } from './modules/actor/actor.module';
 import { Actor } from './modules/actor/entities/actor.entity';
 import { FilmActorModule } from './modules/film_actor/film_actor.module';
 import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
+
 import { CommentModule } from './modules/comment/comment.module';
 import { Comment } from './modules/comment/entities/comment.entity';
 import { CommentReactionModule } from './modules/comment-reaction/comment-reaction.module';
 import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
 import { RatingModule } from './modules/rating/rating.module';
 import { Rating } from './modules/rating/entities/rating.entity';
+import { FilmImage } from './modules/films/entities/film_image.entity';
+
 
 @Module({
   imports: [
@@ -64,6 +67,7 @@ import { Rating } from './modules/rating/entities/rating.entity';
           Film,
           RolePermission,
           FilmGenre,
+          FilmImage,
           Part,
           Episode,
           FilmDirector,

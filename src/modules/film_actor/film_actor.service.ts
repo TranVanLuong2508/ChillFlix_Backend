@@ -8,6 +8,8 @@ import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { plainToInstance } from 'class-transformer';
+import { ListFilm } from '../films/dto/list-film.dto';
 
 @Injectable()
 export class FilmActorService {
@@ -37,7 +39,7 @@ export class FilmActorService {
           releaseDate: entity.film.releaseDate,
           year: entity.film.year,
           thumbUrl: entity.film.thumbUrl,
-          posterUrl: entity.film.posterUrl,
+          // posterUrl: entity.film.posterUrl,
           slug: entity.film.slug,
           age: entity.film.ageCode,
           type: entity.film.typeCode,
@@ -139,7 +141,7 @@ export class FilmActorService {
           ? {
               filmId: fa.film.filmId,
               title: fa.film.title,
-              posterUrl: fa.film.posterUrl,
+              // posterUrl: fa.film.posterUrl,
               thumbUrl: fa.film.thumbUrl,
               description: fa.film.description,
               releaseDate: fa.film.releaseDate,
@@ -260,8 +262,8 @@ export class FilmActorService {
         },
         result: actors,
       };
-    } catch (error) {
-      console.error('Error in getActorsByFilm:', error);
+    } catch (error: any) {
+      console.error('Error in getActorsByFilm:', error.message);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from getActorsByFilm service',
@@ -270,6 +272,7 @@ export class FilmActorService {
   }
   async getFilmsByActor(actorId: number, query: any = {}) {
     try {
+
       query = query || {};
       const { filter, sort } = aqp(query);
 
@@ -301,14 +304,33 @@ export class FilmActorService {
         };
       }
 
-      const films = data.map((item) => ({
+      const film = data.map((item) => ({
         filmId: item.film.filmId,
         filmName: item.film.title,
-        posterUrl: item.film.posterUrl,
+        posterUrl: item.film.filmImages,
         releaseDate: item.film.releaseDate,
         slug: item.film.slug,
         characterName: item.characterName,
       }));
+
+      const actor = await this.actorRepo.findOne({
+        where: { actorId },
+        relations: [
+          'filmActors',
+          'filmActors.film',
+          'filmActors.film.filmGenres',
+          'filmActors.film.filmGenres.genre',
+          'filmActors.film.filmImages',
+          'filmActors.film.age',
+        ],
+      });
+
+      if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
+
+      const filmDataRaw = actor.filmActors.map((i) => i.film);
+
+      let films = plainToInstance(ListFilm, filmDataRaw);
+
 
       return {
         EC: 1,

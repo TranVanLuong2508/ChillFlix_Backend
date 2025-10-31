@@ -13,36 +13,28 @@ export class FileService {
     const filePath = file.path;
 
     try {
-      const dataUpload = await new Promise<CloudinaryResponse>(
-        (resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'chillflix-image',
-              public_id: `${file.originalname}-${Date.now()}`,
-            },
-            (error, result) => {
-              if (error) {
-                const newError = new Error(
-                  error.message || 'Cloudinary upload failed',
-                );
-                (newError as any).originalError = error;
-                return reject(newError);
-              }
-              if (!result) {
-                return reject(
-                  new Error(
-                    'Cloudinary upload failed without an error message.',
-                  ),
-                );
-              }
-              resolve(result);
-            },
-          );
+      const dataUpload = await new Promise<CloudinaryResponse>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'chillflix-image',
+            public_id: `${file.originalname}-${Date.now()}`,
+          },
+          (error, result) => {
+            if (error) {
+              const newError = new Error(error.message || 'Cloudinary upload failed');
+              (newError as any).originalError = error;
+              return reject(newError);
+            }
+            if (!result) {
+              return reject(new Error('Cloudinary upload failed without an error message.'));
+            }
+            resolve(result);
+          },
+        );
 
-          const readStream = createReadStream(filePath);
-          readStream.pipe(uploadStream);
-        },
-      );
+        const readStream = createReadStream(filePath);
+        readStream.pipe(uploadStream);
+      });
 
       return {
         url: dataUpload.secure_url,

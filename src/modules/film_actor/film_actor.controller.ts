@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseIntPipe,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  SerializeOptions,
+} from '@nestjs/common';
 import { FilmActorService } from './film_actor.service';
 import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
@@ -7,6 +20,8 @@ import { PaginationFaDto } from './dto/pagination-fa.dto';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('film-actor')
+@UseInterceptors(ClassSerializerInterceptor)
+@SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmActorController {
   constructor(private readonly filmActorService: FilmActorService) {}
 
