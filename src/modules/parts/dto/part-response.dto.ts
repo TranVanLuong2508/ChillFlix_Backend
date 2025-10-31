@@ -58,5 +58,6 @@ export class PartResponseFindAll {
   description: string;
 
   @Expose()
+  @Type(() => episodeDto)
   episodes: Episode[];
 }

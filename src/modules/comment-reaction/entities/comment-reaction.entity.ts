@@ -34,16 +34,4 @@ export class CommentReaction {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @DeleteDateColumn()
-  deletedAt?: Date;
-
-  @Column({ nullable: true })
-  createdBy: number;
-
-  @Column({ nullable: true })
-  updatedBy: number;
-
-  @Column({ nullable: true })
-  deletedBy: number;
 }
