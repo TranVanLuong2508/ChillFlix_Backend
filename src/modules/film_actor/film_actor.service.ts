@@ -226,7 +226,7 @@ export class FilmActorService {
 
       const [data, total] = await this.filmActorRepo.findAndCount({
         where: { film: { filmId }, ...filter },
-        relations: ['actor', 'film'],
+        relations: ['actor'],
         order,
         skip,
         take: limit,
@@ -252,7 +252,7 @@ export class FilmActorService {
       }));
 
       return {
-        EC: 1,
+        EC: 0,
         EM: 'Get actors by film successfully',
         meta: {
           page,
@@ -270,6 +270,7 @@ export class FilmActorService {
       });
     }
   }
+
   async getFilmsByActor(actorId: number, query: any = {}) {
     try {
       query = query || {};
@@ -288,7 +289,7 @@ export class FilmActorService {
 
       const [data, total] = await this.filmActorRepo.findAndCount({
         where: { actor: { actorId }, ...filter },
-        relations: ['film', 'actor'],
+        relations: ['actor'],
         order,
         skip,
         take: limit,

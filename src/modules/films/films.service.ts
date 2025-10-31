@@ -222,10 +222,8 @@ export class FilmsService {
         });
       }
 
-   
       this.filmsRepository.merge(filmDataRaw, otherFilmData);
 
-    
       if (slug !== '' && slug !== filmDataRaw.slug) {
         const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
         filmDataRaw.slug = slug;
@@ -239,17 +237,14 @@ export class FilmsService {
 
       await this.filmsRepository.save(filmDataRaw);
 
-    
       if (filmImages) {
         await this.updateFilmImage(filmId, filmImages);
       }
-
 
       if (directors) {
         await this.updateFilmDirector(filmId, directors, user);
       }
 
-  
       if (actors) {
         await this.updateFilmActor(filmId, actors, user);
       }

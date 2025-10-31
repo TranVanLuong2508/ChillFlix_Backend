@@ -198,6 +198,7 @@ export class FilmDirectorService {
       });
     }
   }
+
   async getDirectorsByFilm(filmId: string, query: any = {}) {
     try {
       query = query || {};
@@ -243,7 +244,7 @@ export class FilmDirectorService {
       const paginated = directors.slice(skip, skip + limit);
 
       return {
-        EC: 1,
+        EC: 0,
         EM: 'Get directors by film successfully',
         meta: {
           page,
