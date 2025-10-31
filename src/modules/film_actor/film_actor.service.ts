@@ -272,7 +272,6 @@ export class FilmActorService {
   }
   async getFilmsByActor(actorId: number, query: any = {}) {
     try {
-
       query = query || {};
       const { filter, sort } = aqp(query);
 
@@ -304,15 +303,6 @@ export class FilmActorService {
         };
       }
 
-      const film = data.map((item) => ({
-        filmId: item.film.filmId,
-        filmName: item.film.title,
-        posterUrl: item.film.filmImages,
-        releaseDate: item.film.releaseDate,
-        slug: item.film.slug,
-        characterName: item.characterName,
-      }));
-
       const actor = await this.actorRepo.findOne({
         where: { actorId },
         relations: [
@@ -330,7 +320,6 @@ export class FilmActorService {
       const filmDataRaw = actor.filmActors.map((i) => i.film);
 
       let films = plainToInstance(ListFilm, filmDataRaw);
-
 
       return {
         EC: 1,

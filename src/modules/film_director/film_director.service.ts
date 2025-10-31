@@ -294,21 +294,6 @@ export class FilmDirectorService {
         return { EC: 0, EM: `Director ${directorId} not found!` };
       }
 
-      const film = director.filmDirectors.map((fd) => ({
-        filmId: fd.film.filmId,
-        title: fd.film.title,
-        FilmImage: fd.film.filmImages,
-        thumbUrl: fd.film.thumbUrl,
-        description: fd.film.description,
-        releaseDate: fd.film.releaseDate,
-        year: fd.film.year,
-        slug: fd.film.slug,
-        ageCode: fd.film.ageCode,
-        typeCode: fd.film.typeCode,
-        countryCode: fd.film.countryCode,
-        langCode: fd.film.langCode,
-        publicStatusCode: fd.film.publicStatusCode,
-      }));
       const filmDataRaw = director.filmDirectors.map((i) => i.film);
 
       let films = plainToInstance(ListFilm, filmDataRaw);
