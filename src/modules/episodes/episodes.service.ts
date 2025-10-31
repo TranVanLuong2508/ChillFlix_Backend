@@ -20,7 +20,10 @@ export class EpisodesService {
 
   async createListEpisode(createListEpisodeDto: CreateEpisodeDto[], user: IUser) {
     try {
-      createListEpisodeDto.forEach(async (item) => await this.create(item, user));
+      for (const item of createListEpisodeDto) {
+        await this.create(item, user);
+      }
+
       return { EC: 0, EM: 'Create List Episode Success' };
     } catch (error) {
       console.error('Error in episode service create list episode:', error || error.message);

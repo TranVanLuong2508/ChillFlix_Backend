@@ -20,7 +20,10 @@ export class ActorService {
 
   async createListActor(listData: CreateActorDto[], user: IUser) {
     try {
-      listData.forEach(async (item) => await this.createActor(item, user));
+      for (const item of listData) {
+        await this.createActor(item, user);
+      }
+
       return { EC: 0, EM: 'Create List Actor Success' };
     } catch (error) {
       console.error('Error in actor service create list actor:', error || error.message);
