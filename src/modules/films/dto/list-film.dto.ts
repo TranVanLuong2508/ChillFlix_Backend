@@ -13,6 +13,9 @@ export class ListFilm {
   title: string;
 
   @Expose()
+  year: string;
+
+  @Expose()
   duration?: number;
 
   @Expose()

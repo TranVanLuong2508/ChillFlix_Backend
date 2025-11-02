@@ -20,8 +20,12 @@ export class Actor {
 
   @Column({ name: 'actor_name', type: 'varchar', length: 100 })
   actorName: string;
+
   @Column({ name: 'slug', type: 'varchar', length: 120, nullable: true })
   slug?: string;
+
+  @Column({ name: 'shortBio', type: 'text', nullable: true })
+  shortBio?: string;
 
   @Column({ name: 'gender_code', type: 'varchar', length: 10 })
   genderCode?: string;

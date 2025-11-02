@@ -10,6 +10,7 @@ import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
 import { plainToInstance } from 'class-transformer';
 import { ListFilm } from '../films/dto/list-film.dto';
+import { FilmImage } from '../films/entities/film_image.entity';
 
 @Injectable()
 export class FilmActorService {
@@ -40,6 +41,10 @@ export class FilmActorService {
           year: entity.film.year,
           thumbUrl: entity.film.thumbUrl,
           // posterUrl: entity.film.posterUrl,
+          filmImages: entity.film.filmImages?.map((img: FilmImage) => ({
+            filmImageId: img.id,
+            imageUrl: img.url,
+          })),
           slug: entity.film.slug,
           age: entity.film.ageCode,
           type: entity.film.typeCode,
@@ -54,6 +59,7 @@ export class FilmActorService {
           actorId: entity.actor.actorId,
           actorName: entity.actor.actorName,
           slug: entity.actor.slug,
+          shortBio: entity.actor.shortBio,
           genderCode: entity.actor.genderActor?.keyMap,
           birthDate: entity.actor.birthDate,
           nationalityCode: entity.actor.nationalityActor?.keyMap,
@@ -142,6 +148,10 @@ export class FilmActorService {
               filmId: fa.film.filmId,
               title: fa.film.title,
               // posterUrl: fa.film.posterUrl,
+              filmImages: fa.film.filmImages?.map((img: FilmImage) => ({
+                filmImageId: img.id,
+                imageUrl: img.url,
+              })),
               thumbUrl: fa.film.thumbUrl,
               description: fa.film.description,
               releaseDate: fa.film.releaseDate,
@@ -159,6 +169,7 @@ export class FilmActorService {
               actorId: fa.actor.actorId,
               actorName: fa.actor.actorName,
               slug: fa.actor.slug,
+              shortBio: fa.actor.shortBio,
               birthDate: fa.actor.birthDate,
               gender: fa.actor.genderCode,
               nationality: fa.actor.nationalityCode,
@@ -194,7 +205,7 @@ export class FilmActorService {
     try {
       const filmActor = await this.filmActorRepo.findOne({
         where: { id },
-        relations: ['film', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
+        relations: ['film', 'film.filmImages', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
       });
       if (!filmActor) return { EC: 0, EM: `Film-Actor ${id} not found!` };
 
@@ -246,6 +257,7 @@ export class FilmActorService {
         actorName: item.actor.actorName,
         avatarUrl: item.actor.avatarUrl,
         slug: item.actor.slug,
+        shortBio: item.actor.shortBio,
         nationalityCode: item.actor.nationalityCode,
         genderCode: item.actor.genderCode,
         characterName: item.characterName,

@@ -38,7 +38,11 @@ export class FilmDirectorService {
           releaseDate: entity.film.releaseDate,
           year: entity.film.year,
           thumbUrl: entity.film.thumbUrl,
-          posterUrl: entity.film.posterUrl,
+          // posterUrl: entity.film.posterUrl,
+          filmImages: entity.film.filmImages?.map((img: FilmImage) => ({
+            filmImageId: img.id,
+            imageUrl: img.url,
+          })),
           slug: entity.film.slug,
           age: entity.film.ageCode,
           type: entity.film.typeCode,
@@ -140,11 +144,23 @@ export class FilmDirectorService {
           ? {
               filmId: fd.film.filmId,
               title: fd.film.title,
+              originalTitle: fd.film.originalTitle,
+              description: fd.film.description,
+              releaseDate: fd.film.releaseDate,
+              thumbUrl: fd.film.thumbUrl,
+              // posterUrl: fd.film.posterUrl,
+              filmImages: fd.film.filmImages?.map((img: FilmImage) => ({
+                filmImageId: img.id,
+                imageUrl: img.url,
+              })),
               year: fd.film.year,
               slug: fd.film.slug,
               age: fd.film.ageCode,
               type: fd.film.typeCode,
+              country: fd.film.countryCode,
+              language: fd.film.langCode,
               publicStatus: fd.film.publicStatusCode,
+              
             }
           : null,
         director: fd.director
@@ -152,6 +168,8 @@ export class FilmDirectorService {
               directorId: fd.director.directorId,
               name: fd.director.directorName,
               slug: fd.director.slug,
+              story: fd.director.story,
+              avatarUrl: fd.director.avatarUrl,
               gender: fd.director.genderCode,
               nationality: fd.director.nationalityCode,
             }
@@ -184,7 +202,7 @@ export class FilmDirectorService {
     try {
       const filmDirector = await this.filmDirectorRepo.findOne({
         where: { id },
-        relations: ['film', 'director', 'director.genderCodeRL', 'director.nationalityCodeRL'],
+        relations: ['film', 'film.filmImages', 'director', 'director.genderCodeRL', 'director.nationalityCodeRL'],
       });
 
       if (!filmDirector) return { EC: 0, EM: `FilmDirector ${id} not found!` };

@@ -173,8 +173,6 @@ export class DirectorService {
       });
 
       if (!director) return { EC: 0, EM: `Director ${id} not found!` };
-
-      if (director.slug) director.slug = `${director.slug}.${director.directorId}`;
       const { createdAt, updatedAt, createdBy, ...newData } = director as any;
       Object.entries(director).forEach(([k, v]) => {
         if (typeof v === 'object' && v !== null && 'keyMap' in v) {

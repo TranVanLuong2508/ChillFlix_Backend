@@ -57,6 +57,7 @@ export class ActorService {
       const actor = this.actorRepo.create({
         actorName: dto.actorName,
         slug,
+        shortBio: dto.shortBio,
         genderActor: gender,
         avatarUrl: dto.avatarUrl,
         birthDate: dto.birthDate,
@@ -191,7 +192,6 @@ export class ActorService {
         relations: ['genderActor', 'nationalityActor'],
       });
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found` };
-      if (actor.slug) actor.slug = `${actor.slug}.${actor.actorId}`;
       const { createdAt, updatedAt, createdBy, ...newData } = actor as any;
       Object.entries(actor).forEach(([k, v]) => {
         if (typeof v === 'object' && v !== null && 'keyMap' in v) {

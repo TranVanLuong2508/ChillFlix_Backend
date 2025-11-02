@@ -37,6 +37,7 @@ export class FilmActorController {
     return await this.filmActorService.getAllFilmActors(query);
   }
 
+  @Public()
   @Get('get-film-actor-by-id/:id')
   @ResponseMessage('Get film-actor relation by id')
   async getFilmActorById(@Param('id', ParseIntPipe) id: number) {
@@ -50,6 +51,7 @@ export class FilmActorController {
     return await this.filmActorService.getActorsByFilm(filmId, query);
   }
 
+  @Public()
   @Get('get-films-by-actor/:actorId')
   @ResponseMessage('Get films by actor id')
   async getFilmsByActor(@Param('actorId', ParseIntPipe) actorId: number, query: PaginationFaDto) {
