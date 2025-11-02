@@ -57,6 +57,8 @@ export class FilmDirectorService {
           directorId: entity.director.directorId,
           directorName: entity.director.directorName,
           slug: entity.director.slug,
+          birthDate: entity.director.birthDate,
+          story: entity.director.story,
           avatarUrl: entity.director.avatarUrl,
           genderCode: entity.director.genderCodeRL?.keyMap,
           nationalityCode: entity.director.nationalityCodeRL?.keyMap,
@@ -160,14 +162,14 @@ export class FilmDirectorService {
               country: fd.film.countryCode,
               language: fd.film.langCode,
               publicStatus: fd.film.publicStatusCode,
-              
             }
           : null,
         director: fd.director
           ? {
               directorId: fd.director.directorId,
-              name: fd.director.directorName,
+              directorName: fd.director.directorName,
               slug: fd.director.slug,
+              birthDate: fd.director.birthDate,
               story: fd.director.story,
               avatarUrl: fd.director.avatarUrl,
               gender: fd.director.genderCode,
@@ -244,6 +246,8 @@ export class FilmDirectorService {
       let directors = film.filmDirectors.map((fd) => ({
         directorId: fd.director.directorId,
         directorName: fd.director.directorName,
+        birthDate: fd.director.birthDate,
+        story: fd.director.story,
         slug: fd.director.slug,
         isMain: fd.isMain,
         genderCode: fd.director.genderCode,

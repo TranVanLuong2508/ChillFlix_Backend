@@ -43,7 +43,8 @@ export class DirectorService {
 
       const director = this.directorRepo.create({
         directorName: dto.directorName,
-        slug,
+        slug: slug,
+        birthDate: dto.birthDate,
         story: dto.story,
         avatarUrl: dto.avatarUrl,
         createdBy: user.userId,
@@ -239,6 +240,9 @@ export class DirectorService {
         if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
         director.nationalityCodeRL = nationality;
       }
+      const d = dto.birthDate as any;
+      director.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+
       director.updatedBy = user.userId;
       const data = await this.directorRepo.save(director);
       const result = Object.fromEntries(

@@ -6,6 +6,10 @@ export class CreateDirectorDto {
 
   @IsOptional()
   @IsString()
+  birthDate?: Date;
+
+  @IsOptional()
+  @IsString()
   genderCode?: string;
 
   @IsOptional()

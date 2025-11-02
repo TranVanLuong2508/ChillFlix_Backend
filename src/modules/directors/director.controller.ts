@@ -3,7 +3,7 @@ import { DirectorService } from './director.service';
 import { CreateDirectorDto } from './dto-director/create-director.dto';
 import { UpdateDirectorDto } from './dto-director/update-director.dto';
 import { PaginationDto } from './dto-director/pagination.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('director')
@@ -22,6 +22,7 @@ export class DirectorController {
     return await this.directorService.getAllDirectors(query);
   }
 
+  @Public()
   @Get('get-director-by-id/:directorId')
   @ResponseMessage('Get director by ID')
   async getDirectorById(@Param('directorId', ParseIntPipe) directorId: number) {

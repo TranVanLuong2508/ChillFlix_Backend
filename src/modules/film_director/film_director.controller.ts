@@ -37,19 +37,21 @@ export class FilmDirectorController {
     return this.filmDirectorService.getAllFilmDirectors(query);
   }
 
+  @Public()
   @Get('get-film-director-by-id/:id')
   @ResponseMessage('Get film-director relation by id')
   getFilmDirectorById(@Param('id') id: number) {
     return this.filmDirectorService.getFilmDirectorById(id);
   }
 
-  @Get('by-film/:filmId')
   @Public()
+  @Get('by-film/:filmId')
   @ResponseMessage('Get directors by film')
   getDirectorsByFilm(@Param('filmId') filmId: string, @Query() query: PaginationfdDto) {
     return this.filmDirectorService.getDirectorsByFilm(filmId, query);
   }
 
+  @Public()
   @Get('by-director/:directorId')
   @ResponseMessage('Get films by director')
   getFilmsByDirector(@Param('directorId') directorId: number) {
