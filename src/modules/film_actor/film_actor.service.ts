@@ -255,6 +255,7 @@ export class FilmActorService {
       const actors = data.map((item) => ({
         actorId: item.actor.actorId,
         actorName: item.actor.actorName,
+        birthDate: item.actor.birthDate,
         avatarUrl: item.actor.avatarUrl,
         slug: item.actor.slug,
         shortBio: item.actor.shortBio,
