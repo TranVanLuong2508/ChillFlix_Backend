@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import ms from 'ms';
 import { Response } from 'express';
 import { RegisterUserDto } from 'src/modules/users/dto/register-user.dto';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private usersService: UsersService,
     private configService: ConfigService,
     private jwtService: JwtService,
+    private roleService: RolesService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -20,11 +22,17 @@ export class AuthService {
     if (user) {
       const isValidPassword = this.usersService.isValidPassword(pass, user.password);
       if (isValidPassword) {
+        const temp = await this.roleService.findOne(user.roleId);
+
         const { password, ...result } = user;
-        return { EC: 0, EM: 'Login successful', result };
+        const objectUser = {
+          ...result,
+          permissions: temp.role?.permissons,
+        };
+        return objectUser;
       }
     }
-    return { EC: 1, EM: 'Invalid username or password' };
+    return { EC: 0, EM: 'Invalid username or password' };
   }
 
   generateRefreshToken = (payload: any) => {
@@ -32,11 +40,11 @@ export class AuthService {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn') as ms.StringValue) / 1000,
     });
-    return { EC: 0, EM: 'Create refresh token successfully', refreshToken };
+    return { EC: 1, EM: 'Create refresh token successfully', refreshToken };
   };
 
   async login(user: any, response: Response) {
-    const { userId, email, roleId, fullName, genderCode, isVip, statusCode } = user.result;
+    const { userId, email, roleId, fullName, genderCode, isVip, statusCode, permissions } = user;
     const payload = {
       iss: 'from server',
       sub: 'token login',
@@ -57,7 +65,7 @@ export class AuthService {
       maxAge: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn')),
     });
     return {
-      EC: 0,
+      EC: 1,
       EM: 'Login successfully',
       access_token: this.jwtService.sign(payload),
       user: {
@@ -68,6 +76,7 @@ export class AuthService {
         genderCode,
         isVip,
         statusCode,
+        permissions,
       },
     };
   }
@@ -79,7 +88,7 @@ export class AuthService {
   async handleLogout(respones: Response, user: IUser) {
     await this.usersService.updateUserToken('', user.userId);
     respones.clearCookie('refresh_token');
-    return { EC: 0, EM: 'Logout ok' };
+    return { EC: 1, EM: 'Logout ok' };
   }
 
   createRefreshToken = (payload: any) => {
@@ -87,7 +96,7 @@ export class AuthService {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn')) / 1000,
     });
-    return { EC: 0, EM: 'Create refresh token successfully', refresh_token };
+    return { EC: 1, EM: 'Create refresh token successfully', refresh_token };
   };
 
   async processNewToken(refreshToken: string, response: Response) {
@@ -113,6 +122,7 @@ export class AuthService {
         const refresh_token = this.createRefreshToken(payload);
 
         await this.usersService.updateUserToken(refresh_token.refresh_token, userId);
+        const temp = await this.roleService.findOne(user.roleId);
 
         response.clearCookie('refresh_token');
         response.cookie('refresh_token', refresh_token.refresh_token, {
@@ -120,7 +130,7 @@ export class AuthService {
           maxAge: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn')),
         });
         return {
-          EC: 0,
+          EC: 1,
           EM: 'Get new token successfully',
           access_token: this.jwtService.sign(payload),
           user: {
@@ -131,13 +141,14 @@ export class AuthService {
             genderCode,
             isVip,
             statusCode,
+            permissions: temp.role?.permissons,
           },
         };
       } else {
-        throw new BadRequestException(`Invalid refresh token. Please login.`);
+        throw new BadRequestException(`Refresh token invalid. Please log in.`);
       }
     } catch (error) {
-      throw new UnauthorizedException('Authentication failed. Your refresh token is invalid or has expired.');
+      throw new BadRequestException('Refresh token invalid. Please log in.');
     }
   }
 }

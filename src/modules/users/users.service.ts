@@ -232,7 +232,8 @@ export class UsersService {
 
   async register(user: RegisterUserDto) {
     try {
-      const { email, password, genderCode, phoneNumber, age, fullName, roleId } = user;
+      // const { email, password, genderCode, phoneNumber, age, fullName, roleId } = user;
+      const { email, password, fullName } = user;
       const isUserExist = await this.usersRepository.findOne({
         where: { email: email },
       });
@@ -248,10 +249,10 @@ export class UsersService {
           email,
           fullName,
           password: hashedPassword,
-          genderCode,
-          phoneNumber,
-          age,
-          roleId,
+          // genderCode,
+          // phoneNumber,
+          // age,
+          roleId: 3,
         });
 
         await this.usersRepository.save(newUser);

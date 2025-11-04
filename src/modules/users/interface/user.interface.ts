@@ -9,4 +9,10 @@ export interface IUser {
   isVip: boolean;
   statusCode: string;
   refreshToken: string;
+  permissions?: {
+    name: string;
+    apiPath: string;
+    method: string;
+    module: string;
+  }[];
 }
