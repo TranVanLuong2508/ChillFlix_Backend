@@ -290,7 +290,7 @@ export class FilmActorService {
       const { filter, sort } = aqp(query);
 
       const page = parseInt(query.page) || 1;
-      const limit = parseInt(query.limit) || 5;
+      const limit = parseInt(query.limit) || 12;
       const skip = (page - 1) * limit;
 
       delete filter.page;
@@ -334,7 +334,7 @@ export class FilmActorService {
       const filmDataRaw = actor.filmActors.map((i) => i.film);
 
       let films = plainToInstance(ListFilm, filmDataRaw);
-
+      const paginated = films.slice(skip, skip + limit);
       return {
         EC: 1,
         EM: 'Get films by actor successfully',
@@ -344,7 +344,7 @@ export class FilmActorService {
           total,
           totalPages: Math.ceil(total / limit),
         },
-        result: films,
+        result: paginated,
       };
     } catch (error) {
       console.error('Error in getFilmsByActor:', error);

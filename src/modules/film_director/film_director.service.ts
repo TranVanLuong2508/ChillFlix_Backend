@@ -291,7 +291,7 @@ export class FilmDirectorService {
       query = query || {};
       const { filter, sort } = aqp(query);
       const page = parseInt(query.page) || 1;
-      const limit = parseInt(query.limit) || 5;
+      const limit = parseInt(query.limit) || 12;
       const skip = (page - 1) * limit;
 
       delete filter.page;
@@ -299,7 +299,7 @@ export class FilmDirectorService {
       delete filter.skip;
       delete filter.sort;
 
-      const order = sort || { title: 'ASC' };
+      const order = sort || { createdAt: 'DESC' };
 
       const director = await this.directorRepo.findOne({
         where: { directorId },

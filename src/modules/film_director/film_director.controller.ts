@@ -54,8 +54,8 @@ export class FilmDirectorController {
   @Public()
   @Get('by-director/:directorId')
   @ResponseMessage('Get films by director')
-  getFilmsByDirector(@Param('directorId') directorId: number) {
-    return this.filmDirectorService.getFilmsByDirector(directorId);
+  getFilmsByDirector(@Param('directorId') directorId: number, @Query() query: PaginationfdDto) {
+    return this.filmDirectorService.getFilmsByDirector(directorId, query);
   }
 
   @Patch('edit-film-director/:id')
