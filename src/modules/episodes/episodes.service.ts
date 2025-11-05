@@ -123,7 +123,7 @@ export class EpisodesService {
       return {
         EC: 0,
         EM: 'Get data episode success',
-        episode: plainToInstance(EpisodeFindOne, episode),
+        ...plainToInstance(EpisodeFindOne, episode),
       };
     } catch (error) {
       console.error('Error in episode service find one episode:', error || error.message);

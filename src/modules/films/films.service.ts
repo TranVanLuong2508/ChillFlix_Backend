@@ -149,7 +149,7 @@ export class FilmsService {
       if (!film) {
         throw new NotFoundException({
           EC: 2,
-          EM: `Film with id ${id} not found`,
+          EM: `Film with filmId ${id} not found`,
         });
       }
 
@@ -175,6 +175,59 @@ export class FilmsService {
         film: plainToInstance(FilmResponseDto, film),
         directors: directorsRes.directors,
         actors: actorsRes.result,
+      };
+    } catch (error) {
+      console.error('Error in film service get film by Id:', error.message);
+      throw new InternalServerErrorException({
+        EC: 5,
+        EM: 'Error in film service get film by Id',
+      });
+    }
+  }
+
+  async findOneBySlug(slug: string) {
+    try {
+      const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+      joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+      queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+      queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+      joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+      const film = await queryBuilder.where('film.slug = :slug', { slug }).getOne();
+
+      if (!film) {
+        throw new NotFoundException({
+          EC: 2,
+          EM: `Film with filmId ${slug} not found`,
+        });
+      }
+
+      const actorsRes = await this.filmActorService.getActorsByFilm(film.filmId);
+      if (actorsRes.EC) {
+        throw new InternalServerErrorException({
+          EC: 3,
+          EM: actorsRes.EM,
+        });
+      }
+
+      const directorsRes = await this.filmDirectorService.getDirectorsByFilm(film.filmId);
+      if (directorsRes.EC) {
+        throw new InternalServerErrorException({
+          EC: 4,
+          EM: directorsRes.EM,
+        });
+      }
+
+      return {
+        EC: 0,
+        EM: 'Get film by Id success',
+        film: plainToInstance(FilmResponseDto, film),
+        directors: directorsRes.directors,
+        actors: actorsRes.actors,
       };
     } catch (error) {
       console.error('Error in film service get film by Id:', error.message);
