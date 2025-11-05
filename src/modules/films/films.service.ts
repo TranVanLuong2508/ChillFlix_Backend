@@ -227,7 +227,7 @@ export class FilmsService {
         EM: 'Get film by Id success',
         film: plainToInstance(FilmResponseDto, film),
         directors: directorsRes.directors,
-        actors: actorsRes.actors,
+        actors: actorsRes.result,
       };
     } catch (error) {
       console.error('Error in film service get film by Id:', error.message);
