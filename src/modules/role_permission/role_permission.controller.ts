@@ -1,34 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { RolePermissionService } from './role_permission.service';
 import { CreateRolePermissionDto } from './dto/create-role_permission.dto';
-import { UpdateRolePermissionDto } from './dto/update-role_permission.dto';
+import { ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
+import type { IUser } from '../users/interface/user.interface';
+import { DeleteRolePermissionDto } from './dto/delete-role_permisson.dto';
 
 @Controller('role-permission')
 export class RolePermissionController {
   constructor(private readonly rolePermissionService: RolePermissionService) {}
 
   @Post()
-  create(@Body() createRolePermissionDto: CreateRolePermissionDto) {
-    return this.rolePermissionService.create(createRolePermissionDto);
+  @SkipCheckPermission()
+  create(@Body() createRolePermissionDto: CreateRolePermissionDto, @User() user: IUser) {
+    return this.rolePermissionService.create(createRolePermissionDto, user);
   }
 
-  @Get()
-  findAll() {
-    return this.rolePermissionService.findAll();
+  @Delete('/delete')
+  @ResponseMessage('Delete a role permisson')
+  remove(@Body() deleteRolePermissionDto: DeleteRolePermissionDto, @User() user: IUser) {
+    return this.rolePermissionService.remove(deleteRolePermissionDto, user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rolePermissionService.findOne(+id);
+  @Get('by-role/:roleId')
+  @ResponseMessage('Get all permissons by role')
+  gerPermissionByRole(@Param('roleId') roleId: string) {
+    return this.rolePermissionService.getPermissionsByRole(+roleId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRolePermissionDto: UpdateRolePermissionDto) {
-    return this.rolePermissionService.update(+id, updateRolePermissionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rolePermissionService.remove(+id);
+  @Get('by-permission/:permissionId')
+  @ResponseMessage('Get all permissons by role')
+  gerRoleByPermission(@Param('permissionId') permissionId: string) {
+    return this.rolePermissionService.getRolebyPermission(+permissionId);
   }
 }

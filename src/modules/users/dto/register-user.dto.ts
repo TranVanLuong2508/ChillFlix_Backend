@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  MinLength,
-  Length,
-} from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MinLength, Length } from 'class-validator';
 
 export class RegisterUserDto {
   @IsEmail({}, { message: 'Email must be EMAIL format' })
@@ -20,6 +14,9 @@ export class RegisterUserDto {
 
   @IsNotEmpty({ message: 'age must not be empty' })
   age: number;
+
+  @IsNotEmpty({ message: 'roleId must not be empty' })
+  roleId: number;
 
   @IsNotEmpty({ message: 'Password must not be empty' })
   @MinLength(6, { message: 'Password must be at least 6 characters long' })

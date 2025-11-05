@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
+import { User } from 'src/modules/users/entities/user.entity';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'roles' })
 export class Role {
   @PrimaryGeneratedColumn()
   roleId: number;
@@ -11,6 +13,33 @@ export class Role {
   @Column()
   description: string;
 
-  @Column({ nullable: true })
+  @Column({ default: true })
   isActive: boolean;
+
+  @Column({ nullable: true, default: false })
+  isDeleted: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @Column({ nullable: true })
+  deletedAt: Date;
+
+  @Column({ nullable: true })
+  createdBy: number;
+
+  @Column({ nullable: true })
+  updatedBy: number;
+
+  @Column({ nullable: true })
+  deletedBy: number;
+
+  @OneToMany(() => User, (user) => user.role)
+  users: User[];
+
+  @OneToMany(() => RolePermission, (rp) => rp.role)
+  rolePermission: RolePermission[];
 }

@@ -1,5 +1,9 @@
+import { Actor } from 'src/modules/actor/entities/actor.entity';
+import { Director } from 'src/modules/directors/entities/director.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Film } from 'src/modules/films/entities/film.entity';
+import { FilmGenre } from 'src/modules/films/entities/film_genre.entity';
 
 @Entity()
 export class AllCode {
@@ -30,6 +34,33 @@ export class AllCode {
   @OneToMany(() => User, (user) => user.gender)
   userGender: User[];
 
-  @OneToMany(() => User, (user) => user.role)
-  userRole: User[];
+  @OneToMany(() => Film, (film) => film.language)
+  filmLanguage: Film[];
+
+  @OneToMany(() => Film, (film) => film.publicStatus)
+  filmPublicStatus: Film[];
+
+  @OneToMany(() => Film, (film) => film.country)
+  filmCountry: Film[];
+
+  @OneToMany(() => Film, (film) => film.age)
+  filmAge: Film[];
+
+  @OneToMany(() => Film, (film) => film.type)
+  filmType: Film[];
+
+  @OneToMany(() => FilmGenre, (filmGenre) => filmGenre.genre)
+  filmGenres: FilmGenre[];
+
+  @OneToMany(() => Director, (director) => director.genderCode)
+  directorGender: Director[];
+
+  @OneToMany(() => Director, (director) => director.nationalityCode)
+  directorNationality: Director[];
+
+  @OneToMany(() => Actor, (actor) => actor.genderCode)
+  actorGender: Actor[];
+
+  @OneToMany(() => Actor, (actor) => actor.nationalityCode)
+  actorNationality: Actor[];
 }
