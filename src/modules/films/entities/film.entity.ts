@@ -15,6 +15,10 @@ import { FilmGenre } from './film_genre.entity';
 import { Part } from 'src/modules/parts/entities/part.entity';
 import { FilmDirector } from 'src/modules/film_director/entities/film_director.entity';
 import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
+import { Comment } from 'src/modules/comment/entities/comment.entity';
+import { Rating } from 'src/modules/rating/entities/rating.entity';
+import { FilmImage } from './film_image.entity';
+
 
 @Entity({ name: 'films' })
 export class Film {
@@ -39,17 +43,22 @@ export class Film {
   @Column({ nullable: false })
   thumbUrl: string;
 
-  @Column({ nullable: false })
-  posterUrl: string;
-
   @Column({ unique: true, nullable: false })
   slug: string;
 
   @Column({ type: 'int', default: 0 })
+  duration?: number;
+
+  @Column({ type: 'int', default: 0 })
   view: number;
 
+  @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
+  filmGenres: FilmGenre[];
+
+  @OneToMany(() => FilmImage, (filmimage) => filmimage.film, { cascade: true })
+  filmImages: FilmImage[];
+
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   ageCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmAge)
@@ -57,18 +66,13 @@ export class Film {
   age: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   typeCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmType)
   @JoinColumn({ name: 'typeCode', referencedColumnName: 'keyMap' })
   type: AllCode;
 
-  @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
-  filmGenres: FilmGenre[];
-
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   countryCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmCountry)
@@ -76,7 +80,6 @@ export class Film {
   country: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   langCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmLanguage)
@@ -84,7 +87,6 @@ export class Film {
   language: AllCode;
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   publicStatusCode: string;
 
   @ManyToOne(() => AllCode, (allcode) => allcode.filmPublicStatus)
@@ -117,4 +119,9 @@ export class Film {
 
   @OneToMany(() => FilmActor, (filmActor) => filmActor.film)
   filmActors: FilmActor[];
+
+  @OneToMany(() => Comment, (comment) => comment.film)
+  comments: Comment[];
+  @OneToMany(() => Rating, (rating) => rating.film)
+  ratings: Rating[];
 }

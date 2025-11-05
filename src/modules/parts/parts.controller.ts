@@ -27,6 +27,7 @@ export class PartsController {
     return this.partsService.create(createPartDto, user);
   }
 
+  @Public()
   @Post('film')
   findAll(@Body() { filmId }: { filmId: string }) {
     return this.partsService.findAll(filmId);

@@ -43,7 +43,8 @@ export class DirectorService {
 
       const director = this.directorRepo.create({
         directorName: dto.directorName,
-        slug,
+        slug: slug,
+        birthDate: dto.birthDate,
         story: dto.story,
         avatarUrl: dto.avatarUrl,
         createdBy: user.userId,
@@ -173,8 +174,6 @@ export class DirectorService {
       });
 
       if (!director) return { EC: 0, EM: `Director ${id} not found!` };
-
-      if (director.slug) director.slug = `${director.slug}.${director.directorId}`;
       const { createdAt, updatedAt, createdBy, ...newData } = director as any;
       Object.entries(director).forEach(([k, v]) => {
         if (typeof v === 'object' && v !== null && 'keyMap' in v) {
@@ -241,6 +240,9 @@ export class DirectorService {
         if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
         director.nationalityCodeRL = nationality;
       }
+      const d = dto.birthDate as any;
+      director.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+
       director.updatedBy = user.userId;
       const data = await this.directorRepo.save(director);
       const result = Object.fromEntries(

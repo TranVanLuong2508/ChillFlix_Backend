@@ -1,12 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseIntPipe,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  SerializeOptions,
+} from '@nestjs/common';
 import { FilmActorService } from './film_actor.service';
 import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import { PaginationFaDto } from './dto/pagination-fa.dto';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('film-actor')
+@UseInterceptors(ClassSerializerInterceptor)
+@SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmActorController {
   constructor(private readonly filmActorService: FilmActorService) {}
 
@@ -22,6 +37,7 @@ export class FilmActorController {
     return await this.filmActorService.getAllFilmActors(query);
   }
 
+  @Public()
   @Get('get-film-actor-by-id/:id')
   @ResponseMessage('Get film-actor relation by id')
   async getFilmActorById(@Param('id', ParseIntPipe) id: number) {
@@ -29,15 +45,17 @@ export class FilmActorController {
   }
 
   @Get('get-actors-by-film/:filmId')
+  @Public()
   @ResponseMessage('Get actors by film id')
-  async getActorsByFilm(@Param('filmId') filmId: string) {
-    return await this.filmActorService.getActorsByFilm(filmId);
+  async getActorsByFilm(@Param('filmId') filmId: string, query: PaginationFaDto) {
+    return await this.filmActorService.getActorsByFilm(filmId, query);
   }
 
+  @Public()
   @Get('get-films-by-actor/:actorId')
   @ResponseMessage('Get films by actor id')
-  async getFilmsByActor(@Param('actorId', ParseIntPipe) actorId: number) {
-    return await this.filmActorService.getFilmsByActor(actorId);
+  async getFilmsByActor(@Param('actorId', ParseIntPipe) actorId: number, query: PaginationFaDto) {
+    return await this.filmActorService.getFilmsByActor(actorId, query);
   }
 
   @Patch('edit-film-actor/:id')

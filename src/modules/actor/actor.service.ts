@@ -18,6 +18,22 @@ export class ActorService {
     private readonly allcodeRepo: Repository<AllCode>,
   ) {}
 
+  async createListActor(listData: CreateActorDto[], user: IUser) {
+    try {
+      for (const item of listData) {
+        await this.createActor(item, user);
+      }
+
+      return { EC: 0, EM: 'Create List Actor Success' };
+    } catch (error) {
+      console.error('Error in actor service create list actor:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in actor service create list actor',
+      });
+    }
+  }
+
   async createActor(dto: CreateActorDto, user: IUser): Promise<any> {
     try {
       const gender = await this.allcodeRepo.findOne({
@@ -41,6 +57,7 @@ export class ActorService {
       const actor = this.actorRepo.create({
         actorName: dto.actorName,
         slug,
+        shortBio: dto.shortBio,
         genderActor: gender,
         avatarUrl: dto.avatarUrl,
         birthDate: dto.birthDate,
@@ -175,7 +192,6 @@ export class ActorService {
         relations: ['genderActor', 'nationalityActor'],
       });
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found` };
-      if (actor.slug) actor.slug = `${actor.slug}.${actor.actorId}`;
       const { createdAt, updatedAt, createdBy, ...newData } = actor as any;
       Object.entries(actor).forEach(([k, v]) => {
         if (typeof v === 'object' && v !== null && 'keyMap' in v) {
@@ -237,7 +253,9 @@ export class ActorService {
       }
 
       if (dto.avatarUrl) actor.avatarUrl = dto.avatarUrl;
-      if (dto.birthDate) actor.birthDate = dto.birthDate;
+      const d = dto.birthDate as any;
+      actor.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+
       actor.updatedBy = user.userId;
       const data = await this.actorRepo.save(actor);
       const result = Object.fromEntries(

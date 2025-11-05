@@ -40,6 +40,12 @@ export class FilmsController {
     return this.filmsService.findOne(id);
   }
 
+  @Public()
+  @Get('/slug/:slug')
+  findOneBySlug(@Param('slug') slug: string) {
+    return this.filmsService.findOneBySlug(slug);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateFilmDto: UpdateFilmDto, @User() user: IUser) {
     return this.filmsService.update(id, updateFilmDto, user);

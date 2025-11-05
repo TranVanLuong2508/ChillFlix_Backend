@@ -8,6 +8,9 @@ import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { plainToInstance } from 'class-transformer';
+import { ListFilm } from '../films/dto/list-film.dto';
+import { FilmImage } from '../films/entities/film_image.entity';
 
 @Injectable()
 export class FilmActorService {
@@ -37,7 +40,11 @@ export class FilmActorService {
           releaseDate: entity.film.releaseDate,
           year: entity.film.year,
           thumbUrl: entity.film.thumbUrl,
-          posterUrl: entity.film.posterUrl,
+          // posterUrl: entity.film.posterUrl,
+          filmImages: entity.film.filmImages?.map((img: FilmImage) => ({
+            filmImageId: img.id,
+            imageUrl: img.url,
+          })),
           slug: entity.film.slug,
           age: entity.film.ageCode,
           type: entity.film.typeCode,
@@ -52,6 +59,7 @@ export class FilmActorService {
           actorId: entity.actor.actorId,
           actorName: entity.actor.actorName,
           slug: entity.actor.slug,
+          shortBio: entity.actor.shortBio,
           genderCode: entity.actor.genderActor?.keyMap,
           birthDate: entity.actor.birthDate,
           nationalityCode: entity.actor.nationalityActor?.keyMap,
@@ -139,7 +147,11 @@ export class FilmActorService {
           ? {
               filmId: fa.film.filmId,
               title: fa.film.title,
-              posterUrl: fa.film.posterUrl,
+              // posterUrl: fa.film.posterUrl,
+              filmImages: fa.film.filmImages?.map((img: FilmImage) => ({
+                filmImageId: img.id,
+                imageUrl: img.url,
+              })),
               thumbUrl: fa.film.thumbUrl,
               description: fa.film.description,
               releaseDate: fa.film.releaseDate,
@@ -157,6 +169,7 @@ export class FilmActorService {
               actorId: fa.actor.actorId,
               actorName: fa.actor.actorName,
               slug: fa.actor.slug,
+              shortBio: fa.actor.shortBio,
               birthDate: fa.actor.birthDate,
               gender: fa.actor.genderCode,
               nationality: fa.actor.nationalityCode,
@@ -192,7 +205,7 @@ export class FilmActorService {
     try {
       const filmActor = await this.filmActorRepo.findOne({
         where: { id },
-        relations: ['film', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
+        relations: ['film', 'film.filmImages', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
       });
       if (!filmActor) return { EC: 0, EM: `Film-Actor ${id} not found!` };
 
@@ -206,28 +219,62 @@ export class FilmActorService {
       });
     }
   }
-  async getActorsByFilm(filmId: string) {
+  async getActorsByFilm(filmId: string, query: any = {}) {
     try {
-      const filmActors = await this.filmActorRepo.find({
-        where: { film: { filmId: filmId } },
-        relations: ['film', 'actor'],
+      query = query || {};
+      const { filter, sort } = aqp(query);
+
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'ASC' };
+
+      const [data, total] = await this.filmActorRepo.findAndCount({
+        where: { film: { filmId }, ...filter },
+        relations: ['actor'],
+        order,
+        skip,
+        take: limit,
       });
 
-      if (!filmActors || filmActors.length === 0) {
-        return { EC: 0, EM: `No actors found for film ID ${filmId}` };
+      if (total === 0) {
+        return {
+          EC: 1,
+          EM: 'No actors found for this film!',
+          meta: { page, limit, total, totalPages: 0 },
+          data: [],
+        };
       }
 
-      const result = filmActors.map((fa) => ({
-        actorId: fa.actor.actorId,
-        actorName: fa.actor.actorName,
-        birthDate: fa.actor.birthDate,
-        gender: fa.actor.genderCode,
-        nationality: fa.actor.nationalityCode,
-        characterName: fa.characterName,
-        avatarUrl: fa.actor.avatarUrl,
+      const actors = data.map((item) => ({
+        actorId: item.actor.actorId,
+        actorName: item.actor.actorName,
+        birthDate: item.actor.birthDate,
+        avatarUrl: item.actor.avatarUrl,
+        slug: item.actor.slug,
+        shortBio: item.actor.shortBio,
+        nationalityCode: item.actor.nationalityCode,
+        genderCode: item.actor.genderCode,
+        characterName: item.characterName,
       }));
 
-      return { EC: 1, EM: 'Get actors by film successfully', result };
+      return {
+        EC: 0,
+        EM: 'Get actors by film successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: actors,
+      };
     } catch (error: any) {
       console.error('Error in getActorsByFilm:', error.message);
       throw new InternalServerErrorException({
@@ -237,33 +284,70 @@ export class FilmActorService {
     }
   }
 
-  async getFilmsByActor(actorId: number) {
+  async getFilmsByActor(actorId: number, query: any = {}) {
     try {
+      query = query || {};
+      const { filter, sort } = aqp(query);
+
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 12;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'DESC' };
+
+      const [data, total] = await this.filmActorRepo.findAndCount({
+        where: { actor: { actorId }, ...filter },
+        relations: ['actor'],
+        order,
+        skip,
+        take: limit,
+      });
+
+      if (total === 0) {
+        return {
+          EC: 1,
+          EM: 'No films found for this actor!',
+          meta: { page, limit, total, totalPages: 0 },
+          data: [],
+        };
+      }
+
       const actor = await this.actorRepo.findOne({
         where: { actorId },
-        relations: ['filmActors', 'filmActors.film'],
+        relations: [
+          'filmActors',
+          'filmActors.film',
+          'filmActors.film.filmGenres',
+          'filmActors.film.filmGenres.genre',
+          'filmActors.film.filmImages',
+          'filmActors.film.age',
+        ],
       });
+
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
 
-      const films = actor.filmActors.map((fd) => ({
-        filmId: fd.film.filmId,
-        title: fd.film.title,
-        posterUrl: fd.film.posterUrl,
-        thumbUrl: fd.film.thumbUrl,
-        description: fd.film.description,
-        releaseDate: fd.film.releaseDate,
-        year: fd.film.year,
-        slug: fd.film.slug,
-        age: fd.film.ageCode,
-        type: fd.film.typeCode,
-        country: fd.film.countryCode,
-        language: fd.film.langCode,
-        publicStatus: fd.film.publicStatusCode,
-      }));
+      const filmDataRaw = actor.filmActors.map((i) => i.film);
 
-      return { EC: 1, EM: 'Get films by director successfully', films };
-    } catch (error: any) {
-      console.error('Error in getFilmsByActor:', error.message);
+      let films = plainToInstance(ListFilm, filmDataRaw);
+      const paginated = films.slice(skip, skip + limit);
+      return {
+        EC: 1,
+        EM: 'Get films by actor successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: paginated,
+      };
+    } catch (error) {
+      console.error('Error in getFilmsByActor:', error);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from getFilmsByActor service',

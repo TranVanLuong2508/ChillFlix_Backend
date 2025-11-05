@@ -41,6 +41,14 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { Payment } from './modules/payments/entities/payment.entity';
 import { EmailModule } from './modules/email/email.module';
 
+import { CommentModule } from './modules/comment/comment.module';
+import { Comment } from './modules/comment/entities/comment.entity';
+import { CommentReactionModule } from './modules/comment-reaction/comment-reaction.module';
+import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
+import { RatingModule } from './modules/rating/rating.module';
+import { Rating } from './modules/rating/entities/rating.entity';
+import { FilmImage } from './modules/films/entities/film_image.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -65,6 +73,7 @@ import { EmailModule } from './modules/email/email.module';
           Film,
           RolePermission,
           FilmGenre,
+          FilmImage,
           Part,
           Episode,
           FilmDirector,
@@ -74,6 +83,9 @@ import { EmailModule } from './modules/email/email.module';
           Markdown,
           SubscriptionPlan,
           Payment,
+          Comment,
+          CommentReaction,
+          Rating,
         ],
         synchronize: true,
       }),
@@ -99,6 +111,9 @@ import { EmailModule } from './modules/email/email.module';
     SubscriptionsModule,
     PaymentsModule,
     EmailModule,
+    CommentModule,
+    CommentReactionModule,
+    RatingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

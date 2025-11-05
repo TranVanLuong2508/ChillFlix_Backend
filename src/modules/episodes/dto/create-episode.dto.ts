@@ -10,6 +10,10 @@ export class CreateEpisodeDto {
   @IsString({ message: 'title must be STRING format' })
   title: string;
 
+  @IsNotEmpty({ message: 'slug must not be empty' })
+  @IsString({ message: 'slug must be STRING format' })
+  slug: string;
+
   @IsNotEmpty({ message: 'duration must not be empty' })
   @IsNumber({}, { message: 'episodeNumber must be NUMBER format' })
   duration: number;

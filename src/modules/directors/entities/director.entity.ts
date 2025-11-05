@@ -20,6 +20,8 @@ export class Director {
   directorName: string;
   @Column({ name: 'slug', type: 'varchar', length: 120, nullable: true })
   slug?: string;
+  @Column({ name: 'birth_date', type: 'date', nullable: true })
+  birthDate?: Date;
   @Column({ name: 'gender_code', type: 'varchar', length: 10 })
   genderCode?: string;
   @Column({ name: 'story', type: 'text', nullable: true })

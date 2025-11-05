@@ -1,4 +1,13 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateFilmDto } from './create-film.dto';
+import { Type } from 'class-transformer';
+import { UpdateFilmDirectorDto } from 'src/modules/film_director/dto/update-film_director.dto';
+import { UpdateFilmActorDto } from 'src/modules/film_actor/dto/update-film_actor.dto';
 
-export class UpdateFilmDto extends PartialType(CreateFilmDto) {}
+export class UpdateFilmDto extends PartialType(CreateFilmDto) {
+  @Type(() => UpdateFilmDirectorDto)
+  directors: UpdateFilmDirectorDto[];
+
+  @Type(() => UpdateFilmActorDto)
+  actors: UpdateFilmActorDto[];
+}
