@@ -32,8 +32,8 @@ export class EpisodeFindOne {
   @Expose()
   thumbUrl: string;
 
-  @Expose()
-  partId: string;
+  // @Expose()
+  // partId: string;
 
   @Expose()
   @Type(() => PartDto)

@@ -63,7 +63,7 @@ export class PartsService {
       return {
         EC: 0,
         EM: 'Get all part success',
-        result: plainToInstance(PartResponseFindAllByFilmId, result),
+        partData: plainToInstance(PartResponseFindAllByFilmId, result),
       };
     } catch (error) {
       console.error('Error in part service find all part by filmId:', error || error.message);

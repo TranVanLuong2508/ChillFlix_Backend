@@ -33,11 +33,13 @@ export class EpisodesController {
     return this.episodesService.createListEpisode(createListEpisodeDto, user);
   }
 
+  @Public()
   @Get()
   findAll(@Query('current') page: number, @Query('pageSize') limit: number, @Query() qs: string) {
     return this.episodesService.findAll(page, limit, qs);
   }
 
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.episodesService.findOne(id);
