@@ -48,6 +48,7 @@ import { CommentReaction } from './modules/comment-reaction/entities/comment-rea
 import { RatingModule } from './modules/rating/rating.module';
 import { Rating } from './modules/rating/entities/rating.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
+import { ChatbotModule } from './modules/chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { FilmImage } from './modules/films/entities/film_image.entity';
           Rating,
         ],
         synchronize: true,
+        logging: true,
       }),
     }),
     UsersModule,
@@ -114,6 +116,7 @@ import { FilmImage } from './modules/films/entities/film_image.entity';
     CommentModule,
     CommentReactionModule,
     RatingModule,
+    ChatbotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

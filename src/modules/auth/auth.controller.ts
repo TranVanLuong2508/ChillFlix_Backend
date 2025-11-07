@@ -33,7 +33,7 @@ export class AuthController {
   @Get('/account')
   @ResponseMessage('Get User information')
   async handleGetAccount(@User() user: IUser) {
-    const temp = await this.roleService.findOne(1);
+    const temp = await this.roleService.findOne(user.roleId);
     user.permissions = temp.role?.permissons;
     return { user };
   }

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Public, ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { IUser } from 'src/modules/users/interface/user.interface';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 
@@ -30,6 +30,7 @@ export class UsersController {
 
   @Public()
   @Get(':id')
+  @SkipCheckPermission()
   @ResponseMessage('Fetch user by id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
