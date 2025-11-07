@@ -14,7 +14,7 @@ import {
 import { FilmDirectorService } from './film_director.service';
 import { CreateFilmDirectorDto } from './dto/create-film_director.dto';
 import { UpdateFilmDirectorDto } from './dto/update-film_director.dto';
-import { Public, ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
 import type { IUser } from '../users/interface/user.interface';
 
@@ -45,6 +45,7 @@ export class FilmDirectorController {
   }
 
   @Public()
+  @SkipCheckPermission()
   @Get('by-film/:filmId')
   @ResponseMessage('Get directors by film')
   getDirectorsByFilm(@Param('filmId') filmId: string, @Query() query: PaginationfdDto) {
