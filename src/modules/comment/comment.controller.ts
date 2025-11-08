@@ -45,4 +45,15 @@ export class CommentController {
   deleteComment(@Param('commentId') commentId: string, @User() user: IUser) {
     return this.commentService.deleteComment(commentId, user);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('toggle-hide/:commentId')
+  toggleHideComment(@Param('commentId') id: string, @User() user: IUser) {
+    return this.commentService.toggleHideComment(id, user);
+  }
+
+  @Get('count-by-film/:filmId')
+  countComments(@Param('filmId') filmId: string) {
+    return this.commentService.countCommentsByFilm(filmId);
+  }
 }

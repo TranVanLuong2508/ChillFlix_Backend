@@ -23,6 +23,9 @@ export class Comment {
   @Column({ type: 'text' })
   content: string;
 
+  @Column({ default: false })
+  isHidden: boolean;
+  
   @Column({ default: 0 })
   totalLike: number;
 
@@ -75,5 +78,4 @@ export class Comment {
 
   @OneToMany(() => CommentReaction, (reaction) => reaction.comment)
   reactions: CommentReaction[];
-  
 }
