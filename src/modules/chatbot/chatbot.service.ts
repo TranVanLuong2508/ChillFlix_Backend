@@ -37,7 +37,7 @@ export class ChatbotService {
     
     Trả về JSON:
     {
-      "intent": "film_detail|search_movie|recommend_genre|info_plan|popular|list_genre|actor_info|director_info|search_by_actor|search_by_director|general|all_user",
+      "intent": "film_detail|search_movie|recommend_genre|info_plan|popular|list_genre|actor_info|director_info|search_by_actor|search_by_director|general|all_user|thanks_you",
       "keywords": ["keyword1", "keyword2"],
       "genre": "tìm genre code nếu có (G_ACTION, G_HORROR, G_ROMANCE, G_COMEDY, G_SCIFI, G_THRILLER, G_DETECTIVE, G_SCHOOL, G_WAR, G_FANTASY, G_HISTORY, G_DOC, G_FAMILY, G_MUSICAL...)",
       "country": "tìm country code nếu có (C_VN, C_US, C_KR, C_CN, C_JP, C_HK, C_FR, C_TH, C_UK, C_DE, C_TW, C_AU, C_CA...)",
@@ -46,11 +46,13 @@ export class ChatbotService {
     }
     
     Lưu ý:
+    - Nếu intent rơi vào trường hợp "film_detail", thì keywords chỉ lấy tên phim và viết hoa chữ cái đầu mỗi từ
     - Nếu hỏi "phim có diễn viên X" hoặc "phim của diễn viên X" => intent: "search_by_actor"
     - Nếu hỏi "phim của đạo diễn Y" => intent: "search_by_director"
     - Nếu hỏi "thông tin diễn viên X" => intent: "actor_info"
     - Nếu hỏi các câu hỏi có nghĩa tương tự "danh sách người dùng" => intent: "all_user"
-    - Nếu hỏi "phim X" nhưng dạng đầy đủ như xem chi tiết phim / xem nội dung phim / phim tên X cụ thể → intent: "film_detail"
+    - Nếu hỏi "phim X" nhưng dạng đầy đủ như xem "chi tiết phim / xem nội dung phim /  thông tin phim tên X" hoặc chỉ cần dính 1 tên phim cụ thể ==> intent: "film_detail"
+    - Nếu câu được cung cấp là 1 câu có vẻ như "cảm ơn" vì  được giúp đỡ, có thể là hơi  hướng genZ một chút ==> intent: "thanks_you"
     
     CHỈ trả về JSON.
     `;
@@ -71,6 +73,14 @@ export class ChatbotService {
           dbQuery = BackenDBQuery.all_user;
           queryParams = [];
           break;
+        case 'thanks_you':
+          const prompt = `Bạn tên là FlixAI. Khi người dùng nói "cảm ơn" hoặc tương tự, hãy trả về một câu trả lời ngắn, thân thiện, hơi GenZ nhưng phù hợp với ChillFlix. CHỈ TRẢ VỀ 1 DÒNG TEXT, KHÔNG DÙNG JSON, KHÔNG DÙNG MARKDOWN.`;
+          const content = await this.model.generateContent(prompt);
+          let finalText = content.response.text().trim();
+          // optional: remove surrounding ``` nếu có
+          finalText = finalText.replace(/^```(?:\w+)?\n?|```$/g, '').trim();
+
+          return { answer: finalText, data: [] };
 
         case 'film_detail':
           const filmName = intent.keywords?.join(' ') || question;
@@ -438,6 +448,7 @@ export class ChatbotService {
     `;
 
       const finalResult = await this.model.generateContent(responsePrompt);
+      console.log('check rs', finalResult.response);
       let finalText = finalResult.response
         .text()
         .replace(/```json|```/g, '')

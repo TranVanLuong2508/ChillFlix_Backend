@@ -89,7 +89,7 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
           Rating,
         ],
         synchronize: true,
-        logging: true,
+        // logging: true,
       }),
     }),
     UsersModule,

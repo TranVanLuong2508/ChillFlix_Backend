@@ -46,6 +46,7 @@ export class UsersService {
       }
     } catch (error) {
       console.error('Error in create user:', error.message);
+      console.log('check erro create usser', error);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from create user service',

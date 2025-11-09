@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsBoolean, IsEmail, IsNotEmpty, MinLength, Length } from 'class-validator';
+import { IsString, IsBoolean, IsEmail, IsNotEmpty, MinLength, Length, IsNumber } from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail({}, { message: 'Email must be EMAIL format' })
@@ -24,9 +24,10 @@ export class CreateUserDto {
   @IsString({ message: 'genderCode must be STRING format' })
   genderCode: string;
 
-  @IsNotEmpty({ message: 'roleCode must not be empty' })
-  @IsString({ message: 'roleCode must be STRING format' })
-  roleCode: string;
+  @IsNotEmpty({ message: 'roleId must not be empty' })
+  @IsNumber({}, { message: 'roleId must be number format' })
+  @Type(() => Number)
+  roleId: number;
 
   @IsNotEmpty({ message: 'isVip must not be empty' })
   @IsBoolean({ message: 'isVip must be BOOLEAN format' })
