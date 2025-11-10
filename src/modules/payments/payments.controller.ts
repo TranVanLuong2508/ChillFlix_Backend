@@ -2,17 +2,23 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res } from '@ne
 import { PaymentsService } from './payments.service';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import type { Request, Response } from 'express';
-import { Public, SkipCheckPermission } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { RefundRequestDto } from './dto/refund-vnpay.dto';
+import type { IUser } from '../users/interface/user.interface';
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
+  @ResponseMessage('create payment url')
   @SkipCheckPermission()
-  @Public()
-  createPayment(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    return this.paymentsService.createPaymentUrl(req, res);
+  createPayment(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @User() user: IUser,
+    @Body('planId') planId: number,
+  ) {
+    return this.paymentsService.createPaymentUrl(req, res, user, planId);
   }
 
   @Get('vnpay_return')

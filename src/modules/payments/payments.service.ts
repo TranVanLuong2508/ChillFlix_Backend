@@ -11,10 +11,33 @@ import axios from 'axios';
 import { VNPAY_TRANSACTION_STATUS_MESSAGE } from 'src/constants/vnpay.constant';
 import type { RefundRequestDto, VnPayRefundResponseDto } from './dto/refund-vnpay.dto';
 import { VnPayQueryResponse } from './dto/query-response.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Payment } from './entities/payment.entity';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
+import { SubscriptionPlan } from '../subscription-plans/entities/subscription-plan.entity';
+import { Subscription } from '../subscriptions/entities/subscription.entity';
+import type { IUser } from '../users/interface/user.interface';
+import { SubscriptionStatus } from '../subscriptions/types/subscriptionStatus';
+import { PaymentMethod, PaymentStatus } from './types/enum';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+
+    @InjectRepository(Payment)
+    private paymentRepository: Repository<Payment>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+
+    @InjectRepository(SubscriptionPlan)
+    private planRepository: Repository<SubscriptionPlan>,
+
+    @InjectRepository(Subscription)
+    private subscriptionRepository: Repository<Subscription>,
+  ) {}
   create(createPaymentDto: CreatePaymentDto) {
     return 'This action adds a new payment';
   }
@@ -35,8 +58,52 @@ export class PaymentsService {
     return `This action removes a #${id} payment`;
   }
 
-  createPaymentUrl(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async createPaymentUrl(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    user: IUser,
+    inputPlanId: number,
+  ) {
     try {
+      const plan = await this.planRepository.findOne({
+        where: { planId: inputPlanId, isActive: true },
+      });
+
+      console.log('check plan exxist', plan);
+
+      if (!plan) {
+        return {
+          EC: 0,
+          EM: 'VIP package does not exist or has been disabled',
+        };
+      }
+
+      const activeSubsciption = await this.subscriptionRepository.findOne({
+        where: { status: SubscriptionStatus.ACTIVE, userId: user.userId },
+      });
+
+      console.log('check activeSubsciption', activeSubsciption);
+
+      if (activeSubsciption) {
+        return {
+          EC: 0,
+          EM: 'You have an active VIP Plan',
+        };
+      }
+
+      // Create pending payment record
+
+      const newPendingPayment = this.paymentRepository.create({
+        userId: user.userId,
+        planId: plan.planId,
+        amount: Number(plan.price),
+        status: PaymentStatus.PENDING,
+        paymentMethod: PaymentMethod.VNPAY,
+        description: `Thanh toán cho: ${plan.planName}`,
+      });
+
+      await this.paymentRepository.save(newPendingPayment);
+
       //ip khachs hàng
       let ipAddr =
         req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress || '127.0.0.1';
@@ -55,11 +122,12 @@ export class PaymentsService {
       let tmnCode = this.configService.get<string>('VNP_TMN_CODE');
       let secretKey = this.configService.get<string>('VNP_HASH_SECRET');
       let returnUrl = this.configService.get<string>('VNP_RETURN_URL');
-      let orderId = moment(currentDate).format('DDHHmmss');
-      let amount = +req.body.amount;
+
+      let orderId = newPendingPayment.paymentId;
+      let amount = newPendingPayment.amount;
       let locale = 'vn';
       let currCode = 'VND';
-      let orederInfor = 'Thanh toan qua VNPay cho don hang dang ky goi vip tren ChillFlix voi ma GD: ' + orderId;
+      let orederInfor = `Thanh toan goi VIP ${plan.planName} - Ma GD: ${orderId}`;
       let orderType = 190003;
 
       let vnp_Params: any = {
@@ -68,7 +136,7 @@ export class PaymentsService {
         vnp_TmnCode: tmnCode,
         vnp_Locale: locale,
         vnp_CurrCode: currCode,
-        vnp_TxnRef: orderId + '-' + moment(new Date()).format('HHmmss'),
+        vnp_TxnRef: orderId,
         vnp_OrderInfo: orederInfor,
         vnp_OrderType: orderType,
         vnp_Amount: amount * 100, // VNPay yêu cầu đơn vị = đồng × 100
@@ -92,11 +160,18 @@ export class PaymentsService {
       let vnpUrl = this.configService.get<string>('VNP_URL');
       vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
+      newPendingPayment.vnpayTxnRef = orderId;
+      newPendingPayment.vnpayOrderInfo = orederInfor;
+      await this.paymentRepository.save(newPendingPayment);
+
       return {
         EC: 1,
         EM: 'Create VNPAY payment URL success',
         metadata: {
+          paymentId: newPendingPayment.paymentId,
           redirectUrl: vnpUrl,
+          amount: newPendingPayment.amount,
+          planName: plan.planName,
         },
       };
     } catch (error) {
@@ -108,7 +183,7 @@ export class PaymentsService {
     }
   }
 
-  verifyReturn(@Req() req: Request, @Res() res: Response) {
+  async verifyReturn(@Req() req: Request, @Res() res: Response) {
     try {
       let vnp_Params = req.query;
       let secureHash = vnp_Params['vnp_SecureHash'];
@@ -120,6 +195,7 @@ export class PaymentsService {
 
       let tmnCode = this.configService.get<string>('VNP_TMN_CODE');
       let secretKey = this.configService.get<string>('VNP_HASH_SECRET');
+      const orderId = String(vnp_Params['vnp_TxnRef']);
 
       let signData = querystring.stringify(vnp_Params, { encode: false });
 
@@ -127,23 +203,52 @@ export class PaymentsService {
       let signed = hmac.update(new Buffer(signData, 'utf-8')).digest('hex');
 
       const frontendURL = this.configService.get<string>('FRONTEND_URL');
-      if (secureHash === signed) {
-        //add logic
-        console.log('chekc', vnp_Params);
-        res.redirect(`${frontendURL}/user/upgrade_vip`);
-
-        // return res.status(200).json({
-        //   message: 'success',
-        //   code: vnp_Params['vnp_ResponseCode'],
-        //   data: vnp_Params,
-        // });
-        // res.render("success", { code: vnp_Params["vnp_ResponseCode"] });
-      } else {
-        // res.redirect('frontend link you want to redirect')
+      if (secureHash !== signed) {
+        // return res.redirect(`${frontendURL}/payment/failed?reason=invalid_signature`);
         return res.status(200).json({
           message: 'Checksum failed',
           code: '97',
         });
+      } else {
+        console.log('chekc', vnp_Params);
+        const vnpayTxnRef = vnp_Params['vnp_TxnRef'] as string;
+        const vnpayResponseCode = vnp_Params['vnp_ResponseCode'] as string;
+        const vnpayTransactionNo = vnp_Params['vnp_TransactionNo'] as string;
+        const vnpayBankCode = vnp_Params['vnp_BankCode'] as string;
+        const vnpayPayDate = vnp_Params['vnp_PayDate'] as string;
+
+        // Find payment by transaction reference (paymentId)
+        const payment = await this.paymentRepository.findOne({
+          where: { paymentId: vnpayTxnRef },
+        });
+
+        if (!payment) {
+          return {
+            EC: 0,
+            EM: 'Payment not found',
+          };
+        }
+
+        payment.vnpayResponseCode = vnpayResponseCode;
+        payment.vnpayTransactionNo = vnpayTransactionNo;
+        payment.vnpayBankCode = vnpayBankCode;
+        payment.vnpayPayDate = moment(vnpayPayDate, 'YYYYMMDDHHmmss').toDate();
+        console.log('Check responseCode:', vnpayResponseCode);
+
+        if (vnpayResponseCode === '00') {
+          payment.status = PaymentStatus.SUCCESS;
+          await this.paymentRepository.save(payment);
+
+          // Activate VIP subscription
+          await this.activateVipSubscription(payment);
+        } else {
+          payment.status = PaymentStatus.FAILED;
+          await this.paymentRepository.save(payment);
+        }
+        //redirect after payment
+        // res.redirect(
+        //   `${frontendURL}/user/upgrade_vip?orderId=${orderId}&responseCode=${vnp_Params['vnp_ResponseCode']}`,
+        // );
       }
     } catch (error) {
       console.error('Error in verifyReturn VNPAY:', error.message);
@@ -221,80 +326,144 @@ export class PaymentsService {
   }
 
   async handleRefund(@Req() req: Request, body: RefundRequestDto) {
-    const date = new Date();
-    const vnp_TmnCode = this.configService.get<string>('VNP_TMN_CODE');
-    const secretKey = this.configService.get<string>('VNP_HASH_SECRET');
-    let vnp_Api = this.configService.get<string>('VNP_API');
+    try {
+      const date = new Date();
+      const vnp_TmnCode = this.configService.get<string>('VNP_TMN_CODE');
+      const secretKey = this.configService.get<string>('VNP_HASH_SECRET');
+      let vnp_Api = this.configService.get<string>('VNP_API');
 
-    const vnp_TxnRef = body.orderId;
-    const vnp_TransactionDate = body.transDate;
-    const vnp_Amount = body.amount * 100; // VNPay tính đơn vị *100
-    const vnp_TransactionType = body.transType || '02';
-    const vnp_CreateBy = body.user || 'admin';
+      const vnp_TxnRef = body.orderId;
+      const vnp_TransactionDate = body.transDate;
+      const vnp_Amount = body.amount * 100; // VNPay tính đơn vị *100
+      const vnp_TransactionType = body.transType || '02';
+      const vnp_CreateBy = body.user || 'admin';
 
-    const vnp_RequestId = moment(date).format('HHmmss');
-    const vnp_Version = '2.1.0';
-    const vnp_Command = 'refund';
-    const vnp_OrderInfo = `Hoan tien GD ma: ${vnp_TxnRef}`;
-    const vnp_CreateDate = moment(date).format('YYYYMMDDHHmmss');
-    const vnp_IpAddr =
-      req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress || '127.0.0.1';
-    const vnp_TransactionNo = '0'; // yêu cầu VNPay
+      const vnp_RequestId = moment(date).format('HHmmss');
+      const vnp_Version = '2.1.0';
+      const vnp_Command = 'refund';
+      const vnp_OrderInfo = `Hoan tien GD ma: ${vnp_TxnRef}`;
+      const vnp_CreateDate = moment(date).format('YYYYMMDDHHmmss');
+      const vnp_IpAddr =
+        req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress || '127.0.0.1';
+      const vnp_TransactionNo = '0'; // yêu cầu VNPay
 
-    // Tạo secure hash
-    const dataString = [
-      vnp_RequestId,
-      vnp_Version,
-      vnp_Command,
-      vnp_TmnCode,
-      vnp_TransactionType,
-      vnp_TxnRef,
-      vnp_Amount,
-      vnp_TransactionNo,
-      vnp_TransactionDate,
-      vnp_CreateBy,
-      vnp_CreateDate,
-      vnp_IpAddr,
-      vnp_OrderInfo,
-    ].join('|');
+      // Tạo secure hash
+      const dataString = [
+        vnp_RequestId,
+        vnp_Version,
+        vnp_Command,
+        vnp_TmnCode,
+        vnp_TransactionType,
+        vnp_TxnRef,
+        vnp_Amount,
+        vnp_TransactionNo,
+        vnp_TransactionDate,
+        vnp_CreateBy,
+        vnp_CreateDate,
+        vnp_IpAddr,
+        vnp_OrderInfo,
+      ].join('|');
 
-    const vnp_SecureHash = crypto
-      .createHmac('sha512', secretKey)
-      .update(Buffer.from(dataString, 'utf-8'))
-      .digest('hex');
+      const vnp_SecureHash = crypto
+        .createHmac('sha512', secretKey)
+        .update(Buffer.from(dataString, 'utf-8'))
+        .digest('hex');
 
-    const dataObj = {
-      vnp_RequestId,
-      vnp_Version,
-      vnp_Command,
-      vnp_TmnCode,
-      vnp_TransactionType,
-      vnp_TxnRef,
-      vnp_Amount,
-      vnp_TransactionNo,
-      vnp_CreateBy,
-      vnp_OrderInfo,
-      vnp_TransactionDate,
-      vnp_CreateDate,
-      vnp_IpAddr,
-      vnp_SecureHash,
-    };
+      const dataObj = {
+        vnp_RequestId,
+        vnp_Version,
+        vnp_Command,
+        vnp_TmnCode,
+        vnp_TransactionType,
+        vnp_TxnRef,
+        vnp_Amount,
+        vnp_TransactionNo,
+        vnp_CreateBy,
+        vnp_OrderInfo,
+        vnp_TransactionDate,
+        vnp_CreateDate,
+        vnp_IpAddr,
+        vnp_SecureHash,
+      };
 
-    const response = await axios.post(vnp_Api as string, dataObj);
-    const resData: VnPayRefundResponseDto = response.data;
-    delete resData['vnp_SecureHash'];
-    // Trả về thông tin status cho frontend
-    return {
-      EC: resData.vnp_ResponseCode === '00' ? 1 : 0,
-      EM: resData.vnp_Message,
-      ...resData,
-    };
+      const response = await axios.post(vnp_Api as string, dataObj);
+      const resData: VnPayRefundResponseDto = response.data;
+      delete resData['vnp_SecureHash'];
+      // Trả về thông tin status cho frontend
+      return {
+        EC: resData.vnp_ResponseCode === '00' ? 1 : 0,
+        EM: resData.vnp_Message,
+        ...resData,
+      };
+    } catch (error) {
+      console.error('Error in handleRefund:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from refund service',
+      });
+    }
   }
-  catch(error) {
-    console.error('Error in handleRefund:', error.message);
-    throw new InternalServerErrorException({
-      EC: 0,
-      EM: 'Error from refund service',
-    });
+
+  async activateVipSubscription(payment: Payment) {
+    try {
+      const plan = await this.planRepository.findOne({
+        where: { planId: payment.planId },
+      });
+
+      if (!plan) {
+        return {
+          EC: 0,
+          EM: 'VIP Plan not found',
+        };
+      }
+
+      const startDate = new Date();
+      const endDate = new Date();
+
+      switch (plan.durationTypeCode) {
+        case 'MONTH':
+          endDate.setMonth(endDate.getMonth() + plan.planDuration);
+          break;
+        case 'YEAR':
+          endDate.setFullYear(endDate.getFullYear() + plan.planDuration);
+          break;
+        case 'DAY':
+          endDate.setDate(endDate.getDate() + plan.planDuration);
+          break;
+        default:
+          endDate.setMonth(endDate.getMonth() + plan.planDuration);
+      }
+
+      const newSubscription = this.subscriptionRepository.create({
+        userId: payment.userId,
+        planId: payment.planId,
+        paymentId: payment.paymentId,
+        startDate,
+        endDate,
+        status: SubscriptionStatus.ACTIVE,
+        autoRenew: false,
+        createdBy: payment.userId,
+      });
+
+      await this.subscriptionRepository.save(newSubscription);
+
+      // Update user VIP status
+      const resultUpdate = await this.userRepository.update(
+        { userId: payment.userId },
+        {
+          isVip: true,
+          vipExpireDate: endDate,
+        },
+      );
+
+      console.log('check update', resultUpdate);
+      console.log(`VIP subscription activated for user ${payment.userId}`);
+    } catch (error) {
+      console.error('Error in active Vip Subscription for user:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from active Vip Subscription for user',
+      });
+    }
   }
 }

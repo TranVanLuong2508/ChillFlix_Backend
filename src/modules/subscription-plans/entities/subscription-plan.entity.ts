@@ -1,4 +1,5 @@
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+import { Subscription } from 'src/modules/subscriptions/entities/subscription.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -51,4 +53,7 @@ export class SubscriptionPlan {
   @ManyToOne(() => AllCode, (allcode) => allcode.planDuration)
   @JoinColumn({ name: 'durationType_code', referencedColumnName: 'keyMap' })
   durationInfo: AllCode;
+
+  @OneToMany(() => Subscription, (sub) => sub.plan)
+  subscriptions: Subscription[];
 }
