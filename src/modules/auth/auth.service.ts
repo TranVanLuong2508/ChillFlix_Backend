@@ -7,6 +7,7 @@ import ms from 'ms';
 import { Response } from 'express';
 import { RegisterUserDto } from 'src/modules/users/dto/register-user.dto';
 import { RolesService } from '../roles/roles.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     private configService: ConfigService,
     private jwtService: JwtService,
     private roleService: RolesService,
+    private emailService: EmailService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -82,6 +84,7 @@ export class AuthService {
   }
 
   async register(user: RegisterUserDto) {
+    await this.emailService.sendMailAfterRegister(user.fullName, user.email);
     return await this.usersService.register(user);
   }
 

@@ -20,6 +20,18 @@ export class EmailService {
       context: {},
     });
   }
+  async sendMailAfterRegister(userName: string, email: string) {
+    return this.mailerService.sendMail({
+      from: `${this.configService.get<string>('COMPANY_NAME') || 'Chill Flix'} <${this.configService.get<string>('EMAIL_AUTH_USER')}>`,
+      to: email,
+      subject: 'Chào mừng bạn đến với ChillFlix!',
+      template: 'registersucess',
+      context: {
+        name: userName,
+        email: email,
+      },
+    });
+  }
 
   async sendBillUpgradeVipEmail(user: IUser, vnpData: VnPayData, planName: string, startDate: Date, endDate: Date) {
     try {
