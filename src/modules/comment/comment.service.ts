@@ -1,23 +1,32 @@
 import { IsNull, Repository, Not } from 'typeorm';
-import { Injectable, InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
 import { IUser } from '../users/interface/user.interface';
 import aqp from 'api-query-params';
+import { CommentGateway } from './socket/comment-gateway';
 
 @Injectable()
 export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    private readonly commentGateway: CommentGateway,
   ) {}
 
   async createComment(dto: CreateCommentDto, user: IUser) {
     try {
+      if (!user || !user.userId) {
+        return {
+          EC: 0,
+          EM: 'Unauthorized: user not found in request',
+        };
+      }
+
       const comment = this.commentRepo.create({
-        content: dto.content,
+        content: dto.content?.trim(),
         user: { userId: user.userId } as any,
         film: { filmId: dto.filmId } as any,
         part: dto.partId ? ({ partId: dto.partId } as any) : undefined,
@@ -30,17 +39,29 @@ export class CommentService {
       const savedComment = await this.commentRepo.save(comment);
 
       if (dto.parentId) {
-        await this.commentRepo.increment({ commentId: dto.parentId }, 'totalChildrenComment', 1);
+        const parent = await this.commentRepo.findOne({
+          where: { commentId: dto.parentId },
+        });
+
+        if (parent) {
+          await this.commentRepo.increment({ commentId: dto.parentId }, 'totalChildrenComment', 1);
+        }
       }
 
       const fullComment = await this.commentRepo.findOne({
         where: { commentId: savedComment.commentId },
         relations: ['user'],
       });
-
-      return { EC: 1, EM: 'Create comment successfully', fullComment };
+      if (fullComment) {
+        this.commentGateway.broadcastNewComment(fullComment);
+      }
+      return {
+        EC: 1,
+        EM: 'Create comment successfully',
+        fullComment,
+      };
     } catch (error) {
-      console.error('Error in createComment:', error);
+      console.error('Error in createComment:', error?.message || error);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from createComment service',
@@ -48,7 +69,7 @@ export class CommentService {
     }
   }
 
-  async findCommentsByFilm(query: any, filmId: string) {
+  async findCommentsByFilm(query: any, filmId: string, user: IUser | null) {
     try {
       const { filter, sort } = aqp(query);
       const page = parseInt(query.page) || 1;
@@ -69,35 +90,61 @@ export class CommentService {
           isHidden: false,
           ...filter,
         },
-        relations: ['user', 'children', 'children.user'],
+        relations: [
+          'user',
+          'children',
+          'children.user',
+          'reactions',
+          'children.reactions',
+          'reactions.user',
+          'children.reactions.user',
+        ],
         order: { createdAt: 'DESC', children: { createdAt: 'ASC' } },
         skip,
         take: limit,
       });
 
-      const comments = data.map((comment) => ({
-        id: comment.commentId,
-        content: comment.content,
-        createdAt: comment.createdAt,
-        user: {
-          id: comment.user.userId,
-          name: comment.user.fullName,
-          avatar: comment.user.avatarUrl,
-        },
-        replies:
-          comment.children
-            ?.filter((child) => !child.isHidden)
-            .map((child) => ({
-              id: child.commentId,
-              content: child.content,
-              createdAt: child.createdAt,
-              user: {
-                id: child.user.userId,
-                name: child.user.fullName,
-                avatar: child.user.avatarUrl,
-              },
-            })) || [],
-      }));
+      const userId = user?.userId || null;
+      console.log('UserId in findCommentsByFilm:', userId);
+      const comments = data.map((comment) => {
+        const currentReaction = userId ? comment.reactions?.find((r) => r.user?.userId === userId) : null;
+
+        return {
+          id: comment.commentId,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          totalLike: comment.totalLike,
+          totalDislike: comment.totalDislike,
+          totalChildrenComment: comment.totalChildrenComment,
+          currentUserReaction: userId ? currentReaction?.type || null : undefined,
+          user: {
+            id: comment.user.userId,
+            name: comment.user.fullName,
+            avatar: comment.user.avatarUrl,
+          },
+          replies:
+            comment.children
+              ?.filter((child) => !child.isHidden)
+              .map((child) => {
+                const childReaction = userId ? child.reactions?.find((r) => r.user?.userId === userId) : null;
+
+                return {
+                  id: child.commentId,
+                  content: child.content,
+                  createdAt: child.createdAt,
+                  totalLike: child.totalLike,
+                  totalDislike: child.totalDislike,
+                  totalChildrenComment: child.totalChildrenComment,
+                  currentUserReaction: userId ? childReaction?.type || null : undefined,
+                  user: {
+                    id: child.user.userId,
+                    name: child.user.fullName,
+                    avatar: child.user.avatarUrl,
+                  },
+                };
+              }) || [],
+        };
+      });
 
       return {
         EC: 1,
@@ -184,7 +231,7 @@ export class CommentService {
         where: { commentId: updated.commentId },
         relations: ['user'],
       });
-
+      this.commentGateway.broadcastUpdateComment(result);
       return {
         EC: 1,
         EM: 'Update comment successfully',
@@ -208,7 +255,7 @@ export class CommentService {
 
       if (!comment) return { EC: 0, EM: 'Comment not found' };
 
-      const canDelete = comment.user.userId === user.userId || [1, 2].includes(user.roleId);
+      const canDelete = comment.user.userId === user.userId;
 
       if (!canDelete) return { EC: 0, EM: 'You are not allowed to remove this comment' };
 
@@ -218,7 +265,7 @@ export class CommentService {
 
       await this.commentRepo.update(commentId, { deletedBy: user.userId });
       await this.commentRepo.softDelete({ commentId });
-
+      this.commentGateway.broadcastDeleteComment(commentId);
       return { EC: 1, EM: 'Delete comment successfully' };
     } catch (error) {
       console.error('Error in deleteComment:', error);
@@ -235,12 +282,16 @@ export class CommentService {
       if (!comment) return { EC: 0, EM: 'Comment not found' };
 
       if (![1, 2].includes(user.roleId)) {
-        throw new ForbiddenException('You are not allowed to hide comments');
+        return {
+          EC: 0,
+          EM: 'You are not allowed to hide/unhide this comment (only admin/moderator can perform this action)',
+        };
       }
 
       comment.isHidden = !comment.isHidden;
       comment.updatedBy = user.userId;
       await this.commentRepo.save(comment);
+      this.commentGateway.broadcastHideComment(commentId, comment.isHidden);
 
       return {
         EC: 1,
@@ -265,13 +316,14 @@ export class CommentService {
         where: {
           film: { filmId },
           isHidden: false,
+          deletedAt: IsNull(),
         },
       });
 
       return {
         EC: 1,
         EM: 'Count comments successfully',
-        data: { totalComments: total },
+        totalComments: total,
       };
     } catch (error) {
       console.error('Error in countCommentsByFilm:', error);
