@@ -1,14 +1,14 @@
 export interface IUser {
   userId: number;
   email: string;
-  password: string;
+  password?: string;
   fullName: string;
-  isActive: boolean;
+  isActive?: boolean;
   roleId: number;
   genderCode: string;
   isVip: boolean;
   statusCode: string;
-  refreshToken: string;
+  refreshToken?: string;
   permissions?: {
     name: string;
     apiPath: string;

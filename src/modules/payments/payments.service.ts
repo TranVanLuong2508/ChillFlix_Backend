@@ -20,11 +20,13 @@ import { Subscription } from '../subscriptions/entities/subscription.entity';
 import type { IUser } from '../users/interface/user.interface';
 import { SubscriptionStatus } from '../subscriptions/types/subscriptionStatus';
 import { PaymentMethod, PaymentStatus } from './types/enum';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private configService: ConfigService,
+    private emailService: EmailService,
 
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
@@ -127,7 +129,7 @@ export class PaymentsService {
       let amount = newPendingPayment.amount;
       let locale = 'vn';
       let currCode = 'VND';
-      let orederInfor = `Thanh toan goi VIP ${plan.planName} - Ma GD: ${orderId}`;
+      let orederInfor = `Thanh toán cho: ${plan.planName} - Ma GD: ${orderId}`;
       let orderType = 190003;
 
       let vnp_Params: any = {
@@ -246,9 +248,9 @@ export class PaymentsService {
           await this.paymentRepository.save(payment);
         }
         //redirect after payment
-        // res.redirect(
-        //   `${frontendURL}/user/upgrade_vip?orderId=${orderId}&responseCode=${vnp_Params['vnp_ResponseCode']}`,
-        // );
+        res.redirect(
+          `${frontendURL}/user/upgrade_vip?orderId=${orderId}&responseCode=${vnp_Params['vnp_ResponseCode']}`,
+        );
       }
     } catch (error) {
       console.error('Error in verifyReturn VNPAY:', error.message);
@@ -448,6 +450,7 @@ export class PaymentsService {
       await this.subscriptionRepository.save(newSubscription);
 
       // Update user VIP status
+      const user = await this.userRepository.findOne({ where: { userId: payment.userId } });
       const resultUpdate = await this.userRepository.update(
         { userId: payment.userId },
         {
@@ -458,6 +461,23 @@ export class PaymentsService {
 
       console.log('check update', resultUpdate);
       console.log(`VIP subscription activated for user ${payment.userId}`);
+
+      if (user) {
+        const vnpData = {
+          vnp_Amount: payment.amount,
+          vnp_BankCode: payment.vnpayBankCode,
+          vnp_BankTranNo: payment.vnpayBankCode,
+          vnp_CardType: 'ATM',
+          vnp_OrderInfo: payment.vnpayOrderInfo,
+          vnp_PayDate: payment.vnpayPayDate?.toLocaleString('vi-VN'),
+          vnp_ResponseCode: payment.vnpayResponseCode,
+          vnp_TransactionNo: payment.vnpayTransactionNo,
+          vnp_TransactionStatus: payment.status,
+          vnp_TxnRef: payment.vnpayTxnRef,
+        };
+        // await this.emailService.sendBillUpgradeVipEmail(user, vnpData, plan.planName);
+        await this.emailService.sendBillUpgradeVipEmail(user, vnpData, plan.planName, startDate, endDate);
+      }
     } catch (error) {
       console.error('Error in active Vip Subscription for user:', error.message);
       throw new InternalServerErrorException({

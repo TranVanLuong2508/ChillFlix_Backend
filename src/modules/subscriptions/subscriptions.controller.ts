@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { SubscriptionsService } from './subscriptions.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
+import type { IUser } from '../users/interface/user.interface';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -17,9 +19,11 @@ export class SubscriptionsController {
     return this.subscriptionsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.subscriptionsService.findOne(+id);
+  @Get('/get-by-id')
+  @SkipCheckPermission()
+  @ResponseMessage('fetch a subscription by userId')
+  findOne(@User() user: IUser) {
+    return this.subscriptionsService.findOne(user.userId);
   }
 
   @Patch(':id')

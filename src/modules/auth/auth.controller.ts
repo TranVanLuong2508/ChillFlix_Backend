@@ -6,12 +6,14 @@ import type { Request, Response } from 'express';
 import type { IUser } from 'src/modules/users/interface/user.interface';
 import { RegisterUserDto } from 'src/modules/users/dto/register-user.dto';
 import { RolesService } from '../roles/roles.service';
+import { UsersService } from '../users/users.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly roleService: RolesService,
+    private readonly userService: UsersService,
   ) {}
 
   @Public()
@@ -33,13 +35,24 @@ export class AuthController {
   @Get('/account')
   @ResponseMessage('Get User information')
   async handleGetAccount(@User() user: IUser) {
+    const newUserInfor = await this.userService.findOne(user.userId);
+    const returnUser: IUser = {
+      userId: newUserInfor.userId,
+      email: newUserInfor.email,
+      fullName: newUserInfor.fullName,
+      roleId: newUserInfor.roleId,
+      genderCode: newUserInfor.genderCode,
+      isVip: newUserInfor.isVip,
+      statusCode: newUserInfor.statusCode,
+    };
     const temp = await this.roleService.findOne(user.roleId);
-    user.permissions = temp.role?.permissons;
-    return { user };
+    returnUser.permissions = temp.role?.permissons;
+    return { user: returnUser };
   }
 
   @Public()
   @Post('register')
+  @SkipCheckPermission()
   @ResponseMessage('Register a new user')
   register(@Body() registerUserDto: RegisterUserDto) {
     return this.authService.register(registerUserDto);
