@@ -21,7 +21,7 @@ import type { IUser } from '../users/interface/user.interface';
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class EpisodesController {
-  constructor(private readonly episodesService: EpisodesService) {}
+  constructor(private readonly episodesService: EpisodesService) { }
 
   @Post()
   create(@Body() createEpisodeDto: CreateEpisodeDto, @User() user: IUser) {
