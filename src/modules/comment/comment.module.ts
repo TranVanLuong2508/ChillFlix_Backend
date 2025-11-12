@@ -13,6 +13,6 @@ import { CommentGateway } from './socket/comment-gateway';
   controllers: [CommentController],
   imports: [TypeOrmModule.forFeature([Comment, User, Film, Part, Episode])],
   providers: [CommentService, CommentGateway],
-  exports: [CommentModule],
+  exports: [CommentModule, CommentGateway],
 })
 export class CommentModule {}

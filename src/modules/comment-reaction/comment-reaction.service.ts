@@ -5,7 +5,7 @@ import { CommentReaction } from './entities/comment-reaction.entity';
 import { CreateCommentReactionDto } from './dto/create-comment-reaction.dto';
 import { IUser } from '../users/interface/user.interface';
 import { Comment } from '../comment/entities/comment.entity';
-
+import { CommentGateway } from '../comment/socket/comment-gateway';
 @Injectable()
 export class CommentReactionService {
   constructor(
@@ -14,6 +14,7 @@ export class CommentReactionService {
 
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    private readonly commentGateway: CommentGateway,
   ) {}
 
   async reactToComment(dto: CreateCommentReactionDto, user: IUser) {
@@ -71,6 +72,10 @@ export class CommentReactionService {
       comment.totalLike = totalLike;
       comment.totalDislike = totalDislike;
       await this.commentRepo.save(comment);
+      
+      const reaction = { commentId, userId: user.userId, userReaction, totalLike, totalDislike};
+      this.commentGateway.broadcastReactComment(reaction);
+
 
       return {
         EC: 1,

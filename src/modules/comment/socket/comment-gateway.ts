@@ -46,6 +46,10 @@ export class CommentGateway implements OnGatewayConnection {
     this.server.emit('updateComment', comment);
   }
 
+  broadcastReactComment(reaction: any) {
+    this.server.emit('reactComment', reaction);
+  }
+
   broadcastCountComments(data: any) {
     this.server.emit('countComments', data);
   }

@@ -46,7 +46,11 @@ export class CommentService {
         });
 
         if (parentComment) {
-          await this.commentRepo.increment({ commentId: parentComment.commentId }, 'totalChildrenComment', 1);
+          await this.commentRepo.increment(
+            { commentId: parentComment.commentId },
+            'totalChildrenComment',
+            1,
+          );
         }
       }
 
@@ -119,7 +123,9 @@ export class CommentService {
       const userId = user?.userId || null;
       console.log('UserId in findCommentsByFilm:', userId);
       const comments = data.map((comment) => {
-        const currentReaction = userId ? comment.reactions?.find((r) => r.user?.userId === userId) : null;
+        const currentReaction = userId
+          ? comment.reactions?.find((r) => r.user?.userId === userId)
+          : null;
 
         return {
           id: comment.commentId,
@@ -138,7 +144,9 @@ export class CommentService {
             comment.children
               ?.filter((child) => !child.isHidden)
               .map((child) => {
-                const childReaction = userId ? child.reactions?.find((r) => r.user?.userId === userId) : null;
+                const childReaction = userId
+                  ? child.reactions?.find((r) => r.user?.userId === userId)
+                  : null;
 
                 return {
                   id: child.commentId,
@@ -262,7 +270,7 @@ export class CommentService {
     try {
       const comment = await this.commentRepo.findOne({
         where: { commentId },
-        relations: ['user', 'parent', 'children'],
+        relations: ['user', 'parent', 'children', 'film'],
       });
 
       if (!comment) return { EC: 0, EM: 'Comment not found' };
@@ -280,7 +288,11 @@ export class CommentService {
         }
       }
       if (comment.parent) {
-        await this.commentRepo.decrement({ commentId: comment.parent.commentId }, 'totalChildrenComment', 1);
+        await this.commentRepo.decrement(
+          { commentId: comment.parent.commentId },
+          'totalChildrenComment',
+          1,
+        );
       }
       await this.commentRepo.update(commentId, { deletedBy: user.userId });
       await this.commentRepo.softDelete({ commentId });
