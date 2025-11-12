@@ -49,6 +49,7 @@ import { RatingModule } from './modules/rating/rating.module';
 import { Rating } from './modules/rating/entities/rating.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -117,6 +118,7 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
     CommentReactionModule,
     RatingModule,
     ChatbotModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
