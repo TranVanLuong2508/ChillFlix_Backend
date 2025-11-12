@@ -234,7 +234,7 @@ export class FilmsService {
         EC: 0,
         EM: 'Get film by Id success',
         film: plainToInstance(FilmResponseDto, film),
-        directors: directorsRes.directors,
+        directors: directorsRes.result,
         actors: actorsRes.result,
       };
     } catch (error) {

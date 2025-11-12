@@ -15,7 +15,7 @@ import {
 import { FilmActorService } from './film_actor.service';
 import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
-import { Public, ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import { PaginationFaDto } from './dto/pagination-fa.dto';
 import type { IUser } from '../users/interface/user.interface';
 
@@ -44,8 +44,9 @@ export class FilmActorController {
     return await this.filmActorService.getFilmActorById(id);
   }
 
-  @Get('get-actors-by-film/:filmId')
   @Public()
+  @SkipCheckPermission()
+  @Get('get-actors-by-film/:filmId')
   @ResponseMessage('Get actors by film id')
   async getActorsByFilm(@Param('filmId') filmId: string, query: PaginationFaDto) {
     return await this.filmActorService.getActorsByFilm(filmId, query);
