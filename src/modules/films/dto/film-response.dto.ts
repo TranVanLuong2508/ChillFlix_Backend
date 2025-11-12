@@ -115,6 +115,9 @@ export class FilmPaginationDto {
   duration?: number;
 
   @Expose()
+  description: string;
+
+  @Expose()
   title: string;
 
   @Expose()
