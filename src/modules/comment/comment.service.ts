@@ -38,23 +38,35 @@ export class CommentService {
 
       const savedComment = await this.commentRepo.save(comment);
 
+      let parentComment: Comment | null = null;
       if (dto.parentId) {
-        const parent = await this.commentRepo.findOne({
+        parentComment = await this.commentRepo.findOne({
           where: { commentId: dto.parentId },
+          relations: ['user', 'parent', 'parent.user'],
         });
 
-        if (parent) {
-          await this.commentRepo.increment({ commentId: dto.parentId }, 'totalChildrenComment', 1);
+        if (parentComment) {
+          await this.commentRepo.increment({ commentId: parentComment.commentId }, 'totalChildrenComment', 1);
         }
       }
 
       const fullComment = await this.commentRepo.findOne({
         where: { commentId: savedComment.commentId },
-        relations: ['user'],
+        relations: ['user', 'parent', 'parent.user'],
       });
+
       if (fullComment) {
         this.commentGateway.broadcastNewComment(fullComment);
+
+        if (dto.parentId && parentComment?.user) {
+          this.commentGateway.broadcastReplyComment({
+            parentId: parentComment.commentId,
+            replyToUser: parentComment.user,
+            replyComment: fullComment,
+          });
+        }
       }
+      await this.countCommentsByFilm(dto.filmId);
       return {
         EC: 1,
         EM: 'Create comment successfully',
@@ -250,7 +262,7 @@ export class CommentService {
     try {
       const comment = await this.commentRepo.findOne({
         where: { commentId },
-        relations: ['user', 'parent'],
+        relations: ['user', 'parent', 'children'],
       });
 
       if (!comment) return { EC: 0, EM: 'Comment not found' };
@@ -259,13 +271,21 @@ export class CommentService {
 
       if (!canDelete) return { EC: 0, EM: 'You are not allowed to remove this comment' };
 
+      if (comment.children && comment.children.length > 0) {
+        for (const child of comment.children) {
+          await this.commentRepo.update(child.commentId, { deletedBy: user.userId });
+          await this.commentRepo.softDelete({ commentId: child.commentId });
+          this.commentGateway.broadcastDeleteComment(child.commentId);
+          await this.countCommentsByFilm(comment.film.filmId);
+        }
+      }
       if (comment.parent) {
         await this.commentRepo.decrement({ commentId: comment.parent.commentId }, 'totalChildrenComment', 1);
       }
-
       await this.commentRepo.update(commentId, { deletedBy: user.userId });
       await this.commentRepo.softDelete({ commentId });
       this.commentGateway.broadcastDeleteComment(commentId);
+
       return { EC: 1, EM: 'Delete comment successfully' };
     } catch (error) {
       console.error('Error in deleteComment:', error);
@@ -319,7 +339,7 @@ export class CommentService {
           deletedAt: IsNull(),
         },
       });
-
+      this.commentGateway.broadcastCountComments({ filmId, total });
       return {
         EC: 1,
         EM: 'Count comments successfully',

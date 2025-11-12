@@ -30,6 +30,10 @@ export class CommentGateway implements OnGatewayConnection {
     this.server.emit('newComment', comment);
   }
 
+  broadcastReplyComment(data: any) {
+    this.server.emit('replyComment', data);
+  }
+
   broadcastDeleteComment(commentId: string) {
     this.server.emit('deleteComment', { commentId });
   }
@@ -40,5 +44,9 @@ export class CommentGateway implements OnGatewayConnection {
 
   broadcastUpdateComment(comment: any) {
     this.server.emit('updateComment', comment);
+  }
+
+  broadcastCountComments(data: any) {
+    this.server.emit('countComments', data);
   }
 }
