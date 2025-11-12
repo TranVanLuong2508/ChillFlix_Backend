@@ -16,7 +16,7 @@ export class EpisodesService {
   constructor(
     @InjectRepository(Episode) private episodeRepository: Repository<Episode>,
     @InjectRepository(Part) private partRepository: Repository<Part>,
-  ) {}
+  ) { }
 
   async createListEpisode(createListEpisodeDto: CreateEpisodeDto[], user: IUser) {
     try {
@@ -109,15 +109,11 @@ export class EpisodesService {
     }
   }
 
-  async findOne(id: string) {
+  async findOneOption(query: string, type: keyof Episode) {
     try {
-      if (!isUUID(id)) {
-        throw new BadRequestException({ EC: 1, EM: 'Wrong format episode id!' });
-      }
-
-      const episode = await this.episodeRepository.findOne({ where: { id }, relations: ['part'] });
+      const episode = await this.episodeRepository.findOne({ where: { [type]: query }, relations: ['part'] });
       if (!episode) {
-        throw new NotFoundException({ EC: 2, EM: `Episode with id: ${id} not found` });
+        throw new NotFoundException({ EC: 2, EM: `Episode with ${type}: ${query} not found` });
       }
 
       return {
@@ -133,6 +129,19 @@ export class EpisodesService {
       });
     }
   }
+
+  async findOne(id: string) {
+    if (!isUUID(id)) {
+      throw new BadRequestException({ EC: 1, EM: 'Wrong format episode id!' });
+    }
+
+    return this.findOneOption(id, 'id');
+  }
+
+  async findOneBySlug(slug: string) {
+    return this.findOneOption(slug, 'slug');
+  }
+
 
   async update(id: string, updateEpisodeDto: UpdateEpisodeDto, user: IUser) {
     try {

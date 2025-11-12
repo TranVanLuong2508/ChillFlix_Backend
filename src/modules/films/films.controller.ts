@@ -41,7 +41,7 @@ export class FilmsController {
   }
 
   @Public()
-  @Get('/slug/:slug')
+  @Get('slug/:slug')
   findOneBySlug(@Param('slug') slug: string) {
     return this.filmsService.findOneBySlug(slug);
   }

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -46,7 +51,10 @@ export class FilmsService {
 
       if (directors) {
         for (const director of directors) {
-          await this.filmDirectorService.createFilmDirector({ ...director, filmId: newFilm.filmId }, user);
+          await this.filmDirectorService.createFilmDirector(
+            { ...director, filmId: newFilm.filmId },
+            user,
+          );
         }
       }
 
@@ -202,7 +210,7 @@ export class FilmsService {
       if (!film) {
         throw new NotFoundException({
           EC: 2,
-          EM: `Film with filmId ${slug} not found`,
+          EM: `Film with film slug ${slug} not found`,
         });
       }
 
@@ -317,7 +325,10 @@ export class FilmsService {
     }
   }
 
-  async updateFilmImage(filmId: string, images: { type: 'poster' | 'horizontal' | 'backdrop'; url: string }[]) {
+  async updateFilmImage(
+    filmId: string,
+    images: { type: 'poster' | 'horizontal' | 'backdrop'; url: string }[],
+  ) {
     try {
       const existImages = await this.filmImageRepository.find({ where: { filmId } });
 
@@ -431,6 +442,4 @@ export class FilmsService {
       });
     }
   }
-
-  async getFilmByDirectorId() {}
 }
