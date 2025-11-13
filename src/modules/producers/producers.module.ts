@@ -12,4 +12,4 @@ import { Film } from "../films/entities/film.entity"
   providers: [ProducerService],
   exports: [ProducerService],
 })
-export class ProducersModule {}
+export class ProducerModule {}

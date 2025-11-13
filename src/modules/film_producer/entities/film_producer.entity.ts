@@ -19,19 +19,11 @@ export class FilmProducer {
   @Column({ name: "is_main" })
   isMain: boolean
 
-  @ManyToOne(
-    () => Film,
-    (film) => film.filmProducers,
-    { onDelete: "CASCADE" },
-  )
+  @ManyToOne(() => Film,(film) => film.filmProducers,{ onDelete: "CASCADE" },)
   @JoinColumn({ name: "film_id", referencedColumnName: "filmId" })
   film: Film
 
-  @ManyToOne(
-    () => Producer,
-    (producer) => producer.filmProducers,
-    { onDelete: "CASCADE" },
-  )
+  @ManyToOne(() => Producer,(producer) => producer.filmProducers,{ onDelete: "CASCADE" },)
   @JoinColumn({ name: "producer_id", referencedColumnName: "producerId" })
   producer: Producer
 
@@ -43,13 +35,10 @@ export class FilmProducer {
 
   @DeleteDateColumn()
   deletedAt?: Date
-
   @Column({ nullable: true })
   createdBy: number
-
   @Column({ nullable: true })
   updatedBy: number
-
   @Column({ nullable: true })
   deletedBy: number
 }

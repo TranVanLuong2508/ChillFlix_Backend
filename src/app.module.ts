@@ -16,6 +16,7 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
 import { Director } from 'src/modules/directors/entities/director.entity';
 import { DirectorModule } from 'src/modules/directors/director.module';
+import { Producer } from './modules/producers/entities/producer.entity';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
@@ -50,8 +51,9 @@ import { Rating } from './modules/rating/entities/rating.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
-import { ProducersModule } from './modules/producers/producers.module';
+import { ProducerModule } from './modules/producers/producers.module';
 import { FilmProducerModule } from './modules/film_producer/film_producer.module';
+import { FilmProducer } from './modules/film_producer/entities/film_producer.entity';
 
 @Module({
   imports: [
@@ -74,6 +76,7 @@ import { FilmProducerModule } from './modules/film_producer/film_producer.module
           Permission,
           Role,
           Director,
+          Producer,
           Film,
           RolePermission,
           FilmGenre,
@@ -81,6 +84,7 @@ import { FilmProducerModule } from './modules/film_producer/film_producer.module
           Part,
           Episode,
           FilmDirector,
+          FilmProducer,
           Actor,
           FilmActor,
           Subscription,
@@ -121,8 +125,9 @@ import { FilmProducerModule } from './modules/film_producer/film_producer.module
     RatingModule,
     ChatbotModule,
     SearchModule,
-    ProducersModule,
+    ProducerModule,
     FilmProducerModule,
+    FilmProducer,
   ],
   controllers: [AppController],
   providers: [AppService],
