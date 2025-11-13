@@ -14,6 +14,44 @@ import { RolesModule } from 'src/modules/roles/roles.module';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersModule } from 'src/modules/users/users.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
+import { Director } from 'src/modules/directors/entities/director.entity';
+import { DirectorModule } from 'src/modules/directors/director.module';
+import { FilmsModule } from './modules/films/films.module';
+import { Film } from 'src/modules/films/entities/film.entity';
+import { FileModule } from './modules/file/file.module';
+import { RolePermission } from './modules/role_permission/entities/role_permission.entity';
+import { SubscriptionPlansModule } from './modules/subscription-plans/subscription-plans.module';
+import { MarkdownsModule } from './modules/markdowns/markdowns.module';
+import { FilmGenre } from './modules/films/entities/film_genre.entity';
+import { PartsModule } from './modules/parts/parts.module';
+import { EpisodesModule } from './modules/episodes/episodes.module';
+import { Part } from './modules/parts/entities/part.entity';
+import { Episode } from './modules/episodes/entities/episode.entity';
+import { FilmDirectorModule } from './modules/film_director/film_director.module';
+import { FilmDirector } from './modules/film_director/entities/film_director.entity';
+import { ActorModule } from './modules/actor/actor.module';
+import { Actor } from './modules/actor/entities/actor.entity';
+import { FilmActorModule } from './modules/film_actor/film_actor.module';
+import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { Subscription } from './modules/subscriptions/entities/subscription.entity';
+import { Markdown } from './modules/markdowns/entities/markdown.entity';
+import { SubscriptionPlan } from './modules/subscription-plans/entities/subscription-plan.entity';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { Payment } from './modules/payments/entities/payment.entity';
+import { EmailModule } from './modules/email/email.module';
+
+import { CommentModule } from './modules/comment/comment.module';
+import { Comment } from './modules/comment/entities/comment.entity';
+import { CommentReactionModule } from './modules/comment-reaction/comment-reaction.module';
+import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
+import { RatingModule } from './modules/rating/rating.module';
+import { Rating } from './modules/rating/entities/rating.entity';
+import { FilmImage } from './modules/films/entities/film_image.entity';
+import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { SearchModule } from './modules/search/search.module';
+import { ProducersModule } from './modules/producers/producers.module';
+import { FilmProducerModule } from './modules/film_producer/film_producer.module';
 
 @Module({
   imports: [
@@ -30,8 +68,31 @@ import { RolePermissionModule } from './modules/role_permission/role_permission.
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, AllCode, Permission, Role],
+        entities: [
+          User,
+          AllCode,
+          Permission,
+          Role,
+          Director,
+          Film,
+          RolePermission,
+          FilmGenre,
+          FilmImage,
+          Part,
+          Episode,
+          FilmDirector,
+          Actor,
+          FilmActor,
+          Subscription,
+          Markdown,
+          SubscriptionPlan,
+          Payment,
+          Comment,
+          CommentReaction,
+          Rating,
+        ],
         synchronize: true,
+        // logging: true,
       }),
     }),
     UsersModule,
@@ -41,6 +102,27 @@ import { RolePermissionModule } from './modules/role_permission/role_permission.
     PermissionsModule,
     RolesModule,
     RolePermissionModule,
+    DirectorModule,
+    FilmsModule,
+    FileModule,
+    SubscriptionPlansModule,
+    MarkdownsModule,
+    PartsModule,
+    EpisodesModule,
+    FilmDirectorModule,
+    ActorModule,
+    FilmActorModule,
+    FilmDirector,
+    SubscriptionsModule,
+    PaymentsModule,
+    EmailModule,
+    CommentModule,
+    CommentReactionModule,
+    RatingModule,
+    ChatbotModule,
+    SearchModule,
+    ProducersModule,
+    FilmProducerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

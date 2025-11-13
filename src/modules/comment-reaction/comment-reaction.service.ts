@@ -1,0 +1,91 @@
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CommentReaction } from './entities/comment-reaction.entity';
+import { CreateCommentReactionDto } from './dto/create-comment-reaction.dto';
+import { IUser } from '../users/interface/user.interface';
+import { Comment } from '../comment/entities/comment.entity';
+
+@Injectable()
+export class CommentReactionService {
+  constructor(
+    @InjectRepository(CommentReaction)
+    private readonly reactionRepo: Repository<CommentReaction>,
+
+    @InjectRepository(Comment)
+    private readonly commentRepo: Repository<Comment>,
+  ) {}
+
+  async reactToComment(dto: CreateCommentReactionDto, user: IUser) {
+    try {
+      const { commentId, type } = dto;
+
+      const comment = await this.commentRepo.findOne({ where: { commentId } });
+      if (!comment) {
+        throw new NotFoundException('Comment not found');
+      }
+
+      let existing = await this.reactionRepo.findOne({
+        where: {
+          user: { userId: user.userId },
+          comment: { commentId },
+        },
+        relations: ['user', 'comment'],
+      });
+
+      let userReaction: 'LIKE' | 'DISLIKE' | null = null;
+      let message = 'Reacted successfully';
+
+      if (!existing) {
+        const newReaction = this.reactionRepo.create({
+          user: { userId: user.userId } as any,
+          comment: { commentId } as any,
+          type,
+        });
+        await this.reactionRepo.save(newReaction);
+
+        userReaction = type;
+        message = 'Reacted successfully';
+      } else if (existing.type === type) {
+        await this.reactionRepo.remove(existing);
+
+        userReaction = null;
+        message = 'Reaction removed';
+      } else {
+        existing.type = type;
+        await this.reactionRepo.save(existing);
+
+        userReaction = type;
+        message = 'Reaction updated';
+      }
+
+      const [totalLike, totalDislike] = await Promise.all([
+        this.reactionRepo.count({
+          where: { comment: { commentId }, type: 'LIKE' },
+        }),
+        this.reactionRepo.count({
+          where: { comment: { commentId }, type: 'DISLIKE' },
+        }),
+      ]);
+
+      comment.totalLike = totalLike;
+      comment.totalDislike = totalDislike;
+      await this.commentRepo.save(comment);
+
+      return {
+        EC: 1,
+        EM: message,
+        commentId,
+        totalLike,
+        totalDislike,
+        userReaction,
+      };
+    } catch (error) {
+      console.error('Error in reactToComment:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from reactToComment service',
+      });
+    }
+  }
+}

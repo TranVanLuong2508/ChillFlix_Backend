@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/modules/users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,97 +17,182 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const isUserExist = await this.usersRepository.findOne({
-      where: {
-        email: createUserDto.email,
-      },
-    });
-
-    if (isUserExist) {
-      throw new BadRequestException(
-        `Email: ${createUserDto.email} already exists in the system. Please use a different email.`,
-      );
-    } else {
-      const hasedPassword = this.getHashPassword(createUserDto.password);
-
-      const newuser = this.usersRepository.create({
-        ...createUserDto,
-        password: hasedPassword,
+    try {
+      const isUserExist = await this.usersRepository.findOne({
+        where: {
+          email: createUserDto.email,
+        },
       });
-      await this.usersRepository.save(newuser);
-      return {
-        userId: newuser.userId,
-        createdAt: newuser.createdAt,
-      };
+
+      if (isUserExist) {
+        throw new BadRequestException({
+          EC: 0,
+          EM: `Email: ${createUserDto.email} already exists in the system. Please use a different email.`,
+        });
+      } else {
+        const hasedPassword = this.getHashPassword(createUserDto.password);
+
+        const newuser = this.usersRepository.create({
+          ...createUserDto,
+          password: hasedPassword,
+        });
+        await this.usersRepository.save(newuser);
+        return {
+          EC: 1,
+          EM: 'Create user success',
+          userId: newuser.userId,
+          createdAt: newuser.createdAt,
+        };
+      }
+    } catch (error) {
+      console.error('Error in create user:', error.message);
+      console.log('check erro create usser', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from create user service',
+      });
     }
   }
 
   async findAll() {
-    return await this.usersRepository.find({});
+    try {
+      const listUsers = await this.usersRepository.find({});
+      return {
+        EC: 1,
+        EM: 'Get all users success',
+        users: listUsers,
+      };
+    } catch (error) {
+      console.error('Error in getAll user:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getAll user service',
+      });
+    }
   }
 
   async findOne(id: number) {
-    return await this.usersRepository.findOne({
-      where: { userId: id },
-      relations: ['gender', 'role'],
-      select: {
-        gender: {
-          keyMap: true,
-          valueEn: true,
-          valueVi: true,
-          description: true,
+    try {
+      const userData = await this.usersRepository.findOne({
+        where: { userId: id },
+        relations: ['gender', 'role'],
+        select: {
+          role: {
+            roleId: true,
+            roleName: true,
+          },
+          gender: {
+            keyMap: true,
+            valueEn: true,
+            valueVi: true,
+            description: true,
+          },
         },
-        role: {
-          keyMap: true,
-          valueEn: true,
-          valueVi: true,
-          description: true,
-        },
-      },
-    });
+      });
+
+      if (!userData) {
+        throw new BadRequestException({
+          EC: 0,
+          EM: 'User Not Found',
+        });
+      } else {
+        return {
+          EC: 1,
+          EM: 'Get user success',
+          ...userData,
+        };
+      }
+    } catch (error) {
+      console.error('Error in findOne user:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from findOne User service',
+      });
+    }
   }
 
   async update(updateUser: UpdateUserDto, user: IUser) {
-    const updated = await this.usersRepository.update(
-      {
-        userId: updateUser.userId,
-      },
-      {
-        ...updateUser,
-        updatedBy: user.userId,
-        updatedAt: new Date(),
-      },
-    );
+    try {
+      const updated = await this.usersRepository.update(
+        {
+          userId: updateUser.userId,
+        },
+        {
+          ...updateUser,
+          updatedBy: user.userId,
+          updatedAt: new Date(),
+        },
+      );
 
-    return updated;
+      if (updated.affected === 0) {
+        return {
+          EC: 0,
+          EM: 'user not found',
+        };
+      }
+
+      return {
+        EC: 1,
+        EM: 'Update user success',
+        ...updated,
+      };
+    } catch (error: any) {
+      console.error('Error in update Role:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from update user service',
+      });
+    }
   }
 
   async remove(id: number, user: IUser) {
-    const foundUser = await this.usersRepository.findOne({
-      where: { userId: id },
-    });
+    try {
+      const foundUser = await this.usersRepository.findOne({
+        where: { userId: id },
+      });
 
-    if (!foundUser) {
-      throw new BadRequestException('not found user');
+      if (!foundUser) {
+        throw new BadRequestException({
+          EC: 0,
+          EM: 'not found user',
+        });
+      }
+
+      if (foundUser && foundUser.email === 'admin@gmail.com') {
+        throw new BadRequestException({
+          EC: 0,
+          EM: 'CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com',
+        });
+      }
+
+      const deleted = await this.usersRepository.update(
+        { userId: id },
+        {
+          isDeleted: true,
+          deletedBy: user.userId,
+          deletedAt: new Date(),
+        },
+      );
+
+      if (deleted.affected === 0) {
+        return {
+          EC: 0,
+          EM: 'user not found',
+        };
+      } else {
+        return {
+          EC: 1,
+          EM: `Role is deleted`,
+          ...deleted,
+        };
+      }
+    } catch (error) {
+      console.error('Error in delete user:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from delete user service',
+      });
     }
-
-    if (foundUser && foundUser.email === 'admin@gmail.com') {
-      throw new BadRequestException('CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com');
-    }
-
-    const deleted = await this.usersRepository.update(
-      { userId: id },
-      {
-        isDeleted: true,
-        deletedBy: user.userId,
-        deletedAt: new Date(),
-      },
-    );
-
-    return {
-      deletedResult: deleted,
-      EC: 0,
-    };
   }
 
   async findOneByUserName(userName: string) {
@@ -117,7 +202,7 @@ export class UsersService {
         email: true,
         password: true,
         userId: true,
-        roleCode: true,
+        roleId: true,
         fullName: true,
         genderCode: true,
         isVip: true,
@@ -147,52 +232,79 @@ export class UsersService {
   }
 
   async register(user: RegisterUserDto) {
-    const { email, password, genderCode, phoneNumber, age, fullName } = user;
-    const isUserExist = await this.usersRepository.findOne({
-      where: { email: email },
-    });
+    try {
+      // const { email, password, genderCode, phoneNumber, age, fullName, roleId } = user;
+      const { email, password, fullName } = user;
+      const isUserExist = await this.usersRepository.findOne({
+        where: { email: email },
+      });
 
-    if (isUserExist) {
-      throw new BadRequestException(`Email: ${email} already exists in the system. Please use a different email.`);
+      if (isUserExist) {
+        return {
+          EC: 0,
+          EM: `Email: ${email} already exists in the system. Please use a different email.`,
+        };
+      } else {
+        const hashedPassword = this.getHashPassword(password);
+        const newUser = this.usersRepository.create({
+          email,
+          fullName,
+          password: hashedPassword,
+          // genderCode,
+          // phoneNumber,
+          // age,
+          roleId: 3,
+        });
+
+        await this.usersRepository.save(newUser);
+        return {
+          EC: 1,
+          EM: 'User register success',
+          newUser,
+        };
+      }
+    } catch (error) {
+      console.error('Error in register user:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from register user service',
+      });
     }
-    const hashedPassword = this.getHashPassword(password);
-    const newUser = this.usersRepository.create({
-      email,
-      fullName,
-      password: hashedPassword,
-      genderCode,
-      phoneNumber,
-      age,
-    });
-
-    await this.usersRepository.save(newUser);
-
-    return newUser;
   }
 
   async getUsersWithPagination(currentPage: number, limit: number, qs: string) {
-    const { filter, sort } = aqp(qs);
-    delete filter.current;
-    delete filter.pageSize;
-    const offset = (+currentPage - 1) * +limit;
-    const defaultLimit = +limit ? +limit : 10;
-    const totalItems = (await this.usersRepository.find(filter)).length;
-    const totalPages = Math.ceil(totalItems / defaultLimit);
-    const result = await this.usersRepository.find({
-      where: filter,
-      skip: offset,
-      take: defaultLimit,
-      order: sort,
-    });
+    try {
+      const { filter, sort } = aqp(qs);
+      delete filter.current;
+      delete filter.pageSize;
+      const offset = (+currentPage - 1) * +limit;
+      const defaultLimit = +limit ? +limit : 10;
+      const totalItems = (await this.usersRepository.find(filter)).length;
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+      const result = await this.usersRepository.find({
+        where: filter,
+        skip: offset,
+        take: defaultLimit,
+        order: sort,
+      });
 
-    return {
-      metaData: {
-        current: currentPage,
-        pageSize: limit,
-        totalPages: totalPages,
-        totalItems: totalItems,
-      },
-      users: result,
-    };
+      return {
+        EC: 1,
+        EM: 'Get user with pagination success',
+        metaData: {
+          current: currentPage,
+          pageSize: limit,
+          totalPages: totalPages,
+          totalItems: totalItems,
+        },
+        users: result,
+      };
+    } catch (error) {
+      console.error('Error in getUsersWithPagination user:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getUsersWithPagination service',
+      });
+    }
   }
 }

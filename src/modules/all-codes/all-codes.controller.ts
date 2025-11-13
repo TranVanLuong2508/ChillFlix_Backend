@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+
 import { AllCodesService } from './all-codes.service';
 import { CreateAllCodeDto } from './dto/create-all-code.dto';
 import { UpdateAllCodeDto } from './dto/update-all-code.dto';
+import { Public, ResponseMessage, SkipCheckPermission } from 'src/decorators/customize';
 
 @Controller('all-codes')
 export class AllCodesController {
@@ -30,5 +32,13 @@ export class AllCodesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.allCodesService.remove(+id);
+  }
+
+  @Public()
+  @SkipCheckPermission()
+  @Get('type/get-by-type')
+  @ResponseMessage('Fetch Data from ALlCode by Type')
+  getAllCodeByType(@Query('type') type: string) {
+    return this.allCodesService.getAllCodeDataByType(type);
   }
 }

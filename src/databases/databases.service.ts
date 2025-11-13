@@ -1,26 +1,20 @@
-// import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
-// import { Repository } from 'typeorm';
-// import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
-// import { User } from 'src/users/entities/user.entity';
-// import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
-// import { UsersService } from 'src/users/users.service';
-// import { Permission } from 'src/permissions/entities/permission.entity';
-// import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
-
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
 import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { UsersService } from 'src/modules/users/users.service';
+
 import { Repository } from 'typeorm';
+import { INIT_ROLE_PERMISSION } from './sampleData/role_permission';
+import { Role } from 'src/modules/roles/entities/role.entity';
+import { db } from 'src/modules/chatbot/dtb';
 
 @Injectable()
 export class DatabasesService implements OnModuleInit {
@@ -35,20 +29,62 @@ export class DatabasesService implements OnModuleInit {
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
 
+    @InjectRepository(RolePermission)
+    private role_perm_Repository: Repository<RolePermission>,
+
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+
     private configService: ConfigService,
     private userService: UsersService,
   ) {}
 
   async onModuleInit() {
-    const shouldInit = this.configService.get<boolean>('SHOULD_INIT');
+    // const shouldInit = this.configService.get<boolean>('SHOULD_INIT');
+    const shouldInit = false;
     if (Boolean(shouldInit)) {
       console.log('should init if data row count = 0');
       const countCode = await this.allCodeRepository.count();
       const countUser = await this.userRepository.count();
       const countPermission = await this.permissionRepository.count();
+      const count_role_perm = await this.role_perm_Repository.count();
+      const countRole = await this.roleRepository.count();
 
       if (countCode === 0) {
         await this.allCodeRepository.insert(INIT_ALLCODE);
+      }
+
+      if (countRole === 0) {
+        await this.roleRepository.insert([
+          {
+            roleId: 2,
+            roleName: 'ROLE_ADMIN',
+            description: 'admin full quyền',
+            isActive: true,
+            createdBy: 15,
+          },
+          {
+            roleId: 4,
+            roleName: 'ROLE_MOD',
+            description: 'Người kiểm duyệt',
+            createdBy: 15,
+          },
+          {
+            roleId: 5,
+            roleName: 'ROLE_USER',
+            description: 'Người dùng',
+            isActive: true,
+            isDeleted: false,
+            createdBy: 15,
+          },
+          {
+            roleId: 6,
+            roleName: 'tesst',
+            description: 'Người dùng',
+            isActive: true,
+            createdBy: 15,
+          },
+        ]);
       }
 
       if (countUser === 0) {
@@ -61,7 +97,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0768894134',
             genderCode: GENDER_Male,
-            roleCode: ADMIN_ROLE,
+            roleId: ADMIN_ROLE,
             isVip: true,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -73,7 +109,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0768894134',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -85,7 +121,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0768894134',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -97,7 +133,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0717433007',
             genderCode: GENDER_Other,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -109,7 +145,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0791123456',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -121,7 +157,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0789900112',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -133,7 +169,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0774589213',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -145,7 +181,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0799988123',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -157,7 +193,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0762331445',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -169,7 +205,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0703124448',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -181,7 +217,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0714567890',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -193,7 +229,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0793456789',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -205,7 +241,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0755432211',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -217,7 +253,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0791123499',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -229,7 +265,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0745567899',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -241,7 +277,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0787654321',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -253,7 +289,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0719988776',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -265,7 +301,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0708877665',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -277,7 +313,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0795647382',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -289,7 +325,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0756677889',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -301,7 +337,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0714321555',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -313,7 +349,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0709991442',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -325,7 +361,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0788442233',
             genderCode: GENDER_Male,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -337,7 +373,7 @@ export class DatabasesService implements OnModuleInit {
             password: this.userService.getHashPassword(initPassword || 'default123'),
             phoneNumber: '0726655443',
             genderCode: GENDER_Female,
-            roleCode: USER_ROLE,
+            roleId: USER_ROLE,
             isVip: false,
             statusCode: 'US_ACTIVE',
             isDeleted: false,
@@ -348,9 +384,17 @@ export class DatabasesService implements OnModuleInit {
       if (countPermission === 0) {
         await this.permissionRepository.insert(INIT_PERMISSIONS);
       }
+
+      if (count_role_perm === 0) {
+        await this.role_perm_Repository.insert(INIT_ROLE_PERMISSION);
+      }
       if (countCode > 0 && countUser > 0 && countPermission > 0) {
         this.logger.warn('>>> ALREADY INIT SAMPLE DATA...');
       }
     }
+  }
+
+  async query(sql: string, params: any[] = []) {
+    return db.query(sql, params);
   }
 }
