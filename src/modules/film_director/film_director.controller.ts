@@ -22,7 +22,7 @@ import type { IUser } from '../users/interface/user.interface';
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmDirectorController {
-  constructor(private readonly filmDirectorService: FilmDirectorService) {}
+  constructor(private readonly filmDirectorService: FilmDirectorService) { }
 
   @Post('create-film-director')
   @ResponseMessage('Create relation between film and director')

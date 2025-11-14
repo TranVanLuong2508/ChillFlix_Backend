@@ -1,26 +1,28 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common"
-import { type Repository, Not } from "typeorm"
+import { Repository, Not } from "typeorm"
 import { InjectRepository } from '@nestjs/typeorm';
-import type { CreateFilmProducerDto } from "./dto/create-film_producer.dto"
-import type { UpdateFilmProducerDto } from "./dto/update-film_producer.dto"
+import { CreateFilmProducerDto } from "./dto/create-film_producer.dto"
+import { UpdateFilmProducerDto } from "./dto/update-film_producer.dto"
 import { FilmProducer } from "./entities/film_producer.entity"
-import  { Film } from "../films/entities/film.entity"
-import  { Producer } from "../producers/entities/producer.entity"
-import type { PaginationfpDto } from "./dto/pagination-fp.dto"
-import type { IUser } from "../users/interface/user.interface"
+import { Film } from "../films/entities/film.entity"
+import { Producer } from "../producers/entities/producer.entity"
+import { PaginationfpDto } from "./dto/pagination-fp.dto"
+import { IUser } from "../users/interface/user.interface"
 import aqp from "api-query-params"
+import { plainToInstance } from 'class-transformer';
+import { ListFilm } from '../films/dto/list-film.dto';
 import { FilmImage } from '../films/entities/film_image.entity';
 
 @Injectable()
 export class FilmProducerService {
   constructor(
-  @InjectRepository(FilmProducer)
-  private readonly filmProducerRepo: Repository<FilmProducer>,
-  @InjectRepository(Film)
-  private readonly filmRepo: Repository<Film>,
-  @InjectRepository(Producer)
-  private readonly producerRepo: Repository<Producer>,
-) {}
+    @InjectRepository(FilmProducer)
+    private readonly filmProducerRepo: Repository<FilmProducer>,
+    @InjectRepository(Film)
+    private readonly filmRepo: Repository<Film>,
+    @InjectRepository(Producer)
+    private readonly producerRepo: Repository<Producer>,
+  ) { }
 
   private formatFilmProducer(entity: any) {
     if (!entity) return null
@@ -30,32 +32,32 @@ export class FilmProducerService {
 
     const film = entity.film
       ? clean({
-                filmId: entity.film.filmId,
-                originalTitle: entity.film.originalTitle,
-                title: entity.film.title,
-                description: entity.film.description,
-                releaseDate: entity.film.releaseDate,
-                year: entity.film.year,
-                thumbUrl: entity.film.thumbUrl,
-                // posterUrl: entity.film.posterUrl,
-                filmImages: entity.film.filmImages?.map((img: FilmImage) => ({
-                  filmImageId: img.id,
-                  imageUrl: img.url,
-                })),
-                slug: entity.film.slug,
-                age: entity.film.ageCode,
-                type: entity.film.typeCode,
-                country: entity.film.countryCode,
-                language: entity.film.langCode,
-                publicStatus: entity.film.publicStatusCode,
-              })
-            : null;
+        filmId: entity.film.filmId,
+        originalTitle: entity.film.originalTitle,
+        title: entity.film.title,
+        description: entity.film.description,
+        releaseDate: entity.film.releaseDate,
+        year: entity.film.year,
+        thumbUrl: entity.film.thumbUrl,
+        // posterUrl: entity.film.posterUrl,
+        filmImages: entity.film.filmImages?.map((img: FilmImage) => ({
+          filmImageId: img.id,
+          imageUrl: img.url,
+        })),
+        slug: entity.film.slug,
+        age: entity.film.ageCode,
+        type: entity.film.typeCode,
+        country: entity.film.countryCode,
+        language: entity.film.langCode,
+        publicStatus: entity.film.publicStatusCode,
+      })
+      : null;
 
     const producer = entity.producer
       ? clean({
-          producerId: entity.producer.producerId,
-          producerName: entity.producer.producerName,
-        })
+        producerId: entity.producer.producerId,
+        producerName: entity.producer.producerName,
+      })
       : null
 
     const { id, isMain, createdAt, updatedAt, createdBy, updatedBy } = entity
@@ -137,31 +139,32 @@ export class FilmProducerService {
         isMain: fp.isMain,
         film: fp.film
           ? {
-              filmId: fp.film.filmId,
-              title: fp.film.title,
-              originalTitle: fp.film.originalTitle,
-              description: fp.film.description,
-              releaseDate: fp.film.releaseDate,
-              thumbUrl: fp.film.thumbUrl,
-              // posterUrl: fd.film.posterUrl,
-              filmImages: fp.film.filmImages?.map((img: FilmImage) => ({
-                filmImageId: img.id,
-                imageUrl: img.url,
-              })),
-              year: fp.film.year,
-              slug: fp.film.slug,
-              age: fp.film.ageCode,
-              type: fp.film.typeCode,
-              country: fp.film.countryCode,
-              language: fp.film.langCode,
-              publicStatus: fp.film.publicStatusCode,
-            }
+            filmId: fp.film.filmId,
+            title: fp.film.title,
+            originalTitle: fp.film.originalTitle,
+            description: fp.film.description,
+            releaseDate: fp.film.releaseDate,
+            thumbUrl: fp.film.thumbUrl,
+            // posterUrl: fd.film.posterUrl,
+            filmImages: fp.film.filmImages?.map((img: FilmImage) => ({
+              filmImageId: img.id,
+              imageUrl: img.url,
+            })),
+            year: fp.film.year,
+            slug: fp.film.slug,
+            age: fp.film.ageCode,
+            type: fp.film.typeCode,
+            country: fp.film.countryCode,
+            language: fp.film.langCode,
+            publicStatus: fp.film.publicStatusCode,
+          }
           : null,
         producer: fp.producer
           ? {
-              producerId: fp.producer.producerId,
-              producerName: fp.producer.producerName,
-            }
+            producerId: fp.producer.producerId,
+            producerName: fp.producer.producerName,
+            slug: fp.producer.slug,
+          }
           : null,
         createdAt: fp.createdAt,
         updatedAt: fp.updatedAt,
@@ -191,7 +194,7 @@ export class FilmProducerService {
     try {
       const filmProducer = await this.filmProducerRepo.findOne({
         where: { id },
-        relations: ["film",'film.filmImages', "producer"],
+        relations: ["film", 'film.filmImages', "producer"],
       })
 
       if (!filmProducer) return { EC: 0, EM: `FilmProducer ${id} not found!` }
@@ -233,6 +236,7 @@ export class FilmProducerService {
       let producers = film.filmProducers.map((fp) => ({
         producerId: fp.producer.producerId,
         producerName: fp.producer.producerName,
+        slug: fp.producer.slug,
         isMain: fp.isMain,
       }))
 
@@ -286,7 +290,10 @@ export class FilmProducerService {
 
       const producer = await this.producerRepo.findOne({
         where: { producerId },
-        relations: ["filmProducers", "filmProducers.film", "filmProducers.film.filmImages"],
+        relations: [
+          'filmProducers',
+          'filmProducers.film',
+          'filmProducers.film.filmImages'],
       })
 
       if (!producer) {

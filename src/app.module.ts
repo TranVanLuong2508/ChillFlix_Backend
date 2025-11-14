@@ -51,7 +51,7 @@ import { Rating } from './modules/rating/entities/rating.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
-import { ProducerModule } from './modules/producers/producers.module';
+import { ProducerModule } from './modules/producers/producer.module';
 import { FilmProducerModule } from './modules/film_producer/film_producer.module';
 import { FilmProducer } from './modules/film_producer/entities/film_producer.entity';
 
@@ -132,4 +132,4 @@ import { FilmProducer } from './modules/film_producer/entities/film_producer.ent
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

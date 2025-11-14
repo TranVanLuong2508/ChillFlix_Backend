@@ -1,13 +1,13 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common"
-import type { Repository } from "typeorm"
-import  { Producer } from "./entities/producer.entity"
-import type { CreateProducerDto } from "./dto/create-producer.dto"
-import type { UpdateProducerDto } from "./dto/update-producer.dto"
-import aqp from "api-query-params"
-import type { IUser } from "../users/interface/user.interface"
-import  { Film } from "src/modules/films/entities/film.entity"
-import  { FilmProducer } from "src/modules/film_producer/entities/film_producer.entity"
 import { InjectRepository } from "@nestjs/typeorm"
+import { Repository } from "typeorm"
+import { Producer } from "./entities/producer.entity"
+import { CreateProducerDto } from "./dto/create-producer.dto"
+import { UpdateProducerDto } from "./dto/update-producer.dto"
+import { IUser } from "../users/interface/user.interface"
+import aqp from "api-query-params"
+import { Film } from "src/modules/films/entities/film.entity"
+import { FilmProducer } from "src/modules/film_producer/entities/film_producer.entity"
 
 @Injectable()
 export class ProducerService {
@@ -18,7 +18,7 @@ export class ProducerService {
     private readonly filmProducerRepo: Repository<FilmProducer>,
     @InjectRepository(Film)
     private readonly filmRepo: Repository<Film>,
-  ) {}
+  ) { }
 
   async createProducer(dto: CreateProducerDto, user: IUser): Promise<any> {
     try {
@@ -30,7 +30,9 @@ export class ProducerService {
         where: { producerName: dto.producerName },
       })
       if (exists) return { EC: 0, EM: "Producer name already exists!" }
+
       const slug = dto.producerName.toLowerCase().replace(/\s+/g, "-")
+
       const producer = this.producerRepo.create({
         producerName: dto.producerName,
         slug: slug,
@@ -81,11 +83,12 @@ export class ProducerService {
         }
 
       const producers = data.map((d) => {
+        const slug = d.slug;
         const { createdAt, updatedAt, createdBy, ...newData } = d as any
         return Object.fromEntries(
           Object.entries({
             ...newData,
-            slug: d.slug,
+            slug,
           }).filter(([_, v]) => v !== null),
         )
       })

@@ -1,8 +1,8 @@
 import { Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe } from "@nestjs/common"
-import type { ProducerService } from "./producers.service"
-import type { CreateProducerDto } from "./dto/create-producer.dto"
-import type { UpdateProducerDto } from "./dto/update-producer.dto"
-import type { PaginationDto } from "./dto/pagination.dto"
+import { ProducerService } from "./producer.service"
+import { CreateProducerDto } from "./dto/create-producer.dto"
+import { UpdateProducerDto } from "./dto/update-producer.dto"
+import { PaginationDto } from "./dto/pagination.dto"
 import { Public, ResponseMessage, User } from "src/decorators/customize"
 import type { IUser } from "../users/interface/user.interface"
 

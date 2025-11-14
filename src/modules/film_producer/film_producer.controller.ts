@@ -9,23 +9,24 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   SerializeOptions,
+  Body,
 } from "@nestjs/common"
-import type { FilmProducerService } from "./film_producer.service"
-import type { CreateFilmProducerDto } from "./dto/create-film_producer.dto"
-import type { UpdateFilmProducerDto } from "./dto/update-film_producer.dto"
-import { Public, ResponseMessage, User } from "src/decorators/customize"
-import type { PaginationfpDto } from "./dto/pagination-fp.dto"
+import { FilmProducerService } from "./film_producer.service"
+import { CreateFilmProducerDto } from "./dto/create-film_producer.dto"
+import { UpdateFilmProducerDto } from "./dto/update-film_producer.dto"
+import { Public, ResponseMessage, SkipCheckPermission, User } from "src/decorators/customize"
+import { PaginationfpDto } from "./dto/pagination-fp.dto"
 import type { IUser } from "../users/interface/user.interface"
 
 @Controller("film-producer")
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmProducerController {
-  constructor(private readonly filmProducerService: FilmProducerService) {}
+  constructor(private readonly filmProducerService: FilmProducerService) { }
 
   @Post("create-film-producer")
   @ResponseMessage("Create relation between film and producer")
-  createFilmProducer(dto: CreateFilmProducerDto, @User() user: IUser) {
+  createFilmProducer(@Body() dto: CreateFilmProducerDto, @User() user: IUser) {
     return this.filmProducerService.createFilmProducer(dto, user)
   }
 
@@ -58,7 +59,7 @@ export class FilmProducerController {
 
   @Patch("edit-film-producer/:id")
   @ResponseMessage("Update film-producer relation")
-  updateFilmProducer(@Param('id') id: number, dto: UpdateFilmProducerDto, @User() user: IUser) {
+  updateFilmProducer(@Param('id') id: number, @Body() dto: UpdateFilmProducerDto, @User() user: IUser) {
     return this.filmProducerService.updateFilmProducer(id, dto, user)
   }
 

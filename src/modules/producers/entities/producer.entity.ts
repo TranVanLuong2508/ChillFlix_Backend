@@ -38,9 +38,6 @@ export class Producer {
   @Column({ nullable: true })
   deletedBy: number
 
-  @OneToMany(
-    () => FilmProducer,
-    (filmProducer) => filmProducer.producer,
-  )
+  @OneToMany(() => FilmProducer,(filmProducer) => filmProducer.producer,)
   filmProducers: FilmProducer[]
 }
