@@ -1,4 +1,4 @@
-import { IsNull, Repository, Not } from 'typeorm';
+import { IsNull, Repository, Not, In } from 'typeorm';
 import { Injectable, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -39,6 +39,7 @@ export class CommentService {
       const savedComment = await this.commentRepo.save(comment);
 
       let parentComment: Comment | null = null;
+
       if (dto.parentId) {
         parentComment = await this.commentRepo.findOne({
           where: { commentId: dto.parentId },
@@ -61,16 +62,28 @@ export class CommentService {
 
       if (fullComment) {
         this.commentGateway.broadcastNewComment(fullComment);
-
         if (dto.parentId && parentComment?.user) {
+          const targetUserId = parentComment.user.userId;
           this.commentGateway.broadcastReplyComment({
             parentId: parentComment.commentId,
             replyToUser: parentComment.user,
             replyComment: fullComment,
           });
+
+          //socket.io notification
+          if (targetUserId !== user.userId) {
+            this.commentGateway.sendReplyNotification(String(targetUserId), {
+              targetUserId,
+              parentId: parentComment.commentId,
+              replyToUser: parentComment.user,
+              replyComment: fullComment,
+            });
+          }
         }
       }
+
       await this.countCommentsByFilm(dto.filmId);
+
       return {
         EC: 1,
         EM: 'Create comment successfully',
@@ -84,6 +97,7 @@ export class CommentService {
       });
     }
   }
+
   async findCommentsByFilm(query: any, filmId: string, user: IUser | null) {
     try {
       const { filter, sort } = aqp(query);
@@ -105,22 +119,14 @@ export class CommentService {
           isHidden: false,
           ...filter,
         },
-        relations: [
-          'user',
-          'children',
-          'children.user',
-          'reactions',
-          'children.reactions',
-          'reactions.user',
-          'children.reactions.user',
-        ],
-        order: {
-          createdAt: 'DESC',
-          children: { createdAt: 'ASC' },
-        },
+        relations: ['user', 'reactions', 'reactions.user'],
+        order: { createdAt: 'DESC' },
         skip,
         take: limit,
       });
+      for (const root of data) {
+        root.children = await loadChildrenRecursive(this.commentRepo, root.commentId);
+      }
 
       const userId = user?.userId || null;
       const comments = data.map((comment) => buildTree(comment, userId));
@@ -225,27 +231,34 @@ export class CommentService {
     }
   }
 
+  private async deleteChildrenRecursive(commentId: string, userId: number) {
+    const children = await this.commentRepo.find({
+      where: { parent: { commentId }, deletedAt: IsNull() },
+      relations: ['children'],
+    });
+
+    for (const child of children) {
+      await this.deleteChildrenRecursive(child.commentId, userId);
+      await this.commentRepo.update(child.commentId, { deletedBy: userId });
+      await this.commentRepo.softDelete(child.commentId);
+      this.commentGateway.broadcastDeleteComment(child.commentId);
+    }
+  }
+
   async deleteComment(commentId: string, user: IUser) {
     try {
       const comment = await this.commentRepo.findOne({
         where: { commentId },
-        relations: ['user', 'parent', 'children', 'film'],
+        relations: ['user', 'parent', 'film'],
       });
 
       if (!comment) return { EC: 0, EM: 'Comment not found' };
 
-      const canDelete = comment.user.userId === user.userId;
+      if (comment.user.userId !== user.userId)
+        return { EC: 0, EM: 'You are not allowed to remove this comment' };
 
-      if (!canDelete) return { EC: 0, EM: 'You are not allowed to remove this comment' };
-
-      if (comment.children && comment.children.length > 0) {
-        for (const child of comment.children) {
-          await this.commentRepo.update(child.commentId, { deletedBy: user.userId });
-          await this.commentRepo.softDelete({ commentId: child.commentId });
-          this.commentGateway.broadcastDeleteComment(child.commentId);
-          await this.countCommentsByFilm(comment.film.filmId);
-        }
-      }
+      const filmId = comment.film.filmId;
+      await this.deleteChildrenRecursive(commentId, user.userId);
       if (comment.parent) {
         await this.commentRepo.decrement(
           { commentId: comment.parent.commentId },
@@ -254,8 +267,16 @@ export class CommentService {
         );
       }
       await this.commentRepo.update(commentId, { deletedBy: user.userId });
-      await this.commentRepo.softDelete({ commentId });
+      await this.commentRepo.softDelete(commentId);
       this.commentGateway.broadcastDeleteComment(commentId);
+      const total = await this.commentRepo.count({
+        where: { film: { filmId }, deletedAt: IsNull() },
+      });
+
+      this.commentGateway.broadcastCountComments({
+        filmId,
+        total,
+      });
 
       return { EC: 1, EM: 'Delete comment successfully' };
     } catch (error) {
@@ -326,6 +347,25 @@ export class CommentService {
   }
 }
 
+async function loadChildrenRecursive(
+  repo: Repository<Comment>,
+  parentId: string,
+): Promise<Comment[]> {
+  const children = await repo.find({
+    where: {
+      parent: { commentId: parentId },
+      isHidden: false,
+      deletedAt: IsNull(),
+    },
+    relations: ['user', 'reactions', 'reactions.user'],
+    order: { createdAt: 'ASC' },
+  });
+  for (const child of children) {
+    child.children = await loadChildrenRecursive(repo, child.commentId);
+  }
+  return children;
+}
+
 function buildTree(comment: any, userId: string | number | null): any {
   const currentReaction = userId ? comment.reactions?.find((r) => r.user?.userId === userId) : null;
   return {
@@ -341,6 +381,16 @@ function buildTree(comment: any, userId: string | number | null): any {
       name: comment.user.fullName,
       avatar: comment.user.avatarUrl,
     },
+    parent: comment.parent
+      ? {
+          id: comment.parent.commentId,
+          user: {
+            id: comment.parent.user?.userId,
+            name: comment.parent.user?.fullName,
+            avatar: comment.parent.user?.avatarUrl,
+          },
+        }
+      : null,
     replies: (comment.children || [])
       .filter((child) => !child.isHidden)
       .map((child) => buildTree(child, userId)),

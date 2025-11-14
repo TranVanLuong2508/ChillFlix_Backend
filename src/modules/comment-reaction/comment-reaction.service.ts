@@ -21,7 +21,10 @@ export class CommentReactionService {
     try {
       const { commentId, type } = dto;
 
-      const comment = await this.commentRepo.findOne({ where: { commentId } });
+      const comment = await this.commentRepo.findOne({
+        where: { commentId },
+        relations: ['user'],
+      });
       if (!comment) {
         throw new NotFoundException('Comment not found');
       }
@@ -72,10 +75,24 @@ export class CommentReactionService {
       comment.totalLike = totalLike;
       comment.totalDislike = totalDislike;
       await this.commentRepo.save(comment);
-      
-      const reaction = { commentId, userId: user.userId, userReaction, totalLike, totalDislike};
+
+      const reaction = { commentId, userId: user.userId, userReaction, totalLike, totalDislike };
       this.commentGateway.broadcastReactComment(reaction);
 
+      //socket.io notification
+      if (userReaction && comment.user && comment.user.userId !== user.userId) {
+        const reactionUser = await this.reactionRepo.findOne({
+          where: { user: { userId: user.userId } },
+          relations: ['user'],
+        });
+
+        this.commentGateway.sendReactionNotification(String(comment.user.userId), {
+          targetUserId: comment.user.userId,
+          commentId,
+          reactionType: type,
+          reactionUser: reactionUser?.user || { userId: user.userId, fullName: 'Anonymous' },
+        });
+      }
 
       return {
         EC: 1,
