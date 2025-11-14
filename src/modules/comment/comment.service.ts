@@ -84,7 +84,6 @@ export class CommentService {
       });
     }
   }
-
   async findCommentsByFilm(query: any, filmId: string, user: IUser | null) {
     try {
       const { filter, sort } = aqp(query);
@@ -115,56 +114,16 @@ export class CommentService {
           'reactions.user',
           'children.reactions.user',
         ],
-        order: { createdAt: 'DESC', children: { createdAt: 'ASC' } },
+        order: {
+          createdAt: 'DESC',
+          children: { createdAt: 'ASC' },
+        },
         skip,
         take: limit,
       });
 
       const userId = user?.userId || null;
-      console.log('UserId in findCommentsByFilm:', userId);
-      const comments = data.map((comment) => {
-        const currentReaction = userId
-          ? comment.reactions?.find((r) => r.user?.userId === userId)
-          : null;
-
-        return {
-          id: comment.commentId,
-          content: comment.content,
-          createdAt: comment.createdAt,
-          totalLike: comment.totalLike,
-          totalDislike: comment.totalDislike,
-          totalChildrenComment: comment.totalChildrenComment,
-          currentUserReaction: userId ? currentReaction?.type || null : undefined,
-          user: {
-            id: comment.user.userId,
-            name: comment.user.fullName,
-            avatar: comment.user.avatarUrl,
-          },
-          replies:
-            comment.children
-              ?.filter((child) => !child.isHidden)
-              .map((child) => {
-                const childReaction = userId
-                  ? child.reactions?.find((r) => r.user?.userId === userId)
-                  : null;
-
-                return {
-                  id: child.commentId,
-                  content: child.content,
-                  createdAt: child.createdAt,
-                  totalLike: child.totalLike,
-                  totalDislike: child.totalDislike,
-                  totalChildrenComment: child.totalChildrenComment,
-                  currentUserReaction: userId ? childReaction?.type || null : undefined,
-                  user: {
-                    id: child.user.userId,
-                    name: child.user.fullName,
-                    avatar: child.user.avatarUrl,
-                  },
-                };
-              }) || [],
-        };
-      });
+      const comments = data.map((comment) => buildTree(comment, userId));
 
       return {
         EC: 1,
@@ -365,4 +324,25 @@ export class CommentService {
       });
     }
   }
+}
+
+function buildTree(comment: any, userId: string | number | null): any {
+  const currentReaction = userId ? comment.reactions?.find((r) => r.user?.userId === userId) : null;
+  return {
+    id: comment.commentId,
+    content: comment.content,
+    createdAt: comment.createdAt,
+    totalLike: comment.totalLike,
+    totalDislike: comment.totalDislike,
+    totalChildrenComment: comment.totalChildrenComment,
+    currentUserReaction: userId ? currentReaction?.type || null : undefined,
+    user: {
+      id: comment.user.userId,
+      name: comment.user.fullName,
+      avatar: comment.user.avatarUrl,
+    },
+    replies: (comment.children || [])
+      .filter((child) => !child.isHidden)
+      .map((child) => buildTree(child, userId)),
+  };
 }
