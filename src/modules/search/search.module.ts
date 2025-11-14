@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SearchController } from './search.controller';
 import { ElasticsearchModule } from '@nestjs/elasticsearch';
 import { SearchService } from './search.service';
@@ -11,7 +11,7 @@ import { Film } from '../films/entities/film.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Film]),
-    FilmsModule,
+    forwardRef(() => FilmsModule),
     ElasticsearchModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         node: 'http://localhost:9200',
@@ -25,5 +25,6 @@ import { Film } from '../films/entities/film.entity';
   ],
   controllers: [SearchController],
   providers: [SearchService],
+  exports: [SearchService],
 })
 export class SearchModule {}

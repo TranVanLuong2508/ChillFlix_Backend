@@ -14,6 +14,7 @@ export class SearchController {
   @Get('/films')
   @Public()
   @SkipCheckPermission()
+  @ResponseMessage('search films')
   async searchFilms(@Query('q') q: string) {
     return this.searchService.searchFilms(q);
   }
@@ -29,6 +30,7 @@ export class SearchController {
   @Get('/sync/films')
   @Public()
   @SkipCheckPermission()
+  @ResponseMessage('bulk index film')
   async syncFilms() {
     const films = await this.filmsRepository.find(); // lấy toàn bộ films
     return this.searchService.bulkIndexFilms(films);
@@ -37,7 +39,16 @@ export class SearchController {
   @Get('/get-All-Films-From-Index')
   @Public()
   @SkipCheckPermission()
+  @ResponseMessage('Get all films from films Index')
   async getAllFilmsFromIndex() {
     return this.searchService.getAllFilmsFromIndex();
+  }
+
+  @Get('/films/count')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('Count film in films index')
+  async countFilms() {
+    return this.searchService.countFilms();
   }
 }

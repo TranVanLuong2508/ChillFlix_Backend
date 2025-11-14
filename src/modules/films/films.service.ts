@@ -23,6 +23,7 @@ import { FilmDirector } from '../film_director/entities/film_director.entity';
 import { FilmActor } from '../film_actor/entities/film_actor.entity';
 import { FilmDirectorService } from '../film_director/film_director.service';
 import { FilmActorService } from '../film_actor/film_actor.service';
+import { SearchService } from '../search/search.service';
 
 @Injectable()
 export class FilmsService {
@@ -34,6 +35,7 @@ export class FilmsService {
     @InjectRepository(FilmActor) private filmActorRepository: Repository<FilmActor>,
     private filmDirectorService: FilmDirectorService,
     private filmActorService: FilmActorService,
+    private searchService: SearchService, //luong add
   ) {}
 
   async create(createFilmDto: CreateFilmDto, user: IUser) {
@@ -48,6 +50,7 @@ export class FilmsService {
         createdBy: user.userId.toString(),
       });
       await this.filmsRepository.save(newFilm);
+      await this.searchService.indexFilm(newFilm); //luong add
 
       if (directors) {
         for (const director of directors) {
@@ -284,6 +287,8 @@ export class FilmsService {
       }
 
       this.filmsRepository.merge(filmDataRaw, otherFilmData);
+      console.log('check raw:', filmDataRaw);
+      await this.searchService.updateFilmInFilmIndex(filmDataRaw);
 
       if (slug !== '' && slug !== filmDataRaw.slug) {
         const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
