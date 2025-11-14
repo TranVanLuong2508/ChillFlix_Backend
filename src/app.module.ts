@@ -50,6 +50,8 @@ import { Rating } from './modules/rating/entities/rating.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
+import { WatchGateway } from './modules/films/socket/watch-gateway';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
   imports: [
@@ -119,8 +121,9 @@ import { SearchModule } from './modules/search/search.module';
     RatingModule,
     ChatbotModule,
     SearchModule,
+    RedisModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, WatchGateway],
 })
 export class AppModule {}

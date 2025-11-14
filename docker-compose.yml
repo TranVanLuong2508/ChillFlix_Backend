@@ -11,5 +11,16 @@ services:
       - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql
+
+  redis:
+    image: redis:8.2.3
+    container_name: redis-db
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+    command: ['redis-server', '--appendonly', 'yes']
 volumes:
   pgdata:
+  redisdata:
