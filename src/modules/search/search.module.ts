@@ -3,16 +3,22 @@ import { SearchController } from './search.controller';
 import { ElasticsearchModule } from '@nestjs/elasticsearch';
 import { SearchService } from './search.service';
 import { ConfigService } from '@nestjs/config';
+import { FilmsModule } from '../films/films.module';
+import { FilmsService } from '../films/films.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Film } from '../films/entities/film.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Film]),
+    FilmsModule,
     ElasticsearchModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
-        node: configService.get<string>('ELASTICSEARCH_NODE')!,
-        auth: {
-          username: configService.get<string>('ELASTICSEARCH_USERNAME')!,
-          password: configService.get<string>('ELASTICSEARCH_PASSWORD')!,
-        },
+        node: 'http://localhost:9200',
+        // auth: {
+        //   username: configService.get<string>('ELASTICSEARCH_USERNAME')!,
+        //   password: configService.get<string>('ELASTICSEARCH_PASSWORD')!,
+        // },
       }),
       inject: [ConfigService],
     }),

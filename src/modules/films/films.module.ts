@@ -19,5 +19,6 @@ import { FilmActorModule } from '../film_actor/film_actor.module';
   ],
   controllers: [FilmsController],
   providers: [FilmsService],
+  exports: [FilmsService], //luong add
 })
 export class FilmsModule {}

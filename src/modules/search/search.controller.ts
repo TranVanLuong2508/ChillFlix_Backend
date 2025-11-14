@@ -1,34 +1,43 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
-import { CreateSearchDto } from './dto/create-search.dto';
-import { UpdateSearchDto } from './dto/update-search.dto';
+import { Public, ResponseMessage, SkipCheckPermission } from 'src/decorators/customize';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Film } from '../films/entities/film.entity';
 
 @Controller('search')
 export class SearchController {
-  constructor(private readonly searchService: SearchService) {}
-
-  @Post()
-  create(@Body() createSearchDto: CreateSearchDto) {
-    return this.searchService.create(createSearchDto);
+  constructor(
+    private readonly searchService: SearchService,
+    @InjectRepository(Film) private filmsRepository: Repository<Film>,
+  ) {}
+  @Get('/films')
+  @Public()
+  @SkipCheckPermission()
+  async searchFilms(@Query('q') q: string) {
+    return this.searchService.searchFilms(q);
   }
 
-  @Get()
-  findAll() {
-    return this.searchService.findAll();
+  @Delete('/films')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('Delete Films index')
+  async deleteIndex() {
+    return this.searchService.deleteIndexFilm();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.searchService.findOne(+id);
+  @Get('/sync/films')
+  @Public()
+  @SkipCheckPermission()
+  async syncFilms() {
+    const films = await this.filmsRepository.find(); // lấy toàn bộ films
+    return this.searchService.bulkIndexFilms(films);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSearchDto: UpdateSearchDto) {
-    return this.searchService.update(+id, updateSearchDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.searchService.remove(+id);
+  @Get('/get-All-Films-From-Index')
+  @Public()
+  @SkipCheckPermission()
+  async getAllFilmsFromIndex() {
+    return this.searchService.getAllFilmsFromIndex();
   }
 }
