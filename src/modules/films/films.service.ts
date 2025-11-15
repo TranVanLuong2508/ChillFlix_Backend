@@ -277,6 +277,102 @@ export class FilmsService {
     }
   }
 
+  async findByCountry(countryValueEn: string, page: number, limit: number) {
+    try {
+      if (!countryValueEn || countryValueEn.trim() === '') {
+        throw new BadRequestException({
+          EC: 1,
+          EM: 'Country value (valueEn) is required',
+        });
+      }
+
+      const offset = (page - 1) * limit;
+      const defaultLimit = limit ? limit : 10;
+      const defaultPage = page ? page : 1;
+
+      const countryAllCode = await this.filmsRepository
+        .createQueryBuilder('film')
+        .leftJoinAndSelect('film.country', 'country')
+        .where('country.valueEn = :valueEn', { valueEn: countryValueEn })
+        .select('country.keyMap', 'countryCode')
+        .getRawOne();
+
+      if (!countryAllCode || !countryAllCode.countryCode) {
+        return {
+          EC: 0,
+          EM: `No country found with valueEn: ${countryValueEn}`,
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: 0,
+            total: 0,
+          },
+          result: [],
+        };
+      }
+
+      const countryCode = countryAllCode.countryCode;
+
+      const totalItems = await this.filmsRepository.count({
+        where: {
+          countryCode,
+        },
+      });
+
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+
+      const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+      joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+      queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+      queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+      joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+      const films = await queryBuilder
+        .where('film.countryCode = :countryCode', { countryCode })
+        .andWhere('film.deletedAt IS NULL')
+        .orderBy('film.createdAt', 'DESC')
+        .skip(offset)
+        .take(defaultLimit)
+        .getMany();
+
+      if (films.length === 0) {
+        return {
+          EC: 0,
+          EM: `No films found for country: ${countryValueEn}`,
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: totalPages,
+            total: totalItems,
+          },
+          result: [],
+        };
+      }
+
+      return {
+        EC: 0,
+        EM: 'Get films by country success',
+        meta: {
+          current: defaultPage,
+          pageSize: defaultLimit,
+          pages: totalPages,
+          total: totalItems,
+        },
+        result: plainToInstance(FilmPaginationDto, films),
+      };
+    } catch (error) {
+      console.error('Error in film service get films by country:', error.message);
+      throw new InternalServerErrorException({
+        EC: 5,
+        EM: 'Error in film service get films by country',
+      });
+    }
+  }
+
   async update(filmId: string, updateFilmDto: UpdateFilmDto, user: IUser) {
     try {
       if (!isUUID(filmId)) {

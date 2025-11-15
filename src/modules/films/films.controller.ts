@@ -21,7 +21,7 @@ import type { IUser } from '../users/interface/user.interface';
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmsController {
-  constructor(private readonly filmsService: FilmsService) {}
+  constructor(private readonly filmsService: FilmsService) { }
 
   @Post()
   create(@Body() createFilmDto: CreateFilmDto, @User() user: IUser) {
@@ -56,5 +56,12 @@ export class FilmsController {
   @ResponseMessage('Soft delete film')
   remove(@Param('id') id: string, @User() user: IUser) {
     return this.filmsService.remove(id, user);
+  }
+
+  @Public()
+  @SkipCheckPermission()
+  @Get('by-country/:countryValueEn')
+  findByCountry(@Param('countryValueEn') countryValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+    return this.filmsService.findByCountry(countryValueEn, page, limit);
   }
 }
