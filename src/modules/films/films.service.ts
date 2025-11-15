@@ -373,6 +373,108 @@ export class FilmsService {
     }
   }
 
+  async findByGenre(genreValueEn: string, page: number, limit: number) {
+    try {
+      if (!genreValueEn || genreValueEn.trim() === '') {
+        throw new BadRequestException({
+          EC: 1,
+          EM: 'Genre value (valueEn) is required',
+        });
+      }
+
+      const offset = (page - 1) * limit;
+      const defaultLimit = limit ? limit : 10;
+      const defaultPage = page ? page : 1;
+
+      const allCodeRepository = this.filmsRepository.manager.getRepository('AllCode');
+      const genre = await allCodeRepository.findOne({
+        where: {
+          valueEn: genreValueEn,
+          type: 'GENRE',
+        },
+      });
+
+      const genreCode = genre?.keyMap;
+
+      console.log("[v0] Genre lookup - valueEn:", genreValueEn, "genreCode:", genreCode);
+
+      if (!genreCode) {
+        return {
+          EC: 0,
+          EM: `No genre found with valueEn: ${genreValueEn}`,
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: 0,
+            total: 0,
+          },
+          result: [],
+        };
+      }
+
+      const totalItems = await this.filmsRepository
+        .createQueryBuilder('film')
+        .leftJoinAndSelect('film.filmGenres', 'filmGenres')
+        .where('filmGenres.genreCode = :genreCode', { genreCode })
+        .andWhere('film.deletedAt IS NULL')
+        .getCount();
+
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+
+      const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+      joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+      queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+      queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+      joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+      const films = await queryBuilder
+        .where('filmGenres.genreCode = :genreCode', { genreCode })
+        .andWhere('film.deletedAt IS NULL')
+        .orderBy('film.createdAt', 'DESC')
+        .skip(offset)
+        .take(defaultLimit)
+        .getMany();
+
+      console.log("[v0] Films found for genre", genreValueEn, ":", films.length);
+
+      if (films.length === 0) {
+        return {
+          EC: 0,
+          EM: `No films found for genre: ${genreValueEn}`,
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: totalPages,
+            total: totalItems,
+          },
+          result: [],
+        };
+      }
+
+      return {
+        EC: 0,
+        EM: 'Get films by genre success',
+        meta: {
+          current: defaultPage,
+          pageSize: defaultLimit,
+          pages: totalPages,
+          total: totalItems,
+        },
+        result: plainToInstance(FilmPaginationDto, films),
+      };
+    } catch (error) {
+      console.error('Error in film service get films by genre:', error.message);
+      throw new InternalServerErrorException({
+        EC: 5,
+        EM: 'Error in film service get films by genre',
+      });
+    }
+  }
+
   async update(filmId: string, updateFilmDto: UpdateFilmDto, user: IUser) {
     try {
       if (!isUUID(filmId)) {

@@ -64,4 +64,11 @@ export class FilmsController {
   findByCountry(@Param('countryValueEn') countryValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
     return this.filmsService.findByCountry(countryValueEn, page, limit);
   }
+
+  @Public()
+  @SkipCheckPermission()
+  @Get('by-genre/:genreValueEn')
+  findByGenre(@Param('genreValueEn') genreValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+    return this.filmsService.findByGenre(genreValueEn, page, limit);
+  }
 }
