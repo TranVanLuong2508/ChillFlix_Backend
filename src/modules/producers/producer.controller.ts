@@ -1,18 +1,19 @@
-import { Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe } from "@nestjs/common"
+import { Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe, Body } from "@nestjs/common"
 import { ProducerService } from "./producer.service"
 import { CreateProducerDto } from "./dto/create-producer.dto"
 import { UpdateProducerDto } from "./dto/update-producer.dto"
 import { PaginationDto } from "./dto/pagination.dto"
-import { Public, ResponseMessage, User } from "src/decorators/customize"
+import { Public, ResponseMessage, User, SkipCheckPermission } from "src/decorators/customize"
 import type { IUser } from "../users/interface/user.interface"
 
 @Controller("producer")
 export class ProducerController {
-  constructor(private readonly producerService: ProducerService) {}
+  constructor(private readonly producerService: ProducerService) { }
 
   @Post("create-producer")
+  @SkipCheckPermission()
   @ResponseMessage("Create a new producer")
-  async createProducer(dto: CreateProducerDto, @User() user: IUser) {
+  async createProducer(@Body() dto: CreateProducerDto, @User() user: IUser) {
     return await this.producerService.createProducer(dto, user)
   }
 

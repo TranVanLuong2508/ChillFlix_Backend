@@ -26,6 +26,7 @@ export class FilmProducerController {
 
   @Post("create-film-producer")
   @ResponseMessage("Create relation between film and producer")
+  @SkipCheckPermission()
   createFilmProducer(@Body() dto: CreateFilmProducerDto, @User() user: IUser) {
     return this.filmProducerService.createFilmProducer(dto, user)
   }

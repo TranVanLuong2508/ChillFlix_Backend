@@ -39,7 +39,7 @@ export class FilmsService {
     private filmActorService: FilmActorService,
     private filmProducerService: FilmProducerService,
 
-  ) {}
+  ) { }
 
   async create(createFilmDto: CreateFilmDto, user: IUser) {
     try {
@@ -66,7 +66,7 @@ export class FilmsService {
       if (producers) {
         for (const producer of producers) {
           await this.filmProducerService.createFilmProducer(
-            { ...producer, filmId: newFilm.filmId }, 
+            { ...producer, filmId: newFilm.filmId },
             user)
         }
       }
@@ -190,20 +190,20 @@ export class FilmsService {
         });
       }
 
-      const producersRes = await this.filmProducerService.getProducersByFilm(id)
-      if (producersRes.EC) {
+      const producersRes = await this.filmProducerService.getProducersByFilm(id);
+      if (!producersRes || !Object.prototype.hasOwnProperty.call(producersRes, 'result')) {
         throw new InternalServerErrorException({
           EC: 6,
-          EM: producersRes.EM,
-        })
+          EM: producersRes?.EM || 'Error fetching producers for film',
+        });
       }
 
       return {
         EC: 0,
         EM: 'Get film by Id success',
         film: plainToInstance(FilmResponseDto, film),
-        directors: directorsRes.directors,
-        producers: producersRes.producers,
+        directors: directorsRes.result,
+        producers: producersRes.result,
         actors: actorsRes.result,
       };
     } catch (error) {
@@ -252,12 +252,12 @@ export class FilmsService {
         });
       }
 
-      const producersRes = await this.filmProducerService.getProducersByFilm(film.filmId)
-      if (producersRes.EC) {
+      const producersRes = await this.filmProducerService.getProducersByFilm(film.filmId);
+      if (!producersRes || !Object.prototype.hasOwnProperty.call(producersRes, 'result')) {
         throw new InternalServerErrorException({
           EC: 6,
-          EM: producersRes.EM,
-        })
+          EM: producersRes?.EM || 'Error fetching producers for film',
+        });
       }
 
       return {

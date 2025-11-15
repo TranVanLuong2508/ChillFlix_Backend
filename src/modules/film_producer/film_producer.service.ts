@@ -293,7 +293,10 @@ export class FilmProducerService {
         relations: [
           'filmProducers',
           'filmProducers.film',
-          'filmProducers.film.filmImages'],
+          'filmProducers.film.filmImages',
+          'filmProducers.film.filmGenres.genre',
+          'filmProducers.film.filmImages',
+          'filmProducers.film.age',],
       })
 
       if (!producer) {
