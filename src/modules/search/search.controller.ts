@@ -58,4 +58,12 @@ export class SearchController {
   async TESTdeleteFilmFromIndex(@Param('filmId') filmId: string) {
     return this.searchService.removeFilmFromIndex(filmId);
   }
+
+  @Delete('/delete-all')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('Delete all documents in  Films index')
+  async deleteAllDocumentInFilmIndex() {
+    return this.searchService.clearDocumentInFilmIndex();
+  }
 }

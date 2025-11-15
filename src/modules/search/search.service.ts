@@ -331,4 +331,30 @@ export class SearchService implements OnModuleInit {
       description: film.description,
     };
   }
+
+  async clearDocumentInFilmIndex() {
+    try {
+      const response = await this.elasticsearchService.deleteByQuery({
+        index: this.filmIndex,
+        body: {
+          query: {
+            match_all: {},
+          },
+        },
+        refresh: true,
+      });
+
+      return {
+        EC: 1,
+        EM: 'Deleted all documents from film index',
+        deleted: response.deleted,
+      };
+    } catch (error) {
+      console.error('Clear all documents error:', error);
+      return {
+        EC: 0,
+        EM: 'Failed to delete all documents from film index',
+      };
+    }
+  }
 }
