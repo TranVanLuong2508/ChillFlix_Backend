@@ -287,8 +287,7 @@ export class FilmsService {
       }
 
       this.filmsRepository.merge(filmDataRaw, otherFilmData);
-      console.log('check raw:', filmDataRaw);
-      await this.searchService.updateFilmInFilmIndex(filmDataRaw);
+      await this.searchService.updateFilmDocument(filmDataRaw); //luong add
 
       if (slug !== '' && slug !== filmDataRaw.slug) {
         const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
@@ -437,6 +436,7 @@ export class FilmsService {
       }
       await this.filmsRepository.update(filmId, { deletedBy: user.userId.toString() });
       await this.filmsRepository.softDelete(filmId);
+      await this.searchService.removeFilmFromIndex(filmId); //luong add
 
       return { EC: 0, EM: 'Delet film success', deleted: 'success' };
     } catch (error) {

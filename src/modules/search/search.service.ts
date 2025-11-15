@@ -43,6 +43,7 @@ export class SearchService implements OnModuleInit {
         index: this.filmIndex,
         id: film.filmId,
         document: doc,
+        // refresh: 'wait_for',
       });
 
       return {
@@ -206,7 +207,7 @@ export class SearchService implements OnModuleInit {
     }
   }
 
-  async getAllFilmsFromIndex() {
+  async getAllFilmDocument() {
     try {
       const result = await this.elasticsearchService.search({
         index: this.filmIndex,
@@ -250,20 +251,73 @@ export class SearchService implements OnModuleInit {
     }
   }
 
-  async updateFilmInFilmIndex(film: Film) {
-    const doc = this.mapFilmToIndex(film);
-    await this.elasticsearchService.update({
-      index: this.filmIndex,
-      id: film.filmId, // trùng id => ES auto overwrite
-      doc,
-      doc_as_upsert: true,
-    });
+  async updateFilmDocument(film: Film) {
+    try {
+      const doc = this.mapFilmToIndex(film);
+
+      const response = await this.elasticsearchService.update({
+        index: this.filmIndex,
+        id: film.filmId,
+        doc,
+        doc_as_upsert: true, // nếu chưa có ==> tự tạo
+        refresh: 'wait_for',
+      });
+      // - "updated": cập nhật thành công
+      // - "noop": không có thay đổi
+      // - "created": document chưa có → ES tự tạo mới
+      const result = response.result;
+
+      if (result === 'updated' || result === 'created') {
+        return {
+          EC: 1,
+          EM: 'Updated film document successfully',
+          result,
+        };
+      }
+
+      return {
+        EC: 0,
+        EM: `Update film document failed: ${result}`,
+        result,
+      };
+    } catch (error: any) {
+      console.error('Update film document error:', error);
+      return {
+        EC: 0,
+        EM: 'Failed to update film document',
+        error: error.meta?.body ?? error,
+      };
+    }
   }
-  async deleteFilmInFilmIndex(film: Film) {
-    await this.elasticsearchService.delete({
-      index: this.filmIndex,
-      id: film.filmId, // trùng id => ES auto overwrite
-    });
+  async removeFilmFromIndex(filmId: string) {
+    try {
+      const response = await this.elasticsearchService.delete({
+        index: this.filmIndex,
+        id: filmId,
+      });
+
+      if (response.result === 'deleted') {
+        return {
+          EC: 1,
+          EM: 'Deleted film document successfully',
+          ...response,
+        };
+      }
+
+      if (response.result === 'not_found') {
+        return {
+          EC: 0,
+          EM: 'Deleted film document failed',
+          ...response,
+        };
+      }
+    } catch (error) {
+      console.error('Delete film document error:', error);
+      return {
+        EC: 0,
+        EM: 'Failed to delete film document',
+      };
+    }
   }
 
   private mapFilmToIndex(film: any): IfilmIndex {

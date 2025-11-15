@@ -41,7 +41,7 @@ export class SearchController {
   @SkipCheckPermission()
   @ResponseMessage('Get all films from films Index')
   async getAllFilmsFromIndex() {
-    return this.searchService.getAllFilmsFromIndex();
+    return this.searchService.getAllFilmDocument();
   }
 
   @Get('/films/count')
@@ -50,5 +50,12 @@ export class SearchController {
   @ResponseMessage('Count film in films index')
   async countFilms() {
     return this.searchService.countFilms();
+  }
+
+  @Delete('/films/:filmId')
+  @Public()
+  @SkipCheckPermission()
+  async TESTdeleteFilmFromIndex(@Param('filmId') filmId: string) {
+    return this.searchService.removeFilmFromIndex(filmId);
   }
 }
