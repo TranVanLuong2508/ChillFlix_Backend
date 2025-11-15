@@ -1,4 +1,5 @@
 import { Part } from 'src/modules/parts/entities/part.entity';
+import { Comment } from 'src/modules/comment/entities/comment.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -20,6 +22,9 @@ export class Episode {
 
   @Column({ nullable: false })
   title: string;
+
+  @Column({ nullable: false })
+  slug: string;
 
   @Column({ type: 'int', nullable: false })
   duration: number;
@@ -54,4 +59,7 @@ export class Episode {
   @ManyToOne(() => Part, (part) => part.episodes, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'partId' })
   part: Part;
+
+  @OneToMany(() => Comment, (comment) => comment.episode)
+  comments: Comment[];
 }

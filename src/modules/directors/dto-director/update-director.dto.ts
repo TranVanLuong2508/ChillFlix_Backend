@@ -6,6 +6,9 @@ export class UpdateDirectorDto {
   directorName: string;
 
   @IsOptional()
+  birthDate?: Date;
+
+  @IsOptional()
   @IsString()
   genderCode?: string;
 

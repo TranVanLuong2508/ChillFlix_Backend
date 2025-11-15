@@ -1,6 +1,18 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
+import { Subscription } from 'src/modules/subscriptions/entities/subscription.entity';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Entity()
+@Entity({ name: 'subscriptionPlans' })
 export class SubscriptionPlan {
   @PrimaryGeneratedColumn()
   planId: number;
@@ -9,29 +21,39 @@ export class SubscriptionPlan {
   planName: string;
 
   @Column()
-  planDuration: string;
+  planDuration: number;
+
+  @Column({ name: 'durationType_code' })
+  durationTypeCode: string;
+
+  @Column()
+  price: string;
 
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: true, default: false })
-  isDeleted: boolean;
+  @CreateDateColumn({ nullable: true })
+  createdAt?: Date;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @UpdateDateColumn({ nullable: true })
+  updatedAt?: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @Column({ nullable: true })
-  deletedAt: Date;
+  @DeleteDateColumn({ nullable: true })
+  deletedAt?: Date;
 
   @Column({ nullable: true })
-  createdBy: number;
+  createdBy?: number;
 
   @Column({ nullable: true })
-  updatedBy: number;
+  updatedBy?: number;
 
   @Column({ nullable: true })
-  deletedBy: number;
+  deletedBy?: number;
+
+  @ManyToOne(() => AllCode, (allcode) => allcode.planDuration)
+  @JoinColumn({ name: 'durationType_code', referencedColumnName: 'keyMap' })
+  durationInfo: AllCode;
+
+  @OneToMany(() => Subscription, (sub) => sub.plan)
+  subscriptions: Subscription[];
 }

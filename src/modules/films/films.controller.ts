@@ -14,7 +14,7 @@ import {
 import { FilmsService } from './films.service';
 import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
-import { Public, ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('films')
@@ -35,9 +35,16 @@ export class FilmsController {
   }
 
   @Public()
+  @SkipCheckPermission()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.filmsService.findOne(id);
+  }
+
+  @Public()
+  @Get('slug/:slug')
+  findOneBySlug(@Param('slug') slug: string) {
+    return this.filmsService.findOneBySlug(slug);
   }
 
   @Patch(':id')

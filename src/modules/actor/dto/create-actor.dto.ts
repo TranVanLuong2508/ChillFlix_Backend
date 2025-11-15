@@ -19,6 +19,10 @@ export class CreateActorDto {
 
   @IsString()
   @IsOptional()
+  shortBio?: string;
+
+  @IsString()
+  @IsOptional()
   nationalityCode?: string;
 
   @IsString()

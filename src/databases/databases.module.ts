@@ -19,6 +19,6 @@ import { Role } from 'src/modules/roles/entities/role.entity';
   imports: [TypeOrmModule.forFeature([AllCode, User, Permission, Director, RolePermission, Role])],
   controllers: [DatabasesController],
   providers: [DatabasesService, AllCodesService, UsersService, DirectorService, RolePermissionService, RolesService],
-  exports: [AllCodesService],
+  exports: [AllCodesService, DatabasesService],
 })
 export class DatabasesModule {}

@@ -15,6 +15,14 @@ export class AllCodeDto {
   description?: string;
 }
 
+export class FilmImageDto {
+  @Expose()
+  url: string;
+
+  @Expose()
+  type: 'poster' | 'horizontal' | 'backdrop';
+}
+
 @Exclude()
 export class FilmResponseDto {
   @Expose()
@@ -25,6 +33,9 @@ export class FilmResponseDto {
 
   @Expose()
   title: string;
+
+  @Expose()
+  duration?: number;
 
   @Expose()
   description: string;
@@ -46,6 +57,10 @@ export class FilmResponseDto {
 
   @Expose()
   view: string;
+
+  @Expose()
+  @Type(() => FilmImageDto)
+  filmImages: FilmImageDto[];
 
   @Expose()
   genreCodes: string[];
@@ -97,13 +112,13 @@ export class FilmPaginationDto {
   originalTitle: string;
 
   @Expose()
-  posterUrl: string;
-
-  @Expose()
-  title: string;
+  duration?: number;
 
   @Expose()
   description: string;
+
+  @Expose()
+  title: string;
 
   @Expose()
   year: string;
@@ -121,6 +136,10 @@ export class FilmPaginationDto {
   @Expose()
   @Type(() => AllCodeDto)
   language: AllCodeDto;
+
+  @Expose()
+  @Type(() => FilmImageDto)
+  filmImages: FilmImageDto[];
 
   @Expose()
   @Transform(

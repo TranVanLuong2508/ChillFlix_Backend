@@ -10,6 +10,6 @@ import { Film } from '../films/entities/film.entity';
   imports: [TypeOrmModule.forFeature([FilmDirector, Film, Director])],
   controllers: [FilmDirectorController],
   providers: [FilmDirectorService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, FilmDirectorService],
 })
 export class FilmDirectorModule {}

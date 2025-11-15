@@ -12,21 +12,21 @@ export class RegisterUserDto {
   })
   fullName: string;
 
-  @IsNotEmpty({ message: 'age must not be empty' })
-  age: number;
+  // @IsNotEmpty({ message: 'age must not be empty' })
+  // age: number;
 
-  @IsNotEmpty({ message: 'roleId must not be empty' })
-  roleId: number;
+  // @IsNotEmpty({ message: 'roleId must not be empty' })
+  // roleId: number;
 
   @IsNotEmpty({ message: 'Password must not be empty' })
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password: string;
 
-  @IsNotEmpty({ message: 'phoneNumber must not be empty' })
-  @IsString({ message: 'phoneNumber must be STRING format' })
-  phoneNumber: string;
+  // @IsNotEmpty({ message: 'phoneNumber must not be empty' })
+  // @IsString({ message: 'phoneNumber must be STRING format' })
+  // phoneNumber: string;
 
-  @IsNotEmpty({ message: 'genderCode must not be empty' })
-  @IsString({ message: 'genderCode must be STRING format' })
-  genderCode: string;
+  // @IsNotEmpty({ message: 'genderCode must not be empty' })
+  // @IsString({ message: 'genderCode must be STRING format' })
+  // genderCode: string;
 }

@@ -10,6 +10,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
   canActivate(context: ExecutionContext) {
     // Add your custom authentication logic here
+    // if (context.getType() === 'ws') {
+    //   return true;
+    // }
     // for example, call super.logIn(request) to establish a session.
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -22,6 +25,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   handleRequest(err, user, info, context: ExecutionContext) {
+    // if (context.getType() === 'ws') {
+    //   return user;
+    // }
+
     const request: Request = context.switchToHttp().getRequest();
     const isSkipPermission = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_PERMISSION, [
       context.getHandler(),

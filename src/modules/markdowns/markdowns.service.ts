@@ -1,12 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateMarkdownDto } from './dto/create-markdown.dto';
 import { UpdateMarkdownDto } from './dto/update-markdown.dto';
+import { IUser } from '../users/interface/user.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Markdown } from './entities/markdown.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MarkdownsService {
-  create(createMarkdownDto: CreateMarkdownDto) {
-    return 'This action adds a new markdown';
-  }
+  constructor(
+    @InjectRepository(Markdown)
+    private markdownPlanRepository: Repository<Markdown>,
+  ) {}
+  async create(createMarkdownDto: CreateMarkdownDto, user: IUser) {}
 
   findAll() {
     return `This action returns all markdowns`;

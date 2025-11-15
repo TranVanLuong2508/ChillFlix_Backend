@@ -3,7 +3,7 @@ import { ActorService } from './actor.service';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 import { PaginationActorDto } from './dto/pagination-actor.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('actor')
@@ -16,12 +16,19 @@ export class ActorController {
     return await this.actorService.createActor(dto, user);
   }
 
+  @Post('create-list-actor')
+  @ResponseMessage('Create a new actor')
+  async createListActor(@Body() dto: CreateActorDto[], @User() user: IUser) {
+    return await this.actorService.createListActor(dto, user);
+  }
+
   @Get('all-actors')
   @ResponseMessage('Get all actors with pagination, filtering, and sorting')
   async getAllActors(@Query() query: PaginationActorDto) {
     return await this.actorService.getAllActors(query);
   }
-
+  
+  @Public()
   @Get('get-actor-by-id/:actorId')
   @ResponseMessage('Get actor by ID')
   async getActorById(@Param('actorId') actorId: number) {

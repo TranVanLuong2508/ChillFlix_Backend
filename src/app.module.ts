@@ -16,6 +16,7 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
 import { Director } from 'src/modules/directors/entities/director.entity';
 import { DirectorModule } from 'src/modules/directors/director.module';
+import { Producer } from './modules/producers/entities/producer.entity';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
@@ -33,6 +34,26 @@ import { ActorModule } from './modules/actor/actor.module';
 import { Actor } from './modules/actor/entities/actor.entity';
 import { FilmActorModule } from './modules/film_actor/film_actor.module';
 import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { Subscription } from './modules/subscriptions/entities/subscription.entity';
+import { Markdown } from './modules/markdowns/entities/markdown.entity';
+import { SubscriptionPlan } from './modules/subscription-plans/entities/subscription-plan.entity';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { Payment } from './modules/payments/entities/payment.entity';
+import { EmailModule } from './modules/email/email.module';
+
+import { CommentModule } from './modules/comment/comment.module';
+import { Comment } from './modules/comment/entities/comment.entity';
+import { CommentReactionModule } from './modules/comment-reaction/comment-reaction.module';
+import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
+import { RatingModule } from './modules/rating/rating.module';
+import { Rating } from './modules/rating/entities/rating.entity';
+import { FilmImage } from './modules/films/entities/film_image.entity';
+import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { SearchModule } from './modules/search/search.module';
+import { ProducerModule } from './modules/producers/producer.module';
+import { FilmProducerModule } from './modules/film_producer/film_producer.module';
+import { FilmProducer } from './modules/film_producer/entities/film_producer.entity';
 
 @Module({
   imports: [
@@ -55,16 +76,27 @@ import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
           Permission,
           Role,
           Director,
+          Producer,
           Film,
           RolePermission,
           FilmGenre,
+          FilmImage,
           Part,
           Episode,
           FilmDirector,
+          FilmProducer,
           Actor,
           FilmActor,
+          Subscription,
+          Markdown,
+          SubscriptionPlan,
+          Payment,
+          Comment,
+          CommentReaction,
+          Rating,
         ],
         synchronize: true,
+        // logging: true,
       }),
     }),
     UsersModule,
@@ -85,8 +117,19 @@ import { FilmActor } from './modules/film_actor/entities/film_actor.entity';
     ActorModule,
     FilmActorModule,
     FilmDirector,
+    SubscriptionsModule,
+    PaymentsModule,
+    EmailModule,
+    CommentModule,
+    CommentReactionModule,
+    RatingModule,
+    ChatbotModule,
+    SearchModule,
+    ProducerModule,
+    FilmProducerModule,
+    FilmProducer,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

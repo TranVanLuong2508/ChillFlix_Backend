@@ -10,6 +10,6 @@ import { Actor } from '../actor/entities/actor.entity';
   imports: [TypeOrmModule.forFeature([FilmActor, Film, Actor])],
   controllers: [FilmActorController],
   providers: [FilmActorService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, FilmActorService],
 })
 export class FilmActorModule {}

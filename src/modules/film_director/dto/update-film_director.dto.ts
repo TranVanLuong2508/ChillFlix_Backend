@@ -1,13 +1,13 @@
-import { IsBoolean, IsInt, IsOptional, IsUUID } from 'class-validator';
+import { IsBoolean, IsNotEmpty } from 'class-validator';
 
 export class UpdateFilmDirectorDto {
+  @IsNotEmpty()
   filmId: string;
 
-  @IsOptional()
-  @IsInt()
+  @IsNotEmpty()
   directorId: number;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsBoolean()
-  isMain?: boolean;
+  isMain: boolean;
 }

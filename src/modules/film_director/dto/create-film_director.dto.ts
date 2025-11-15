@@ -1,13 +1,13 @@
 import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateFilmDirectorDto {
-  @IsNotEmpty()
-  filmId: string;
+  @IsOptional()
+  filmId?: string;
 
   @IsNotEmpty()
   directorId: number;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsBoolean()
-  isMain?: boolean;
+  isMain: boolean;
 }

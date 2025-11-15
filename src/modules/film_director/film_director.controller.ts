@@ -1,14 +1,28 @@
-import { Controller, Post, Get, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  SerializeOptions,
+} from '@nestjs/common';
 import { FilmDirectorService } from './film_director.service';
 import { CreateFilmDirectorDto } from './dto/create-film_director.dto';
 import { UpdateFilmDirectorDto } from './dto/update-film_director.dto';
-import { ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('film-director')
+@UseInterceptors(ClassSerializerInterceptor)
+@SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmDirectorController {
-  constructor(private readonly filmDirectorService: FilmDirectorService) {}
+  constructor(private readonly filmDirectorService: FilmDirectorService) { }
 
   @Post('create-film-director')
   @ResponseMessage('Create relation between film and director')
@@ -23,22 +37,26 @@ export class FilmDirectorController {
     return this.filmDirectorService.getAllFilmDirectors(query);
   }
 
+  @Public()
   @Get('get-film-director-by-id/:id')
   @ResponseMessage('Get film-director relation by id')
   getFilmDirectorById(@Param('id') id: number) {
     return this.filmDirectorService.getFilmDirectorById(id);
   }
 
+  @Public()
+  @SkipCheckPermission()
   @Get('by-film/:filmId')
   @ResponseMessage('Get directors by film')
-  getDirectorsByFilm(@Param('filmId') filmId: string) {
-    return this.filmDirectorService.getDirectorsByFilm(filmId);
+  getDirectorsByFilm(@Param('filmId') filmId: string, @Query() query: PaginationfdDto) {
+    return this.filmDirectorService.getDirectorsByFilm(filmId, query);
   }
 
+  @Public()
   @Get('by-director/:directorId')
   @ResponseMessage('Get films by director')
-  getFilmsByDirector(@Param('directorId') directorId: number) {
-    return this.filmDirectorService.getFilmsByDirector(directorId);
+  getFilmsByDirector(@Param('directorId') directorId: number, @Query() query: PaginationfdDto) {
+    return this.filmDirectorService.getFilmsByDirector(directorId, query);
   }
 
   @Patch('edit-film-director/:id')
