@@ -52,6 +52,8 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
 import { WatchGateway } from './modules/films/socket/watch-gateway';
 import { RedisModule } from './modules/redis/redis.module';
+import { CoWatchingModule } from './modules/co-watching/co-watching.module';
+import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entity';
 
 @Module({
   imports: [
@@ -90,6 +92,7 @@ import { RedisModule } from './modules/redis/redis.module';
           Comment,
           CommentReaction,
           Rating,
+          RoomCoWatching,
         ],
         synchronize: true,
         // logging: true,
@@ -122,6 +125,7 @@ import { RedisModule } from './modules/redis/redis.module';
     ChatbotModule,
     SearchModule,
     RedisModule,
+    CoWatchingModule,
   ],
   controllers: [AppController],
   providers: [AppService, WatchGateway],

@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { RoomCoWatching } from 'src/modules/co-watching/entities/co-watching.entity';
 
 @Entity({ name: 'episodes' })
 export class Episode {
@@ -62,4 +63,7 @@ export class Episode {
 
   @OneToMany(() => Comment, (comment) => comment.episode)
   comments: Comment[];
+
+  @OneToMany(() => RoomCoWatching, (room) => room.episode)
+  roomCoWatchings: RoomCoWatching[];
 }
