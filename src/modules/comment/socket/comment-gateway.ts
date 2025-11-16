@@ -21,15 +21,13 @@ export class CommentGateway implements OnGatewayConnection {
   private userSockets = new Map<string, Set<string>>();
 
   handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
+    console.log(`[COMMENT SOCKET] Client connected: ${client.id}`);
     client.on('disconnect', () => {
       for (const [userId, socketSet] of this.userSockets.entries()) {
         if (socketSet.has(client.id)) {
           socketSet.delete(client.id);
-          console.log(`Socket ${client.id} removed from user ${userId}`);
           if (socketSet.size === 0) {
             this.userSockets.delete(userId);
-            console.log(`All sockets removed for user ${userId}`);
           }
           break;
         }
@@ -41,39 +39,31 @@ export class CommentGateway implements OnGatewayConnection {
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
     if (data?.userId) {
       const userIdStr = String(data.userId);
+      console.log(`[COMMENT SOCKET] User ${userIdStr} registered with socket ${client.id}`);
       if (!this.userSockets.has(userIdStr)) {
         this.userSockets.set(userIdStr, new Set());
       }
       this.userSockets.get(userIdStr)!.add(client.id);
-      console.log(`User ${userIdStr} registered socket ${client.id}`);
-      console.log(`Current userSockets keys:`, Array.from(this.userSockets.keys()));
     }
   }
 
   private emitToUser(userId: string, event: string, data: any) {
     const userIdStr = String(userId);
-    console.log(
-      `[SOCKET] emitToUser: trying userId=${userIdStr}, current keys:`,
-      Array.from(this.userSockets.keys()),
-    );
     const socketSet = this.userSockets.get(userIdStr);
     if (socketSet && socketSet.size > 0) {
       for (const socketId of socketSet) {
-        console.log(
-          `[SOCKET] emitToUser: userId=${userIdStr}, socketId=${socketId}, event=${event}`,
-        );
         this.server.to(socketId).emit(event, data);
       }
-    } else {
-      console.log(`[SOCKET] emitToUser: userId=${userIdStr} not found in userSockets`);
     }
   }
 
   sendReplyNotification(targetUserId: string, data: any) {
+    console.log(`[COMMENT SOCKET] Sending reply notification to user ${targetUserId}`, data);
     this.emitToUser(targetUserId, 'replyNotification', data);
   }
 
   sendReactionNotification(targetUserId: string, data: any) {
+    console.log(`[COMMENT SOCKET] Sending reaction notification to user ${targetUserId}`, data);
     this.emitToUser(targetUserId, 'reactionNotification', data);
   }
 

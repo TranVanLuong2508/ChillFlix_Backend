@@ -7,6 +7,7 @@ import { Comment } from './entities/comment.entity';
 import { IUser } from '../users/interface/user.interface';
 import aqp from 'api-query-params';
 import { CommentGateway } from './socket/comment-gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentService {
@@ -14,6 +15,7 @@ export class CommentService {
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
     private readonly commentGateway: CommentGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createComment(dto: CreateCommentDto, user: IUser) {
@@ -57,7 +59,7 @@ export class CommentService {
 
       const fullComment = await this.commentRepo.findOne({
         where: { commentId: savedComment.commentId },
-        relations: ['user', 'parent', 'parent.user'],
+        relations: ['user', 'parent', 'parent.user', 'film'],
       });
 
       if (fullComment) {
@@ -78,6 +80,24 @@ export class CommentService {
               replyToUser: parentComment.user,
               replyComment: fullComment,
             });
+
+            // save notification to db
+            try {
+              const notification = await this.notificationsService.createNotification({
+                userId: targetUserId,
+                type: 'reply',
+                message: `${fullComment.user.fullName} đã trả lời bình luận của bạn: "${fullComment.content}"`,
+                replierId: user.userId,
+                result: {
+                  commentId: fullComment.commentId,
+                  parentId: parentComment.commentId,
+                  filmId: dto.filmId,
+                  slug: fullComment.film?.slug,
+                },
+              });
+            } catch (notifError) {
+              console.error('[NOTIFICATION] Error creating notification:', notifError);
+            }
           }
         }
       }

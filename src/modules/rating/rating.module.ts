@@ -5,10 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { Rating } from './entities/rating.entity';
 import { Film } from '../films/entities/film.entity';
+import { RatingGateway } from './socket/rating-gateway';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Rating, Film, User])],
   controllers: [RatingController],
-  providers: [RatingService],
+  providers: [RatingService, RatingGateway],
+  exports: [RatingService, RatingGateway],
 })
 export class RatingModule {}
