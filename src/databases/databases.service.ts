@@ -2,7 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { ADMIN_ROLE, GENDER_Female, GENDER_Male, GENDER_Other, USER_ROLE } from 'src/constants/allcode.constant';
+import {
+  ADMIN_ROLE,
+  GENDER_Female,
+  GENDER_Male,
+  GENDER_Other,
+  USER_ROLE,
+} from 'src/constants/allcode.constant';
 import { INIT_ALLCODE } from 'src/databases/sampleData/sample.allcode';
 import { INIT_PERMISSIONS } from 'src/databases/sampleData/sample.permission';
 import { AllCode } from 'src/modules/all-codes/entities/all-code.entity';
@@ -14,7 +20,6 @@ import { UsersService } from 'src/modules/users/users.service';
 import { Repository } from 'typeorm';
 import { INIT_ROLE_PERMISSION } from './sampleData/role_permission';
 import { Role } from 'src/modules/roles/entities/role.entity';
-import { db } from 'src/modules/chatbot/dtb';
 
 @Injectable()
 export class DatabasesService implements OnModuleInit {
@@ -392,9 +397,5 @@ export class DatabasesService implements OnModuleInit {
         this.logger.warn('>>> ALREADY INIT SAMPLE DATA...');
       }
     }
-  }
-
-  async query(sql: string, params: any[] = []) {
-    return db.query(sql, params);
   }
 }

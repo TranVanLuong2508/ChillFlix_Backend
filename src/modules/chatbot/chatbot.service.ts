@@ -2,17 +2,34 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { BackenDBQuery } from './DBQuery/db-query';
-import { DatabasesService } from 'src/databases/databases.service';
+import { Client } from 'pg';
 
 @Injectable()
 export class ChatbotService {
+  private client: Client;
   private model: any;
-  constructor(
-    private configService: ConfigService,
-    private readonly databaseService: DatabasesService,
-  ) {
-    const genAI = new GoogleGenerativeAI(this.configService.get<string>('GEMINI_API_KEY') as string);
+  constructor(private configService: ConfigService) {
+    this.client = new Client({
+      host: this.configService.get<string>('DB_HOST'),
+      port: this.configService.get<number>('DB_PORT'),
+      user: this.configService.get<string>('DB_USERNAME'),
+      password: this.configService.get<string>('DB_PASSWORD'),
+      database: this.configService.get<string>('DB_NAME'),
+    });
+
+    this.client
+      .connect()
+      .then(() => console.log(`Connected to DB: ${this.configService.get('DB_NAME')}`))
+      .catch((err) => console.error('DB connection error:', err));
+
+    const genAI = new GoogleGenerativeAI(
+      this.configService.get<string>('GEMINI_API_KEY') as string,
+    );
     this.model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  }
+
+  async query(sql: string, params: any[] = []) {
+    return this.client.query(sql, params);
   }
 
   toSlug(str: string): string {
@@ -398,7 +415,8 @@ export class ChatbotService {
       }
 
       console.log('check dbQuery: ', dbQuery);
-      const dbResult = await this.databaseService.query(dbQuery, queryParams);
+      // const dbResult = await this.databaseService.query(dbQuery, queryParams);
+      const dbResult = await this.query(dbQuery, queryParams);
       console.log(`Tìm thấy ${dbResult.rows.length} kết quả`);
 
       if (dbResult.rows.length === 0) {
