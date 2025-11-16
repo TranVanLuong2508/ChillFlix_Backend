@@ -1,4 +1,4 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 
 @Exclude()
 export class CoWatchingRes {
@@ -37,4 +37,33 @@ export class CoWatchingRes {
 
   @Expose()
   duration: number;
+}
+
+@Exclude()
+export class Film {
+  @Expose()
+  originalTitle: string;
+
+  @Expose()
+  title: string;
+
+  @Expose()
+  slug: string;
+}
+
+@Exclude()
+export class Host {
+  @Expose()
+  fullName: string;
+}
+
+@Exclude()
+export class RoomPaginate extends CoWatchingRes {
+  @Expose()
+  @Type(() => Film)
+  film: Film;
+
+  @Expose()
+  @Type(() => Host)
+  host: Host;
 }

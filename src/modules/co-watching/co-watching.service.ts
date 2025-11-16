@@ -14,7 +14,7 @@ import { RedisService } from '../redis/redis.service';
 import { FilmsService } from '../films/films.service';
 import { CreateCoWatchingDto } from './dto/create-co-watching.dto';
 import { UpdateCoWatchingDto } from './dto/update-co-watching.dto';
-import { CoWatchingRes } from './dto/co-watching-response.dto';
+import { CoWatchingRes, RoomPaginate } from './dto/co-watching-response.dto';
 import { RoomCoWatching } from './entities/co-watching.entity';
 import { IUser } from '../users/interface/user.interface';
 
@@ -89,6 +89,7 @@ export class CoWatchingService {
         order: sort,
         skip: offset,
         take: defaultLimit,
+        relations: ['film', 'host'],
       });
 
       return {
@@ -100,7 +101,7 @@ export class CoWatchingService {
           pages: totalPages,
           total: totalItems,
         },
-        list: result,
+        list: plainToInstance(RoomPaginate, result),
       };
     } catch (error) {
       console.error(

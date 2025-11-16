@@ -1,8 +1,12 @@
+import { Film } from 'src/modules/films/entities/film.entity';
+import { User } from 'src/modules/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,8 +22,16 @@ export class RoomCoWatching {
   @Column({ nullable: false })
   hostId: number;
 
+  @ManyToOne(() => User, { eager: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'hostId', referencedColumnName: 'userId' })
+  host: User;
+
   @Column({ type: 'uuid', nullable: false })
   filmId: string;
+
+  @ManyToOne(() => Film, { eager: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'filmId', referencedColumnName: 'filmId' })
+  film: Film;
 
   @Column({ nullable: false })
   partNumber: number;
