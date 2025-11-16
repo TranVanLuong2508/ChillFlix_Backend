@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsEmpty,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -13,9 +14,17 @@ export class CreateCoWatchingDto {
   @IsNotEmpty({ message: 'Name cannot be empty.' })
   name: string;
 
-  @IsUUID('all', { message: 'Episode ID must be a valid UUID.' })
-  @IsNotEmpty({ message: 'Episode ID is required.' })
-  episodeId: string;
+  @IsUUID('all', { message: 'Film ID must be a valid UUID.' })
+  @IsNotEmpty({ message: 'Film ID is required.' })
+  filmId: string;
+
+  @IsNumber({}, { message: 'partNumber must be a number' })
+  @IsEmpty({ message: 'partNumber is required' })
+  partNumber: number;
+
+  @IsNumber({}, { message: 'episodeNumber must be a number' })
+  @IsEmpty({ message: 'episodeNumber is required' })
+  episodeNumber: number;
 
   @IsString({ message: 'Thumbnail URL must be a string.' })
   @IsNotEmpty({ message: 'Thumbnail URL cannot be empty.' })

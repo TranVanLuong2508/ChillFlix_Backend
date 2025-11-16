@@ -1,11 +1,8 @@
-import { Episode } from 'src/modules/episodes/entities/episode.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -22,11 +19,13 @@ export class RoomCoWatching {
   hostId: number;
 
   @Column({ type: 'uuid', nullable: false })
-  episodeId: string;
+  filmId: string;
 
-  @ManyToOne(() => Episode, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'episodeId' })
-  episode: Episode;
+  @Column({ nullable: false })
+  partNumber: number;
+
+  @Column({ nullable: false })
+  episodeNumber: number;
 
   @Column({ nullable: false })
   thumbUrl: string;
