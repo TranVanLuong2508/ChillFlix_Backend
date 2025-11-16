@@ -17,7 +17,11 @@ export class UsersController {
 
   @Get('get-user-with-pagination')
   @ResponseMessage('Fetch user with pagination')
-  getUsersWithPagination(@Query('current') currentPage: string, @Query('pageSize') limit: string, @Query() qs: string) {
+  getUsersWithPagination(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+  ) {
     return this.usersService.getUsersWithPagination(+currentPage, +limit, qs);
   }
 

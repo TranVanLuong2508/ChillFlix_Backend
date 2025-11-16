@@ -112,6 +112,7 @@ export class UsersService {
   }
 
   async update(updateUser: UpdateUserDto, user: IUser) {
+    console.log('check data update: ', updateUser);
     try {
       const updated = await this.usersRepository.update(
         {
@@ -137,7 +138,7 @@ export class UsersService {
         ...updated,
       };
     } catch (error: any) {
-      console.error('Error in update Role:', error.message);
+      console.error('Error in update user:', error);
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from update user service',
