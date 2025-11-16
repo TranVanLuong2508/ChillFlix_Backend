@@ -38,16 +38,10 @@ export class CoWatchingService {
       });
       const newRoom = await this.coWatchingRepository.save(roomData);
 
-      const roomWithRelations = await this.coWatchingRepository.findOne({
-        where: { roomId: newRoom.roomId },
-        relations: ['episode', 'episode.part'],
-      });
-
-      const filmId = roomWithRelations!.episode.part.filmId;
-      const dataFilm = await this.filmService.findOne(filmId);
+      const dataFilm = await this.filmService.findOne(newRoom.filmId);
 
       const data = {
-        room: plainToInstance(CoWatchingRes, roomWithRelations, {
+        room: plainToInstance(CoWatchingRes, newRoom, {
           excludeExtraneousValues: true,
         }),
         film: dataFilm.film,
@@ -95,7 +89,6 @@ export class CoWatchingService {
         order: sort,
         skip: offset,
         take: defaultLimit,
-        relations: ['episode', 'episode.part'],
       });
 
       return {
@@ -142,7 +135,6 @@ export class CoWatchingService {
 
       const roomData = await this.coWatchingRepository.findOne({
         where: { roomId: id },
-        relations: ['episode', 'episode.part'],
       });
       if (!roomData) {
         throw new NotFoundException({
@@ -151,8 +143,7 @@ export class CoWatchingService {
         });
       }
 
-      const filmId = roomData.episode.part.filmId;
-      const dataFilm = await this.filmService.findOne(filmId);
+      const dataFilm = await this.filmService.findOne(roomData.filmId);
 
       const data = {
         room: plainToInstance(CoWatchingRes, roomData, {

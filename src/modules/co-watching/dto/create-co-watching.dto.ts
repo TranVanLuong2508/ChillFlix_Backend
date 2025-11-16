@@ -1,13 +1,4 @@
-import {
-  IsBoolean,
-  IsEmpty,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUrl,
-  IsUUID,
-} from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
 
 export class CreateCoWatchingDto {
   @IsString({ message: 'Name must be a string.' })
@@ -19,11 +10,11 @@ export class CreateCoWatchingDto {
   filmId: string;
 
   @IsNumber({}, { message: 'partNumber must be a number' })
-  @IsEmpty({ message: 'partNumber is required' })
+  @IsNotEmpty({ message: 'partNumber is required' })
   partNumber: number;
 
   @IsNumber({}, { message: 'episodeNumber must be a number' })
-  @IsEmpty({ message: 'episodeNumber is required' })
+  @IsNotEmpty({ message: 'episodeNumber is required' })
   episodeNumber: number;
 
   @IsString({ message: 'Thumbnail URL must be a string.' })

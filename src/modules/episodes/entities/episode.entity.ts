@@ -63,7 +63,4 @@ export class Episode {
 
   @OneToMany(() => Comment, (comment) => comment.episode)
   comments: Comment[];
-
-  @OneToMany(() => RoomCoWatching, (room) => room.episode)
-  roomCoWatchings: RoomCoWatching[];
 }

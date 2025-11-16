@@ -1,5 +1,4 @@
-import { Exclude, Expose, Type } from 'class-transformer';
-import { EpisodeFindOne } from 'src/modules/episodes/dto/episode-response.dto';
+import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
 export class CoWatchingRes {
@@ -13,11 +12,13 @@ export class CoWatchingRes {
   hostId: number;
 
   @Expose()
-  episodeId: string;
+  filmId: string;
 
   @Expose()
-  @Type(() => EpisodeFindOne)
-  episode: EpisodeFindOne;
+  partNumber: number;
+
+  @Expose()
+  episodeNumber: number;
 
   @Expose()
   thumbUrl: string;
