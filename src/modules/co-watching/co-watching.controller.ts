@@ -2,16 +2,19 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { CoWatchingService } from './co-watching.service';
 import { CreateCoWatchingDto } from './dto/create-co-watching.dto';
 import { UpdateCoWatchingDto } from './dto/update-co-watching.dto';
+import type { IUser } from '../users/interface/user.interface';
+import { Public, User } from 'src/decorators/customize';
 
 @Controller('co-watching')
 export class CoWatchingController {
   constructor(private readonly coWatchingService: CoWatchingService) {}
 
   @Post()
-  create(@Body() createCoWatchingDto: CreateCoWatchingDto) {
-    return this.coWatchingService.create(createCoWatchingDto);
+  async create(@Body() createCoWatchingDto: CreateCoWatchingDto, @User() user: IUser) {
+    return this.coWatchingService.create(createCoWatchingDto, user);
   }
 
+  @Public()
   @Get()
   findAll(@Query('current') page: number, @Query('pageSize') limit: number, @Query() qs: string) {
     return this.coWatchingService.findAll(page, limit, qs);

@@ -13,10 +13,6 @@ export class CreateCoWatchingDto {
   @IsNotEmpty({ message: 'Name cannot be empty.' })
   name: string;
 
-  @IsNumber({}, { message: 'Host ID mut be number' })
-  @IsNotEmpty({ message: 'Host ID is required.' })
-  hostId: number;
-
   @IsUUID('all', { message: 'Episode ID must be a valid UUID.' })
   @IsNotEmpty({ message: 'Episode ID is required.' })
   episodeId: string;

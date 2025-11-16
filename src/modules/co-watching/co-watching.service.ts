@@ -4,14 +4,19 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import aqp from 'api-query-params';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
+import { isEmpty, isUUID } from 'class-validator';
+
+import { RedisService } from '../redis/redis.service';
+import { FilmsService } from '../films/films.service';
 import { CreateCoWatchingDto } from './dto/create-co-watching.dto';
 import { UpdateCoWatchingDto } from './dto/update-co-watching.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { CoWatchingRes } from './dto/co-watching-response.dto';
 import { RoomCoWatching } from './entities/co-watching.entity';
-import { Repository } from 'typeorm';
-import { RedisService } from '../redis/redis.service';
-import aqp from 'api-query-params';
-import { isEmpty, isUUID } from 'class-validator';
+import { IUser } from '../users/interface/user.interface';
 
 @Injectable()
 export class CoWatchingService {
@@ -22,29 +27,38 @@ export class CoWatchingService {
     private readonly redisService: RedisService,
     @InjectRepository(RoomCoWatching)
     private readonly coWatchingRepository: Repository<RoomCoWatching>,
+    private readonly filmService: FilmsService,
   ) {}
 
-  async create(createCoWatchingDto: CreateCoWatchingDto) {
+  async create(createCoWatchingDto: CreateCoWatchingDto, user: IUser) {
     try {
-      const roomData = this.coWatchingRepository.create({ ...createCoWatchingDto });
+      const roomData = this.coWatchingRepository.create({
+        ...createCoWatchingDto,
+        hostId: user.userId,
+      });
       const newRoom = await this.coWatchingRepository.save(roomData);
 
       const roomWithRelations = await this.coWatchingRepository.findOne({
         where: { roomId: newRoom.roomId },
-        relations: ['episode', 'episode.part', 'episode.part.film'],
+        relations: ['episode', 'episode.part'],
       });
 
-      await this.redisService.setJson(
-        this.REDIS_PREFIX + newRoom.roomId,
-        roomWithRelations,
-        this.REDIS_TTL,
-      );
+      const filmId = roomWithRelations!.episode.part.filmId;
+      const dataFilm = await this.filmService.findOne(filmId);
+
+      const data = {
+        room: plainToInstance(CoWatchingRes, roomWithRelations, {
+          excludeExtraneousValues: true,
+        }),
+        film: dataFilm.film,
+      };
+
+      await this.redisService.setJson(this.REDIS_PREFIX + newRoom.roomId, data, this.REDIS_TTL);
 
       return {
         EC: 0,
-        EM: 'Create new film success',
-        roomId: newRoom.roomId,
-        createdAt: newRoom.createdAt,
+        EM: 'Create new room success',
+        ...data,
       };
     } catch (error) {
       console.error(
@@ -81,6 +95,7 @@ export class CoWatchingService {
         order: sort,
         skip: offset,
         take: defaultLimit,
+        relations: ['episode', 'episode.part'],
       });
 
       return {
@@ -92,7 +107,7 @@ export class CoWatchingService {
           pages: totalPages,
           total: totalItems,
         },
-        result,
+        list: result,
       };
     } catch (error) {
       console.error(
@@ -121,13 +136,13 @@ export class CoWatchingService {
         return {
           EC: 0,
           EM: 'Get room by id success',
-          data: cached,
+          ...cached,
         };
       }
 
       const roomData = await this.coWatchingRepository.findOne({
         where: { roomId: id },
-        relations: ['episode', 'episode.part', 'episode.part.film'],
+        relations: ['episode', 'episode.part'],
       });
       if (!roomData) {
         throw new NotFoundException({
@@ -136,12 +151,22 @@ export class CoWatchingService {
         });
       }
 
-      await this.redisService.setJson(cacheKey, roomData, this.REDIS_TTL);
+      const filmId = roomData.episode.part.filmId;
+      const dataFilm = await this.filmService.findOne(filmId);
+
+      const data = {
+        room: plainToInstance(CoWatchingRes, roomData, {
+          excludeExtraneousValues: true,
+        }),
+        film: dataFilm.film,
+      };
+
+      await this.redisService.setJson(cacheKey, data, this.REDIS_TTL);
 
       return {
         EC: 0,
         EM: 'Get room by id success',
-        data: roomData,
+        ...data,
       };
     } catch (error) {
       console.error(
