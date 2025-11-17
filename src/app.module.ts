@@ -50,6 +50,8 @@ import { Rating } from './modules/rating/entities/rating.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
+import { Favorite } from './modules/favorites/entities/favorite.entity';
 
 @Module({
   imports: [
@@ -88,6 +90,7 @@ import { SearchModule } from './modules/search/search.module';
           Comment,
           CommentReaction,
           Rating,
+          Favorite,
         ],
         synchronize: true,
         // logging: true,
@@ -119,6 +122,7 @@ import { SearchModule } from './modules/search/search.module';
     RatingModule,
     ChatbotModule,
     SearchModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

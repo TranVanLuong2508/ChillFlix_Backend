@@ -18,7 +18,7 @@ import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
 import { Comment } from 'src/modules/comment/entities/comment.entity';
 import { Rating } from 'src/modules/rating/entities/rating.entity';
 import { FilmImage } from './film_image.entity';
-
+import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -124,4 +124,9 @@ export class Film {
   comments: Comment[];
   @OneToMany(() => Rating, (rating) => rating.film)
   ratings: Rating[];
+
+  //luong add
+  @OneToMany(() => Favorite, (fav) => fav.film)
+  favorites: Favorite[];
+  //
 }

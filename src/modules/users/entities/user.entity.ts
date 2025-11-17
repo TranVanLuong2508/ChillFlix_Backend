@@ -17,6 +17,7 @@ import { CommentReaction } from 'src/modules/comment-reaction/entities/comment-r
 import { Rating } from 'src/modules/rating/entities/rating.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Subscription } from 'src/modules/subscriptions/entities/subscription.entity';
+import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -108,4 +109,7 @@ export class User {
 
   @OneToMany(() => Subscription, (sub) => sub.user)
   subscriptions: Subscription[];
+
+  @OneToMany(() => Favorite, (fav) => fav.user)
+  favorites: Favorite[];
 }
