@@ -18,6 +18,7 @@ import { Rating } from 'src/modules/rating/entities/rating.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Subscription } from 'src/modules/subscriptions/entities/subscription.entity';
 import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
+import { Playlist } from 'src/modules/playlists/entities/playlist.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -112,4 +113,7 @@ export class User {
 
   @OneToMany(() => Favorite, (fav) => fav.user)
   favorites: Favorite[];
+
+  @OneToMany(() => Playlist, (playlist) => playlist.user)
+  playlist: Playlist[];
 }

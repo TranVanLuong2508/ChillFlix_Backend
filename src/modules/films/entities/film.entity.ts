@@ -19,6 +19,7 @@ import { Comment } from 'src/modules/comment/entities/comment.entity';
 import { Rating } from 'src/modules/rating/entities/rating.entity';
 import { FilmImage } from './film_image.entity';
 import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
+import { PlaylistFilm } from 'src/modules/playlist-film/entities/playlist-film.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -128,5 +129,8 @@ export class Film {
   //luong add
   @OneToMany(() => Favorite, (fav) => fav.film)
   favorites: Favorite[];
+
+  @OneToMany(() => PlaylistFilm, (pll) => pll.film)
+  playlistFilms: PlaylistFilm[];
   //
 }

@@ -52,6 +52,10 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { Favorite } from './modules/favorites/entities/favorite.entity';
+import { PlaylistsModule } from './modules/playlists/playlists.module';
+import { Playlist } from './modules/playlists/entities/playlist.entity';
+import { PlaylistFilmModule } from './modules/playlist-film/playlist-film.module';
+import { PlaylistFilm } from './modules/playlist-film/entities/playlist-film.entity';
 
 @Module({
   imports: [
@@ -91,6 +95,8 @@ import { Favorite } from './modules/favorites/entities/favorite.entity';
           CommentReaction,
           Rating,
           Favorite,
+          Playlist,
+          PlaylistFilm,
         ],
         synchronize: true,
         // logging: true,
@@ -123,6 +129,8 @@ import { Favorite } from './modules/favorites/entities/favorite.entity';
     ChatbotModule,
     SearchModule,
     FavoritesModule,
+    PlaylistsModule,
+    PlaylistFilmModule,
   ],
   controllers: [AppController],
   providers: [AppService],
