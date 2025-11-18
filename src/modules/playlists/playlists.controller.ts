@@ -40,4 +40,20 @@ export class PlaylistsController {
   removeFilm(@Param('id') playlistId: string, @Param('filmId') filmId: string) {
     return this.playlistsService.removeFilmFromPlaylist(playlistId, filmId);
   }
+
+  @Delete('remove-playlist/:playlistId')
+  @SkipCheckPermission()
+  DeletePlaylist(@User() user: IUser, @Param('playlistId') playlistId: string) {
+    return this.playlistsService.deletePlaylist(user.userId, playlistId);
+  }
+
+  @Patch('edit-playlist/:playlistId')
+  @SkipCheckPermission()
+  EditPlaylist(
+    @User() user: IUser,
+    @Param('playlistId') playlistId: string,
+    @Body() dto: UpdatePlaylistDto,
+  ) {
+    return this.playlistsService.editPlaylist(user.userId, playlistId, dto);
+  }
 }

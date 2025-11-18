@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { PlaylistFilm } from '../playlist-film/entities/playlist-film.entity';
 import { Film } from '../films/entities/film.entity';
 import { AddFilmToPlaylistDto } from './dto/add-film-to-playlist.dto';
+import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 
 @Injectable()
 export class PlaylistsService {
@@ -58,6 +59,9 @@ export class PlaylistsService {
       const playlists = await this.playlistRepo.find({
         where: { userId: userId },
         relations: ['playlistFilms', 'playlistFilms.film'],
+        order: {
+          createdAt: 'DESC',
+        },
       });
 
       if (playlists) {
@@ -188,6 +192,79 @@ export class PlaylistsService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from removeFilmFromPlaylist',
+      });
+    }
+  }
+
+  async deletePlaylist(userId: number, playlistId: string) {
+    try {
+      const playlist = await this.playlistRepo.findOne({
+        where: { userId: userId, playlistId: playlistId },
+        relations: ['playlistFilms'],
+      });
+      if (!playlist) {
+        return {
+          EC: 0,
+          EM: 'Playlist not found',
+        };
+      }
+      await this.playlistRepo.remove(playlist);
+      return {
+        EC: 1,
+        EM: 'Delete playlist successfully',
+      };
+    } catch (error) {
+      console.log('Error delete playlist', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from deletePlaylist',
+      });
+    }
+  }
+
+  async editPlaylist(userId: number, playlistId: string, dto: UpdatePlaylistDto) {
+    try {
+      const playlist = await this.playlistRepo.findOne({
+        where: { userId: userId, playlistId: playlistId },
+      });
+
+      if (!playlist) {
+        return {
+          EC: 0,
+          EM: 'Playlist not found',
+        };
+      }
+
+      if (dto.playlistName && dto.playlistName !== playlist.playlistName) {
+        const isExist = await this.playlistRepo.exists({
+          where: {
+            userId: userId,
+            playlistName: dto.playlistName,
+          },
+        });
+
+        if (isExist) {
+          return {
+            EC: 2,
+            EM: `Playlist ${dto.playlistName} already exists`,
+          };
+        }
+      }
+
+      playlist.playlistName = dto.playlistName ?? playlist.playlistName;
+      playlist.description = dto.description ?? playlist.description;
+
+      await this.playlistRepo.save(playlist);
+
+      return {
+        EC: 1,
+        EM: 'Update playlist successfully',
+      };
+    } catch (error) {
+      console.log('Error update playlist', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from editPlaylist',
       });
     }
   }
