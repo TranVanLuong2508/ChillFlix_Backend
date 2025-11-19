@@ -10,5 +10,6 @@ import { Film } from '../films/entities/film.entity';
   imports: [TypeOrmModule.forFeature([Rating, Film, User])],
   controllers: [RatingController],
   providers: [RatingService],
+  exports: [RatingService],
 })
 export class RatingModule {}

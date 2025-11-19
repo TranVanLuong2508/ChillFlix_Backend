@@ -11,6 +11,7 @@ import { FilmImage } from './entities/film_image.entity';
 import { FilmDirectorModule } from '../film_director/film_director.module';
 import { FilmActorModule } from '../film_actor/film_actor.module';
 import { CoWatchingModule } from '../co-watching/co-watching.module';
+import { RatingModule } from '../rating/rating.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CoWatchingModule } from '../co-watching/co-watching.module';
     FilmDirectorModule,
     FilmActorModule,
     forwardRef(() => CoWatchingModule),
+    RatingModule,
   ],
   controllers: [FilmsController],
   providers: [FilmsService],

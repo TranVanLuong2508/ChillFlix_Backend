@@ -52,7 +52,8 @@ export class RatingService {
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });
-    const average = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
+    const average =
+      ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
 
     return {
       EC: 1,
@@ -75,6 +76,23 @@ export class RatingService {
     };
   }
 
+  async getEverage(filmId: string) {
+    const ratings = await this.ratingRepo.find({
+      where: {
+        film: {
+          filmId,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+    const average =
+      ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
+
+    return { average: average };
+  }
+
   async deleteRating(ratingId: string, user: IUser) {
     const rating = await this.ratingRepo.findOne({
       where: { ratingId },
@@ -82,7 +100,8 @@ export class RatingService {
     });
     if (!rating) return { EC: 0, EM: 'Rating not found' };
 
-    if (rating.user.userId !== user.userId) return { EC: 0, EM: 'You are not allowed to delete this rating' };
+    if (rating.user.userId !== user.userId)
+      return { EC: 0, EM: 'You are not allowed to delete this rating' };
 
     await this.ratingRepo.update(ratingId, { deletedBy: user.userId });
     await this.ratingRepo.softDelete({ ratingId });

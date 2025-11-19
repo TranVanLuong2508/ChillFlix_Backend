@@ -38,6 +38,9 @@ export class FilmResponseDto {
   duration?: number;
 
   @Expose()
+  ratingEverage: number;
+
+  @Expose()
   description: string;
 
   @Expose()
@@ -113,6 +116,9 @@ export class FilmPaginationDto {
 
   @Expose()
   duration?: number;
+
+  @Expose()
+  ratingEverage: number;
 
   @Expose()
   description: string;
