@@ -83,16 +83,18 @@ export class CommentService {
 
             // save notification to db
             try {
+              const filmTitle = fullComment.film?.title;
               const notification = await this.notificationsService.createNotification({
                 userId: targetUserId,
                 type: 'reply',
-                message: `${fullComment.user.fullName} đã trả lời bình luận của bạn: "${fullComment.content}"`,
+                message: `${fullComment.user.fullName} đã trả lời bình luận của bạn trong ${filmTitle}`,
                 replierId: user.userId,
                 result: {
                   commentId: fullComment.commentId,
                   parentId: parentComment.commentId,
                   filmId: dto.filmId,
                   slug: fullComment.film?.slug,
+                  filmTitle: filmTitle,
                 },
               });
             } catch (notifError) {

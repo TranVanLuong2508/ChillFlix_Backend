@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { IUser } from '../users/interface/user.interface';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @Injectable()
 export class NotificationsService {
@@ -11,13 +12,7 @@ export class NotificationsService {
     private readonly notificationRepo: Repository<Notification>,
   ) {}
 
-  async createNotification(data: {
-    userId: number;
-    type: string;
-    message: string;
-    replierId?: number;
-    result?: any;
-  }) {
+  async createNotification(data: CreateNotificationDto) {
     const notification = this.notificationRepo.create({
       user: { userId: data.userId } as any,
       type: data.type,
