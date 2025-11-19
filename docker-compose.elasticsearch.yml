@@ -9,4 +9,7 @@ services:
     ports:
       - '9200:9200'
       - '9300:9300'
-  
+#Run: docker pull elasticsearch:8.15.0 in terminal
+#Run file: docker-compose.elasticsearch.yml
+#Run project, after have log: "Created new Elasticsearch index:true"
+#Use postman, run api search/sync/films in search controller
