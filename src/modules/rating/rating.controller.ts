@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Param, Delete, UseGuards } from '@nestjs/common';
 import { RatingService } from './rating.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { User, Public } from 'src/decorators/customize';
+import { User, Public, SkipCheckPermission } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
 
 @Controller('rating')
@@ -19,6 +19,7 @@ export class RatingController {
     return this.ratingService.getRatingsByFilm(filmId);
   }
 
+  @SkipCheckPermission()
   @Delete('delete-rating/:ratingId')
   deleteRating(@Param('ratingId') ratingId: string, @User() user: IUser) {
     return this.ratingService.deleteRating(ratingId, user);
