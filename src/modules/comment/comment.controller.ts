@@ -1,9 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import type { IUser } from '../users/interface/user.interface';
-import { Public, ResponseMessage, User } from 'src/decorators/customize';
+import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import { PaginationDto } from './dto/pagination.dto';
 import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 
@@ -12,6 +22,7 @@ export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @UseGuards(AuthGuard('jwt'))
+  @SkipCheckPermission()
   @Public()
   @Post('create-comment')
   @ResponseMessage('Create a new comment')
@@ -20,10 +31,15 @@ export class CommentController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  // @Public()
+  @SkipCheckPermission()
+  @Public()
   @Get('get-comments-by-film/:filmId')
   @ResponseMessage('Get comments by film ID')
-  getCommentsByFilmAuth(@Param('filmId') filmId: string, @Query() query: PaginationDto, @User() user: IUser) {
+  getCommentsByFilmAuth(
+    @Param('filmId') filmId: string,
+    @Query() query: PaginationDto,
+    @User() user: IUser,
+  ) {
     return this.commentService.findCommentsByFilm(query, filmId, user);
   }
 
@@ -42,6 +58,7 @@ export class CommentController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @SkipCheckPermission()
   @Patch('update-comment/:commentId')
   @ResponseMessage('Update comment by ID')
   updateComment(
@@ -53,7 +70,7 @@ export class CommentController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Public()
+  @SkipCheckPermission()
   @Delete('delete-comment/:commentId')
   @ResponseMessage('Remove comment by ID')
   deleteComment(@Param('commentId') commentId: string, @User() user: IUser) {
@@ -61,12 +78,14 @@ export class CommentController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @SkipCheckPermission()
   @Patch('toggle-hide/:commentId')
   toggleHideComment(@Param('commentId') id: string, @User() user: IUser) {
     return this.commentService.toggleHideComment(id, user);
   }
 
   @Public()
+  @SkipCheckPermission()
   @Get('count-by-film/:filmId')
   countComments(@Param('filmId') filmId: string) {
     return this.commentService.countCommentsByFilm(filmId);
