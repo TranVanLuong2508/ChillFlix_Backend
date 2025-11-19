@@ -59,6 +59,9 @@ export class PartResponseFindAllByFilmId {
   description: string;
 
   @Expose()
+  filmId: string;
+
+  @Expose()
   @Type(() => episodeDto)
   episodes: Episode[];
 }

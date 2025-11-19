@@ -55,6 +55,9 @@ export class Film {
 export class Host {
   @Expose()
   fullName: string;
+
+  @Expose()
+  avatarUrl: string;
 }
 
 @Exclude()

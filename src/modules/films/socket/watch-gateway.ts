@@ -10,6 +10,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { CoWatchingService } from 'src/modules/co-watching/co-watching.service';
 
 @WebSocketGateway({
   cors: {
@@ -27,6 +28,8 @@ export class WatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private logger = new Logger('WatchGateway');
+
+  constructor(private readonly coWatchingService: CoWatchingService) {}
 
   handleConnection(client: Socket) {
     this.logger.log(`>>> Client connected: ${client.id}`);
@@ -64,6 +67,12 @@ export class WatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { roomId, event } = data;
 
     this.logger.log(`Sync event in room ${roomId} from ${client.id}:`, event);
+    if (event.type === 'syncEpisode') {
+      this.coWatchingService.update(roomId, {
+        partNumber: event.part,
+        episodeNumber: event.episode,
+      });
+    }
 
     client.to(roomId).emit('sync_event', event);
 

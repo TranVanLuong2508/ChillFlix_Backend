@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CoWatchingService } from './co-watching.service';
 import { CoWatchingController } from './co-watching.controller';
 import { RedisModule } from '../redis/redis.module';
@@ -7,8 +7,9 @@ import { RoomCoWatching } from './entities/co-watching.entity';
 import { FilmsModule } from '../films/films.module';
 
 @Module({
-  imports: [RedisModule, TypeOrmModule.forFeature([RoomCoWatching]), FilmsModule],
+  imports: [RedisModule, TypeOrmModule.forFeature([RoomCoWatching]), forwardRef(() => FilmsModule)],
   controllers: [CoWatchingController],
   providers: [CoWatchingService],
+  exports: [CoWatchingService],
 })
 export class CoWatchingModule {}
