@@ -16,6 +16,7 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { RolePermissionModule } from './modules/role_permission/role_permission.module';
 import { Director } from 'src/modules/directors/entities/director.entity';
 import { DirectorModule } from 'src/modules/directors/director.module';
+import { Producer } from './modules/producers/entities/producer.entity';
 import { FilmsModule } from './modules/films/films.module';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { FileModule } from './modules/file/file.module';
@@ -59,6 +60,10 @@ import { PlaylistFilm } from './modules/playlist-film/entities/playlist-film.ent
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { Notification } from './modules/notifications/entities/notification.entity';
 
+import { ProducerModule } from './modules/producers/producer.module';
+import { FilmProducerModule } from './modules/film_producer/film_producer.module';
+import { FilmProducer } from './modules/film_producer/entities/film_producer.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -80,6 +85,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
           Permission,
           Role,
           Director,
+          Producer,
           Film,
           RolePermission,
           FilmGenre,
@@ -87,6 +93,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
           Part,
           Episode,
           FilmDirector,
+          FilmProducer,
           Actor,
           FilmActor,
           Subscription,
@@ -135,6 +142,9 @@ import { Notification } from './modules/notifications/entities/notification.enti
     PlaylistsModule,
     PlaylistFilmModule,
     NotificationsModule,
+    ProducerModule,
+    FilmProducerModule,
+    FilmProducer,
   ],
   controllers: [AppController],
   providers: [AppService],

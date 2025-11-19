@@ -14,6 +14,7 @@ import {
 } from 'class-validator';
 import { CreateFilmActorDto } from 'src/modules/film_actor/dto/create-film_actor.dto';
 import { CreateFilmDirectorDto } from 'src/modules/film_director/dto/create-film_director.dto';
+import { CreateFilmProducerDto } from "src/modules/film_producer/dto/create-film_producer.dto"
 
 export class CreateFilmImageDto {
   @Expose()
@@ -114,4 +115,11 @@ export class CreateFilmDto {
   @ValidateNested({ each: true })
   @Type(() => CreateFilmActorDto)
   actors: CreateFilmActorDto[];
+
+  
+  @Expose()
+  @IsArray({ message: "Producers must be ARRAY format" })
+  @ValidateNested({ each: true })
+  @Type(() => CreateFilmProducerDto)
+  producers: CreateFilmProducerDto[]
 }

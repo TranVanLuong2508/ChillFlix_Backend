@@ -21,7 +21,7 @@ import type { IUser } from '../users/interface/user.interface';
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmsController {
-  constructor(private readonly filmsService: FilmsService) {}
+  constructor(private readonly filmsService: FilmsService) { }
 
   @Post()
   create(@Body() createFilmDto: CreateFilmDto, @User() user: IUser) {
@@ -57,4 +57,38 @@ export class FilmsController {
   remove(@Param('id') id: string, @User() user: IUser) {
     return this.filmsService.remove(id, user);
   }
+
+  @Public()
+  @SkipCheckPermission()
+  @Get('by-country/:countryValueEn')
+  findByCountry(@Param('countryValueEn') countryValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+    return this.filmsService.findByCountry(countryValueEn, page, limit);
+  }
+
+  @Public()
+  @SkipCheckPermission()
+  @Get('by-genre/:genreValueEn')
+  findByGenre(@Param('genreValueEn') genreValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+    return this.filmsService.findByGenre(genreValueEn, page, limit);
+  }
+
+  @Public()
+  @SkipCheckPermission()
+  @Get('by-type/:typeValueEn')
+  findByType(@Param('typeValueEn') typeValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+    return this.filmsService.findByType(typeValueEn, page, limit);
+  }
+
+  // @Public()
+  // @SkipCheckPermission()
+  // @Get('filter/search')
+  // findWithFilters(@Query('country') country?: string, @Query('type') type?: string, @Query('rating') rating?: string, @Query('genre') genre?: string, @Query('version') version?: string, @Query('year') year?: string, @Query('sort') sort?: string, @Query('current') page: number = 1, @Query('limit') limit: number = 10,
+  // ) {
+  //   return this.filmsService.findWithFilters(
+  //     { country, type, rating, genre, version, year },
+  //     sort,
+  //     page,
+  //     limit,
+  //   );
+  // }
 }
