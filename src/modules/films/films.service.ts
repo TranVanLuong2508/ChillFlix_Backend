@@ -26,6 +26,7 @@ import { FilmDirectorService } from '../film_director/film_director.service';
 import { FilmActorService } from '../film_actor/film_actor.service';
 import { SearchService } from '../search/search.service';
 import { FilmProducerService } from '../film_producer/film_producer.service';
+import { RatingService } from '../rating/rating.service';
 
 @Injectable()
 export class FilmsService {
@@ -40,6 +41,7 @@ export class FilmsService {
     private filmActorService: FilmActorService,
     private searchService: SearchService, //luong add
     private filmProducerService: FilmProducerService,
+    private ratingService: RatingService,
   ) {}
 
   async create(createFilmDto: CreateFilmDto, user: IUser) {
@@ -129,6 +131,18 @@ export class FilmsService {
         take: defaultLimit,
       });
 
+      const data = await Promise.all(
+        await result.map(async (film) => {
+          const result = await this.ratingService.getEverage(film.filmId);
+          return {
+            ...film,
+            ratingEverage: +result.average,
+          };
+        }),
+      );
+
+      console.log('>>Check all: ', data);
+
       return {
         EC: 0,
         EM: 'Get film with query paginate success',
@@ -138,7 +152,7 @@ export class FilmsService {
           pages: totalPages,
           total: totalItems,
         },
-        result: plainToInstance(FilmPaginationDto, result),
+        result: plainToInstance(FilmPaginationDto, data),
       };
     } catch (error) {
       console.error('Error in film service get film paginate:', error.message);
@@ -176,6 +190,7 @@ export class FilmsService {
           EM: `Film with filmId ${id} not found`,
         });
       }
+      const ratingEverage = await this.ratingService.getEverage(film?.filmId);
 
       const actorsRes = await this.filmActorService.getActorsByFilm(id);
       if (actorsRes.EC) {
@@ -204,10 +219,11 @@ export class FilmsService {
       return {
         EC: 0,
         EM: 'Get film by Id success',
-        film: plainToInstance(FilmResponseDto, film),
-        directors: directorsRes.result,
-        producers: producersRes.result,
+
+        film: plainToInstance(FilmResponseDto, { ...film, ratingEverage: ratingEverage.average }),
+        directors: directorsRes.directors,
         actors: actorsRes.result,
+        producers: producersRes.result,
       };
     } catch (error) {
       console.error('Error in film service get film by Id:', error.message);
@@ -239,6 +255,8 @@ export class FilmsService {
         });
       }
 
+      const ratingEverage = await this.ratingService.getEverage(film?.filmId);
+
       const actorsRes = await this.filmActorService.getActorsByFilm(film.filmId);
       if (actorsRes.EC) {
         throw new InternalServerErrorException({
@@ -266,7 +284,7 @@ export class FilmsService {
       return {
         EC: 0,
         EM: 'Get film by Id success',
-        film: plainToInstance(FilmResponseDto, film),
+        film: plainToInstance(FilmResponseDto, { ...film, ratingEverage: ratingEverage.average }),
         directors: directorsRes.result,
         producers: producersRes.result,
         actors: actorsRes.result,

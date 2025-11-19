@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
 import { UpdateEpisodeDto } from './dto/update-episode.dto';
 import { IUser } from '../users/interface/user.interface';
@@ -16,7 +21,7 @@ export class EpisodesService {
   constructor(
     @InjectRepository(Episode) private episodeRepository: Repository<Episode>,
     @InjectRepository(Part) private partRepository: Repository<Part>,
-  ) { }
+  ) {}
 
   async createListEpisode(createListEpisodeDto: CreateEpisodeDto[], user: IUser) {
     try {
@@ -36,17 +41,25 @@ export class EpisodesService {
 
   async create(createEpisodeDto: CreateEpisodeDto, user: IUser) {
     try {
-      const partIsExist = await this.partRepository.exists({ where: { id: createEpisodeDto.partId } });
+      const partIsExist = await this.partRepository.exists({
+        where: { id: createEpisodeDto.partId },
+      });
 
       if (!partIsExist) {
-        throw new NotFoundException({ EC: 1, EM: `Part with id ${createEpisodeDto.partId} not found` });
+        throw new NotFoundException({
+          EC: 1,
+          EM: `Part with id ${createEpisodeDto.partId} not found`,
+        });
       }
 
       if (!createEpisodeDto.title) {
         createEpisodeDto.title = `Tập ${createEpisodeDto.episodeNumber}`;
       }
 
-      const newEpisode = this.episodeRepository.create({ ...createEpisodeDto, createdBy: user.userId.toString() });
+      const newEpisode = this.episodeRepository.create({
+        ...createEpisodeDto,
+        createdBy: user.userId.toString(),
+      });
       await this.episodeRepository.save(newEpisode);
       return {
         EC: 0,
@@ -111,7 +124,10 @@ export class EpisodesService {
 
   async findOneOption(query: string, type: keyof Episode) {
     try {
-      const episode = await this.episodeRepository.findOne({ where: { [type]: query }, relations: ['part'] });
+      const episode = await this.episodeRepository.findOne({
+        where: { [type]: query },
+        relations: ['part'],
+      });
       if (!episode) {
         throw new NotFoundException({ EC: 2, EM: `Episode with ${type}: ${query} not found` });
       }
@@ -141,7 +157,6 @@ export class EpisodesService {
   async findOneBySlug(slug: string) {
     return this.findOneOption(slug, 'slug');
   }
-
 
   async update(id: string, updateEpisodeDto: UpdateEpisodeDto, user: IUser) {
     try {

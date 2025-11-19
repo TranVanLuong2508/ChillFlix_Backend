@@ -19,6 +19,7 @@ import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Subscription } from 'src/modules/subscriptions/entities/subscription.entity';
 import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
 import { Playlist } from 'src/modules/playlists/entities/playlist.entity';
+import { RoomCoWatching } from 'src/modules/co-watching/entities/co-watching.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -116,4 +117,7 @@ export class User {
 
   @OneToMany(() => Playlist, (playlist) => playlist.user)
   playlist: Playlist[];
+
+  @OneToMany(() => RoomCoWatching, (room) => room.host)
+  hostedRooms: RoomCoWatching[];
 }

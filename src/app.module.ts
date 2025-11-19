@@ -63,6 +63,10 @@ import { Notification } from './modules/notifications/entities/notification.enti
 import { ProducerModule } from './modules/producers/producer.module';
 import { FilmProducerModule } from './modules/film_producer/film_producer.module';
 import { FilmProducer } from './modules/film_producer/entities/film_producer.entity';
+import { WatchGateway } from './modules/films/socket/watch-gateway';
+import { RedisModule } from './modules/redis/redis.module';
+import { CoWatchingModule } from './modules/co-watching/co-watching.module';
+import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entity';
 
 @Module({
   imports: [
@@ -107,6 +111,7 @@ import { FilmProducer } from './modules/film_producer/entities/film_producer.ent
           Playlist,
           PlaylistFilm,
           Notification,
+          RoomCoWatching,
         ],
         synchronize: true,
         // logging: true,
@@ -145,8 +150,11 @@ import { FilmProducer } from './modules/film_producer/entities/film_producer.ent
     ProducerModule,
     FilmProducerModule,
     FilmProducer,
+
+    RedisModule,
+    CoWatchingModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, WatchGateway],
 })
 export class AppModule {}

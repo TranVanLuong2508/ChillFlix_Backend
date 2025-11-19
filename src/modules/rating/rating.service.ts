@@ -26,7 +26,7 @@ export class RatingService {
 
       const existing = await this.ratingRepo
         .createQueryBuilder('rating')
-        .withDeleted() 
+        .withDeleted()
         .leftJoinAndSelect('rating.user', 'user')
         .leftJoinAndSelect('rating.film', 'film')
         .where('rating.userId = :userId', { userId: user.userId })
@@ -102,7 +102,8 @@ export class RatingService {
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });
-    const average = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
+    const average =
+      ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
 
     return {
       EC: 1,
@@ -123,6 +124,23 @@ export class RatingService {
         })),
       },
     };
+  }
+
+  async getEverage(filmId: string) {
+    const ratings = await this.ratingRepo.find({
+      where: {
+        film: {
+          filmId,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+    const average =
+      ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
+
+    return { average: average };
   }
 
   async deleteRating(ratingId: string, user: IUser) {
