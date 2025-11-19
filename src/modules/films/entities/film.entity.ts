@@ -18,12 +18,10 @@ import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
 import { Comment } from 'src/modules/comment/entities/comment.entity';
 import { Rating } from 'src/modules/rating/entities/rating.entity';
 import { FilmImage } from './film_image.entity';
-<<<<<<< HEAD
 import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
 import { PlaylistFilm } from 'src/modules/playlist-film/entities/playlist-film.entity';
-=======
 import { FilmProducer } from "src/modules/film_producer/entities/film_producer.entity"
->>>>>>> dev-Ky
+
 
 @Entity({ name: 'films' })
 export class Film {
@@ -130,7 +128,7 @@ export class Film {
   @OneToMany(() => Rating, (rating) => rating.film)
   ratings: Rating[];
 
-<<<<<<< HEAD
+
   //luong add
   @OneToMany(() => Favorite, (fav) => fav.film)
   favorites: Favorite[];
@@ -138,11 +136,11 @@ export class Film {
   @OneToMany(() => PlaylistFilm, (pll) => pll.film)
   playlistFilms: PlaylistFilm[];
   //
-=======
+
   @OneToMany(
     () => FilmProducer,
     (filmProducer) => filmProducer.film,
   )
   filmProducers: FilmProducer[]
->>>>>>> dev-Ky
+
 }
