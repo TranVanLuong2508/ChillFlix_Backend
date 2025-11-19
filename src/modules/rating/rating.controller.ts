@@ -9,7 +9,6 @@ export class RatingController {
   constructor(private readonly ratingService: RatingService) {}
 
   @SkipCheckPermission()
-  @Public()
   @Post('create-rating')
   createRating(@Body() dto: CreateRatingDto, @User() user: IUser) {
     return this.ratingService.createRating(dto, user);
@@ -21,9 +20,8 @@ export class RatingController {
     return this.ratingService.getRatingsByFilm(filmId);
   }
 
-  @Delete('delete-rating/:ratingId')
   @SkipCheckPermission()
-  @Public()
+  @Delete('delete-rating/:ratingId')
   deleteRating(@Param('ratingId') ratingId: string, @User() user: IUser) {
     return this.ratingService.deleteRating(ratingId, user);
   }

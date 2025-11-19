@@ -8,35 +8,30 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @SkipCheckPermission()
-  @Public()
   @Get()
   getNotifications(@User() user: IUser, @Query() query: any) {
     return this.notificationsService.getNotifications(user, query);
   }
 
   @SkipCheckPermission()
-  @Public()
   @Get('unread-count')
   getUnreadCount(@User() user: IUser) {
     return this.notificationsService.getUnreadCount(user.userId);
   }
 
   @SkipCheckPermission()
-  @Public()
   @Patch(':id/read')
   markAsRead(@Param('id') id: string, @User() user: IUser) {
     return this.notificationsService.markAsRead(parseInt(id), user);
   }
 
   @SkipCheckPermission()
-  @Public()
   @Patch('read-all')
   markAllAsRead(@User() user: IUser) {
     return this.notificationsService.markAllAsRead(user);
   }
 
   @SkipCheckPermission()
-  @Public()
   @Delete(':id')
   deleteNotification(@Param('id') id: string, @User() user: IUser) {
     return this.notificationsService.deleteNotification(parseInt(id), user);
