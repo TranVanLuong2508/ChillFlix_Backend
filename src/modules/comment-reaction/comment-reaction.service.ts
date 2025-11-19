@@ -5,6 +5,8 @@ import { CommentReaction } from './entities/comment-reaction.entity';
 import { CreateCommentReactionDto } from './dto/create-comment-reaction.dto';
 import { IUser } from '../users/interface/user.interface';
 import { Comment } from '../comment/entities/comment.entity';
+import { CommentGateway } from '../comment/socket/comment-gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentReactionService {
@@ -14,13 +16,18 @@ export class CommentReactionService {
 
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    private readonly commentGateway: CommentGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async reactToComment(dto: CreateCommentReactionDto, user: IUser) {
     try {
       const { commentId, type } = dto;
 
-      const comment = await this.commentRepo.findOne({ where: { commentId } });
+      const comment = await this.commentRepo.findOne({
+        where: { commentId },
+        relations: ['user', 'film'],
+      });
       if (!comment) {
         throw new NotFoundException('Comment not found');
       }
@@ -71,6 +78,44 @@ export class CommentReactionService {
       comment.totalLike = totalLike;
       comment.totalDislike = totalDislike;
       await this.commentRepo.save(comment);
+
+      const reaction = { commentId, userId: user.userId, userReaction, totalLike, totalDislike };
+      this.commentGateway.broadcastReactComment(reaction);
+
+      //socket.io notification
+      if (userReaction && comment.user && comment.user.userId !== user.userId) {
+        const reactionUser = await this.reactionRepo.findOne({
+          where: { user: { userId: user.userId } },
+          relations: ['user'],
+        });
+
+        this.commentGateway.sendReactionNotification(String(comment.user.userId), {
+          targetUserId: comment.user.userId,
+          commentId,
+          reactionType: type,
+          reactionUser: reactionUser?.user || { userId: user.userId, fullName: 'Anonymous' },
+          film: comment.film ? { filmId: comment.film.filmId, slug: comment.film.slug } : null,
+        });
+
+        // save notification to db
+        try {
+          const reactionText = type === 'LIKE' ? 'thích' : 'không thích';
+          await this.notificationsService.createNotification({
+            userId: comment.user.userId,
+            type: 'reaction',
+            message: `${reactionUser?.user?.fullName || 'Ai đó'} đã ${reactionText} bình luận của bạn`,
+            replierId: user.userId,
+            result: {
+              commentId: commentId,
+              reactionType: type,
+              filmId: comment.film?.filmId,
+              slug: comment.film?.slug,
+            },
+          });
+        } catch (notifError) {
+          console.error('Error creating reaction notification:', notifError);
+        }
+      }
 
       return {
         EC: 1,

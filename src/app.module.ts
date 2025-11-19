@@ -56,6 +56,8 @@ import { PlaylistsModule } from './modules/playlists/playlists.module';
 import { Playlist } from './modules/playlists/entities/playlist.entity';
 import { PlaylistFilmModule } from './modules/playlist-film/playlist-film.module';
 import { PlaylistFilm } from './modules/playlist-film/entities/playlist-film.entity';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { Notification } from './modules/notifications/entities/notification.entity';
 
 @Module({
   imports: [
@@ -97,6 +99,7 @@ import { PlaylistFilm } from './modules/playlist-film/entities/playlist-film.ent
           Favorite,
           Playlist,
           PlaylistFilm,
+          Notification,
         ],
         synchronize: true,
         // logging: true,
@@ -131,6 +134,7 @@ import { PlaylistFilm } from './modules/playlist-film/entities/playlist-film.ent
     FavoritesModule,
     PlaylistsModule,
     PlaylistFilmModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

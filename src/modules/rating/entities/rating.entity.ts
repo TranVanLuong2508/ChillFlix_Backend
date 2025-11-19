@@ -38,5 +38,5 @@ export class Rating {
   @Column({ nullable: true })
   updatedBy: number;
   @Column({ nullable: true })
-  deletedBy: number;
+  deletedBy?: number;
 }

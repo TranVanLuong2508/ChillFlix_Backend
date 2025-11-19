@@ -4,8 +4,9 @@ import {
   SubscribeMessage,
   MessageBody,
   OnGatewayConnection,
+  ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
   cors: {
@@ -17,8 +18,53 @@ export class CommentGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  handleConnection(client: any) {
-    console.log(' Client connected:', client.id);
+  private userSockets = new Map<string, Set<string>>();
+
+  handleConnection(client: Socket) {
+    console.log(`[COMMENT SOCKET] Client connected: ${client.id}`);
+    client.on('disconnect', () => {
+      for (const [userId, socketSet] of this.userSockets.entries()) {
+        if (socketSet.has(client.id)) {
+          socketSet.delete(client.id);
+          if (socketSet.size === 0) {
+            this.userSockets.delete(userId);
+          }
+          break;
+        }
+      }
+    });
+  }
+
+  @SubscribeMessage('register')
+  handleRegister(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
+    if (data?.userId) {
+      const userIdStr = String(data.userId);
+      console.log(`[COMMENT SOCKET] User ${userIdStr} registered with socket ${client.id}`);
+      if (!this.userSockets.has(userIdStr)) {
+        this.userSockets.set(userIdStr, new Set());
+      }
+      this.userSockets.get(userIdStr)!.add(client.id);
+    }
+  }
+
+  private emitToUser(userId: string, event: string, data: any) {
+    const userIdStr = String(userId);
+    const socketSet = this.userSockets.get(userIdStr);
+    if (socketSet && socketSet.size > 0) {
+      for (const socketId of socketSet) {
+        this.server.to(socketId).emit(event, data);
+      }
+    }
+  }
+
+  sendReplyNotification(targetUserId: string, data: any) {
+    console.log(`[COMMENT SOCKET] Sending reply notification to user ${targetUserId}`, data);
+    this.emitToUser(targetUserId, 'replyNotification', data);
+  }
+
+  sendReactionNotification(targetUserId: string, data: any) {
+    console.log(`[COMMENT SOCKET] Sending reaction notification to user ${targetUserId}`, data);
+    this.emitToUser(targetUserId, 'reactionNotification', data);
   }
 
   @SubscribeMessage('sendComment')
@@ -46,7 +92,11 @@ export class CommentGateway implements OnGatewayConnection {
     this.server.emit('updateComment', comment);
   }
 
-  broadcastCountComments(data: any) {
+  broadcastReactComment(reaction: any) {
+    this.server.emit('reactComment', reaction);
+  }
+
+  broadcastCountComments(data: { filmId: string; total: number }) {
     this.server.emit('countComments', data);
   }
 }
