@@ -29,6 +29,7 @@ export class AuthService {
         const { password, ...result } = user;
         const objectUser = {
           ...result,
+          roleName: temp.role?.roleName,
           permissions: temp.role?.permissons,
         };
         return objectUser;
@@ -40,19 +41,31 @@ export class AuthService {
   generateRefreshToken = (payload: any) => {
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
-      expiresIn: ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn') as ms.StringValue) / 1000,
+      expiresIn:
+        ms(this.configService.get<string>('REFRESH_TOKEN_expiresIn') as ms.StringValue) / 1000,
     });
     return { EC: 1, EM: 'Create refresh token successfully', refreshToken };
   };
 
   async login(user: any, response: Response) {
-    const { userId, email, roleId, fullName, genderCode, isVip, statusCode, permissions } = user;
+    const {
+      userId,
+      email,
+      roleId,
+      fullName,
+      genderCode,
+      isVip,
+      statusCode,
+      permissions,
+      roleName,
+    } = user;
     const payload = {
       iss: 'from server',
       sub: 'token login',
       userId,
       email,
       roleId,
+      roleName,
       fullName,
       genderCode,
       isVip,
@@ -74,6 +87,7 @@ export class AuthService {
         userId,
         email,
         roleId,
+        roleName,
         fullName,
         genderCode,
         isVip,
@@ -110,13 +124,14 @@ export class AuthService {
 
       const user = await this.usersService.findUserByRefreshToken(refreshToken);
       if (user) {
-        const { userId, email, roleId, fullName, genderCode, isVip, statusCode } = user;
+        const { userId, email, roleId, fullName, genderCode, isVip, statusCode, roleName } = user;
         const payload = {
           iss: 'from server',
           sub: 'token login',
           userId,
           email,
           roleId,
+          roleName,
           fullName,
           genderCode,
           isVip,
@@ -140,6 +155,7 @@ export class AuthService {
             userId,
             email,
             roleId,
+            roleName,
             fullName,
             genderCode,
             isVip,

@@ -5,6 +5,7 @@ export interface IUser {
   fullName: string;
   isActive?: boolean;
   roleId: number;
+  roleName: string;
   genderCode: string;
   isVip: boolean;
   statusCode: string;
