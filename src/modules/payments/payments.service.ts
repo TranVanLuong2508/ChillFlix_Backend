@@ -108,7 +108,10 @@ export class PaymentsService {
 
       //ip khachs hàng
       let ipAddr =
-        req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress || '127.0.0.1';
+        req.headers['x-forwarded-for'] ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        '127.0.0.1';
 
       if (Array.isArray(ipAddr)) {
         ipAddr = ipAddr[0];
@@ -275,7 +278,10 @@ export class PaymentsService {
       let vnp_Command = 'querydr';
       let vnp_OrderInfo = 'Truy van GD ma:' + vnp_TxnRef;
       let vnp_IpAddr =
-        req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress || '127.0.0.1';
+        req.headers['x-forwarded-for'] ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        '127.0.0.1';
       let currCode = 'VND';
       let vnp_CreateDate = moment(currentDate).format('YYYYMMDDHHmmss');
 
@@ -311,7 +317,8 @@ export class PaymentsService {
       const resData: VnPayQueryResponse = response.data;
       delete resData['vnp_SecureHash'];
       const statusMessage =
-        VNPAY_TRANSACTION_STATUS_MESSAGE[resData.vnp_TransactionStatus] || 'Trạng thái không xác định';
+        VNPAY_TRANSACTION_STATUS_MESSAGE[resData.vnp_TransactionStatus] ||
+        'Trạng thái không xác định';
 
       return {
         EC: resData.vnp_ResponseCode === '00' ? 1 : 0,
@@ -346,7 +353,10 @@ export class PaymentsService {
       const vnp_OrderInfo = `Hoan tien GD ma: ${vnp_TxnRef}`;
       const vnp_CreateDate = moment(date).format('YYYYMMDDHHmmss');
       const vnp_IpAddr =
-        req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress || '127.0.0.1';
+        req.headers['x-forwarded-for'] ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        '127.0.0.1';
       const vnp_TransactionNo = '0'; // yêu cầu VNPay
 
       // Tạo secure hash
@@ -476,7 +486,14 @@ export class PaymentsService {
           vnp_TxnRef: payment.vnpayTxnRef,
         };
         // await this.emailService.sendBillUpgradeVipEmail(user, vnpData, plan.planName);
-        await this.emailService.sendBillUpgradeVipEmail(user, vnpData, plan.planName, startDate, endDate);
+        await this.emailService.sendBillUpgradeVipEmail(
+          user.email,
+          user.fullName,
+          vnpData,
+          plan.planName,
+          startDate,
+          endDate,
+        );
       }
     } catch (error) {
       console.error('Error in active Vip Subscription for user:', error.message);

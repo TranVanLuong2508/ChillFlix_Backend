@@ -100,6 +100,7 @@ export class UsersService {
           EC: 1,
           EM: 'Get user success',
           ...userData,
+          roleName: userData.role.roleName,
         };
       }
     } catch (error) {
@@ -222,10 +223,24 @@ export class UsersService {
     return compareSync(password, hash);
   }
 
+  // async findUserByRefreshToken(refresh_token: string) {
+  //   return await this.usersRepository.findOne({
+  //     where: { refreshToken: refresh_token },
+  //   });
+  // }
+
   async findUserByRefreshToken(refresh_token: string) {
-    return await this.usersRepository.findOne({
+    const user = await this.usersRepository.findOne({
       where: { refreshToken: refresh_token },
+      relations: ['role'],
     });
+
+    const roleName = user?.role.roleName;
+    if (!user) return null;
+    return {
+      ...user,
+      roleName,
+    };
   }
 
   async updateUserToken(refresh_token: string, id: number) {
