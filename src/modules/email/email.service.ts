@@ -33,11 +33,18 @@ export class EmailService {
     });
   }
 
-  async sendBillUpgradeVipEmail(user: IUser, vnpData: VnPayData, planName: string, startDate: Date, endDate: Date) {
+  async sendBillUpgradeVipEmail(
+    email: string,
+    fullName: string,
+    vnpData: VnPayData,
+    planName: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     try {
       const emailData = {
-        userName: user.fullName || 'Quý khách',
-        userEmail: user.email,
+        userName: fullName || 'Quý khách',
+        userEmail: email,
 
         planName,
         startDate: this.formatDate(startDate),
@@ -59,7 +66,7 @@ export class EmailService {
       };
       return this.mailerService.sendMail({
         from: `${emailData.companyName} <${this.configService.get<string>('EMAIL_AUTH_USER')}>`,
-        to: user.email,
+        to: email,
         subject: 'Hóa đơn nâng cấp VIP trên ChillFLix',
         template: 'upgrade-vip-bill',
         context: emailData,

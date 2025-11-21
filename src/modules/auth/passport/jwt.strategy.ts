@@ -19,13 +19,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: IUser) {
-    const { userId, fullName, email, roleId, genderCode, isVip, statusCode } = payload;
+    const { userId, fullName, email, roleId, genderCode, isVip, statusCode, roleName } = payload;
     const temp = await this.roleService.findOne(roleId);
 
     return {
       userId,
       email,
       roleId,
+      roleName,
       fullName,
       genderCode,
       isVip,

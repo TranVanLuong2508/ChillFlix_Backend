@@ -41,6 +41,7 @@ export class AuthController {
       email: newUserInfor.email,
       fullName: newUserInfor.fullName,
       roleId: newUserInfor.roleId,
+      roleName: newUserInfor.role.roleName,
       genderCode: newUserInfor.genderCode,
       isVip: newUserInfor.isVip,
       statusCode: newUserInfor.statusCode,
