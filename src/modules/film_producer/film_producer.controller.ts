@@ -31,6 +31,7 @@ export class FilmProducerController {
     return this.filmProducerService.createFilmProducer(dto, user)
   }
 
+  @Public()
   @Get('all-film-producers')
   @ResponseMessage('Get all film-producer relations')
   GetAllFilmProducers(@Query() query: PaginationfpDto) {

@@ -18,6 +18,8 @@ export class ProducerController {
   }
 
   @Get('get-all-producers')
+  @SkipCheckPermission()
+  @Public()
   @ResponseMessage('Get all producers with pagination, filtering, and sorting')
   async getAllProducers(@Query() query: PaginationDto) {
     return await this.producerService.getAllProducers(query);
@@ -46,10 +48,10 @@ export class ProducerController {
     return await this.producerService.deleteProducerById(producerId, user)
   }
 
-  @Public()
-  @Get("get-films-by-producer/:producerId")
-  @ResponseMessage("Get all films by producer ID")
-  async getFilmsByProducerId(@Param('producerId', ParseIntPipe) producerId: number, @Query() query: PaginationDto) {
-    return await this.producerService.getFilmsByProducerId(producerId, query)
-  }
+  // @Public()
+  // @Get("get-films-by-producer/:producerId")
+  // @ResponseMessage("Get all films by producer ID")
+  // async getFilmsByProducerId(@Param('producerId', ParseIntPipe) producerId: number, @Query() query: PaginationDto) {
+  //   return await this.producerService.getFilmsByProducerId(producerId, query)
+  // }
 }
