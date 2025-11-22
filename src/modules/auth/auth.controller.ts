@@ -45,6 +45,7 @@ export class AuthController {
       genderCode: newUserInfor.genderCode,
       isVip: newUserInfor.isVip,
       statusCode: newUserInfor.statusCode,
+      avatarUrl: newUserInfor.avatarUrl,
     };
     const temp = await this.roleService.findOne(user.roleId);
     returnUser.permissions = temp.role?.permissons;

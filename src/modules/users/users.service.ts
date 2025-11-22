@@ -8,6 +8,7 @@ import { RegisterUserDto } from 'src/modules/users/dto/register-user.dto';
 import { IUser } from 'src/modules/users/interface/user.interface';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import aqp from 'api-query-params';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -146,6 +147,40 @@ export class UsersService {
       });
     }
   }
+  async updateProfile(updateUser: UpdateProfileDto, user: IUser) {
+    console.log('check data update: ', updateUser);
+    try {
+      const updated = await this.usersRepository.update(
+        {
+          userId: updateUser.userId,
+        },
+        {
+          ...updateUser,
+          updatedBy: user.userId,
+          updatedAt: new Date(),
+        },
+      );
+
+      if (updated.affected === 0) {
+        return {
+          EC: 0,
+          EM: 'user not found',
+        };
+      }
+
+      return {
+        EC: 1,
+        EM: 'updateProfile user success',
+        ...updated,
+      };
+    } catch (error: any) {
+      console.error('Error in updateProfile user:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from updateProfile user service',
+      });
+    }
+  }
 
   async remove(id: number, user: IUser) {
     try {
@@ -209,6 +244,7 @@ export class UsersService {
         genderCode: true,
         isVip: true,
         statusCode: true,
+        avatarUrl: true,
       },
     });
   }

@@ -1,5 +1,3 @@
-// cloudinary.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryResponse } from './cloudinary/cloudinary-response';
@@ -37,6 +35,8 @@ export class FileService {
       });
 
       return {
+        EC: 0,
+        EM: 'Upload image success',
         url: dataUpload.secure_url,
         createdAt: dataUpload.created_at,
       };

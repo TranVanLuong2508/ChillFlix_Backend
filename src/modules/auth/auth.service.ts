@@ -58,6 +58,7 @@ export class AuthService {
       statusCode,
       permissions,
       roleName,
+      avatarUrl,
     } = user;
     const payload = {
       iss: 'from server',
@@ -70,6 +71,7 @@ export class AuthService {
       genderCode,
       isVip,
       statusCode,
+      avatarUrl,
     };
     //generate refresh token
     const refresh_token = this.generateRefreshToken(payload);
@@ -93,6 +95,7 @@ export class AuthService {
         isVip,
         statusCode,
         permissions,
+        avatarUrl,
       },
     };
   }
@@ -124,7 +127,17 @@ export class AuthService {
 
       const user = await this.usersService.findUserByRefreshToken(refreshToken);
       if (user) {
-        const { userId, email, roleId, fullName, genderCode, isVip, statusCode, roleName } = user;
+        const {
+          userId,
+          email,
+          roleId,
+          fullName,
+          genderCode,
+          isVip,
+          statusCode,
+          roleName,
+          avatarUrl,
+        } = user;
         const payload = {
           iss: 'from server',
           sub: 'token login',
@@ -136,6 +149,7 @@ export class AuthService {
           genderCode,
           isVip,
           statusCode,
+          avatarUrl,
         };
         const refresh_token = this.createRefreshToken(payload);
 
@@ -160,6 +174,7 @@ export class AuthService {
             genderCode,
             isVip,
             statusCode,
+            avatarUrl,
             permissions: temp.role?.permissons,
           },
         };

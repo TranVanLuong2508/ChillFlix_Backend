@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { IUser } from 'src/modules/users/interface/user.interface';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Controller('users')
 export class UsersController {
@@ -44,6 +45,13 @@ export class UsersController {
   @ResponseMessage('Update a user')
   update(@Body() updateUserDto: UpdateUserDto, @User() user: IUser) {
     return this.usersService.update(updateUserDto, user);
+  }
+  @Patch('update-profile')
+  @SkipCheckPermission()
+  @ResponseMessage('Update profle a user')
+  updateProfile(@Body() updateProfileDto: UpdateProfileDto, @User() user: IUser) {
+    console.log('call update');
+    return this.usersService.updateProfile(updateProfileDto, user);
   }
 
   @Delete(':id')

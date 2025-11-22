@@ -9,6 +9,7 @@ export interface IUser {
   genderCode: string;
   isVip: boolean;
   statusCode: string;
+  avatarUrl: string;
   refreshToken?: string;
   permissions?: {
     name: string;
