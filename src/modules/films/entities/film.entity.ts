@@ -124,6 +124,7 @@ export class Film {
 
   @OneToMany(() => Comment, (comment) => comment.film)
   comments: Comment[];
+
   @OneToMany(() => Rating, (rating) => rating.film)
   ratings: Rating[];
 
