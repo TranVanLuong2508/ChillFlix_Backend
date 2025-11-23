@@ -121,7 +121,7 @@ export class ProducerSearchService {
       return {
         EC: 1,
         EM: 'Search producer succeed',
-        data: data,
+        producers: data,
         total: data.length,
       };
     } catch (error) {

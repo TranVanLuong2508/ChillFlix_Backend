@@ -121,7 +121,7 @@ export class ActorSearchService {
       return {
         EC: 1,
         EM: 'Search actor succeed',
-        data: data,
+        actors: data,
         total: data.length,
       };
     } catch (error) {

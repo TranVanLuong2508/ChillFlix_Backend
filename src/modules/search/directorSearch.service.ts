@@ -121,7 +121,7 @@ export class DirectorSearchService {
       return {
         EC: 1,
         EM: 'Search director succeed',
-        data: data,
+        directors: data,
         total: data.length,
       };
     } catch (error) {
