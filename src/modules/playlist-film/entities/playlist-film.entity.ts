@@ -26,7 +26,7 @@ export class PlaylistFilm {
   @Column({ name: 'filmId' })
   filmId: string;
 
-  @ManyToOne(() => Film, (f) => f.playlistFilms)
+  @ManyToOne(() => Film, (f) => f.playlistFilms, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'filmId', referencedColumnName: 'filmId' })
   film: Film;
 

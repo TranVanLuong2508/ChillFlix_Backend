@@ -17,6 +17,7 @@ export class PermissionsController {
   }
 
   @Get()
+  @SkipCheckPermission()
   @ResponseMessage('Fetch all permission')
   findAll() {
     return this.permissionsService.findAll();
@@ -40,7 +41,11 @@ export class PermissionsController {
 
   @Patch(':id')
   @ResponseMessage('Update a permission')
-  update(@Param('id') id: string, @Body() updatePermissionDto: UpdatePermissionDto, @User() user: IUser) {
+  update(
+    @Param('id') id: string,
+    @Body() updatePermissionDto: UpdatePermissionDto,
+    @User() user: IUser,
+  ) {
     return this.permissionsService.update(+id, updatePermissionDto, user);
   }
 

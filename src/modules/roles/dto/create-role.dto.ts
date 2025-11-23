@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateRoleDto {
   @IsNotEmpty({ message: 'roleName must be not Empty' })
@@ -14,4 +14,8 @@ export class CreateRoleDto {
   @IsBoolean({ message: 'isActive must be Boolean format' })
   @Type(() => Boolean)
   isActive: boolean;
+
+  @IsArray()
+  @IsNumber({}, { each: true })
+  permissionIds: number[];
 }

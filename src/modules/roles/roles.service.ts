@@ -3,21 +3,25 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { IUser } from '../users/interface/user.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository, TreeLevelColumn } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
 import { plainToInstance } from 'class-transformer';
 import { RoleResponseDto } from './dto/role-response.dto';
+import { RolePermission } from '../role_permission/entities/role_permission.entity';
 
 @Injectable()
 export class RolesService {
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+
+    @InjectRepository(RolePermission)
+    private rolePermissionRepository: Repository<RolePermission>,
   ) {}
   async create(createRoleDto: CreateRoleDto, user: IUser) {
     try {
-      const { roleName, description, isActive } = createRoleDto;
+      const { roleName, description, isActive, permissionIds } = createRoleDto;
 
       const isExist = await this.roleRepository.exists({
         where: { roleName: roleName },
@@ -25,18 +29,29 @@ export class RolesService {
 
       if (isExist) {
         return {
-          EC: 0,
+          EC: 2,
           EM: `Role ${roleName} is already exist`,
         };
       } else {
-        const newRole = this.roleRepository.create({
+        //tạo role
+        const newRole = await this.roleRepository.save({
           roleName,
           description,
           isActive,
           createdBy: user.userId,
         });
 
-        await this.roleRepository.save(newRole);
+        //tạo role_permission
+
+        if (permissionIds?.length > 0) {
+          const records = permissionIds.map((perId) => ({
+            roleId: newRole.roleId,
+            permissionId: perId,
+            createdBy: user.userId,
+          }));
+
+          await this.rolePermissionRepository.save(records);
+        }
 
         return {
           EC: 1,
@@ -57,7 +72,16 @@ export class RolesService {
   async findAll() {
     try {
       const result = await this.roleRepository.find({
-        where: { isActive: true, isDeleted: false },
+        where: { isDeleted: false },
+        select: {
+          roleId: true,
+          roleName: true,
+          description: true,
+          isActive: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
       if (result) {
         return {
@@ -78,7 +102,7 @@ export class RolesService {
   async findOne(id: number) {
     try {
       const isExist = await this.roleRepository.exists({
-        where: { roleId: id, isActive: true, isDeleted: false },
+        where: { roleId: id, isDeleted: false },
       });
       if (!isExist) {
         return {
@@ -107,20 +131,23 @@ export class RolesService {
     }
   }
 
-  async update(id: number, updateRoleDto: UpdateRoleDto, user: IUser) {
+  async finOneById(id: number) {
     try {
-      const updateResult = await this.roleRepository.update(
-        {
-          roleId: id,
+      const role = await this.roleRepository.findOne({
+        where: { roleId: id, isDeleted: false },
+        relations: {
+          rolePermission: true,
         },
-        {
-          ...updateRoleDto,
-          updatedAt: new Date(),
-          updatedBy: user.userId,
+        select: {
+          roleId: true,
+          roleName: true,
+          description: true,
+          isActive: true,
+          rolePermission: true,
         },
-      );
+      });
 
-      if (updateResult.affected === 0) {
+      if (!role) {
         return {
           EC: 0,
           EM: 'Role not found',
@@ -129,8 +156,72 @@ export class RolesService {
 
       return {
         EC: 1,
+        EM: 'Find a role success',
+        ...role,
+      };
+    } catch (error: any) {
+      console.error('Error in findOne role:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from findOne role service',
+      });
+    }
+  }
+
+  async update(id: number, updateRoleDto: UpdateRoleDto, user: IUser) {
+    try {
+      const { permissionIds, ...roleFields } = updateRoleDto;
+      await this.roleRepository.update(
+        {
+          roleId: id,
+        },
+        {
+          ...roleFields,
+          updatedAt: new Date(),
+          updatedBy: user.userId,
+        },
+      );
+
+      // Nếu không cập nhật permission
+      if (!permissionIds) {
+        return { EC: 1, EM: 'Update role success' };
+      }
+
+      // Lấy permission cũ
+      const oldRolePermission_Record = await this.rolePermissionRepository.find({
+        where: { roleId: id },
+      });
+
+      const oldIds = oldRolePermission_Record.map((rp) => rp.permissionId);
+
+      // Xác định cần thêm và cần xoá, t mệt vl
+      const idToAdds = permissionIds.filter((pid) => !oldIds.includes(pid));
+      console.log('check to add: ', idToAdds);
+
+      const idToRemoves = oldIds.filter((pid) => !permissionIds.includes(pid));
+      console.log('check to toRemove: ', idToRemoves);
+
+      // Thêm mới
+      if (idToAdds.length > 0) {
+        await this.rolePermissionRepository.save(
+          idToAdds.map((pid) => ({
+            roleId: id,
+            permissionId: pid,
+            createdBy: user.userId,
+          })),
+        );
+      }
+
+      if (idToRemoves.length > 0) {
+        await this.rolePermissionRepository.delete({
+          roleId: id,
+          permissionId: In(idToRemoves),
+        });
+      }
+
+      return {
+        EC: 1,
         EM: 'Update Role success',
-        ...updateResult,
       };
     } catch (error: any) {
       console.error('Error in update Role:', error.message);
