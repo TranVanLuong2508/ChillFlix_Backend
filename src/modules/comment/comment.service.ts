@@ -315,7 +315,7 @@ export class CommentService {
       const comment = await this.commentRepo.findOne({ where: { commentId } });
       if (!comment) return { EC: 0, EM: 'Comment not found' };
 
-      if (![1, 2].includes(user.roleId)) {
+      if (user.roleName !== 'ROLE_ADMIN' && user.roleName !== 'ROLE_MOD') {
         return {
           EC: 0,
           EM: 'You are not allowed to hide/unhide this comment (only admin/moderator can perform this action)',

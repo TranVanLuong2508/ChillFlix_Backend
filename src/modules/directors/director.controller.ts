@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { DirectorService } from './director.service';
 import { CreateDirectorDto } from './dto-director/create-director.dto';
 import { UpdateDirectorDto } from './dto-director/update-director.dto';
@@ -16,6 +26,7 @@ export class DirectorController {
     return await this.directorService.createDirector(dto, user);
   }
 
+  @Public()
   @Get('get-all-directors')
   @ResponseMessage('Get all directors with pagination, filtering, and sorting')
   async getAllDirectors(@Query() query: PaginationDto) {
@@ -41,7 +52,10 @@ export class DirectorController {
 
   @Delete('delete-director-by-id/:directorId')
   @ResponseMessage('Delete director by ID')
-  async deleteDirectorById(@Param('directorId', ParseIntPipe) directorId: number, @User() user: IUser) {
+  async deleteDirectorById(
+    @Param('directorId', ParseIntPipe) directorId: number,
+    @User() user: IUser,
+  ) {
     return await this.directorService.deleteDirectorById(directorId, user);
   }
 }
