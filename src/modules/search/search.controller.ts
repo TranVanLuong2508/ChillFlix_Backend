@@ -4,11 +4,13 @@ import { Public, ResponseMessage, SkipCheckPermission } from 'src/decorators/cus
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Film } from '../films/entities/film.entity';
+import { ActorSearchService } from './actorSearch.service';
 
 @Controller('search')
 export class SearchController {
   constructor(
     private readonly searchService: SearchService,
+    private readonly actorSearchService: ActorSearchService,
     @InjectRepository(Film) private filmsRepository: Repository<Film>,
   ) {}
   @Get('/films')
@@ -18,6 +20,28 @@ export class SearchController {
   async searchFilms(@Query('q') q: string) {
     return this.searchService.searchFilms(q);
   }
+
+  @Get('/actors')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('search actors')
+  async searchActors(@Query('q') q: string) {
+    return this.actorSearchService.searchActors(q);
+  }
+  // @Get('/directors')
+  // @Public()
+  // @SkipCheckPermission()
+  // @ResponseMessage('search films')
+  // async searchFilms(@Query('q') q: string) {
+  //   return this.searchService.searchFilms(q);
+  // }
+  // @Get('/producers')
+  // @Public()
+  // @SkipCheckPermission()
+  // @ResponseMessage('search films')
+  // async searchFilms(@Query('q') q: string) {
+  //   return this.searchService.searchFilms(q);
+  // }
 
   @Delete('/films')
   @Public()

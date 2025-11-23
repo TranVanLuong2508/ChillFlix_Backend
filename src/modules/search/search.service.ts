@@ -3,16 +3,27 @@ import { filmIndexMapping } from './film.mapping';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { IfilmIndex } from './interfaces/film-index.interface';
 import { Film } from '../films/entities/film.entity';
+import { actorIndexMapping } from './mapping/actor.mapping';
+import { directorIndexMapping } from './mapping/director.mapping';
+import { producerIndexMapping } from './mapping/producer.mapping';
 
 @Injectable()
 export class SearchService implements OnModuleInit {
   private readonly filmIndex = 'films';
+  private readonly actorIndex = 'actors';
+  private readonly directorIndex = 'directors';
+  private readonly producerIndex = 'producers';
 
   constructor(private readonly elasticsearchService: ElasticsearchService) {}
+
   async onModuleInit() {
     console.log('initializing Elasticsearch...');
     // Tạo index khi khởi động ứng dụng nếu chưa  có
     await this.createIndex();
+
+    await this.createIndexClone(this.actorIndex, actorIndexMapping);
+    await this.createIndexClone(this.directorIndex, directorIndexMapping);
+    await this.createIndexClone(this.producerIndex, producerIndexMapping);
   }
 
   async createIndex() {
@@ -32,6 +43,26 @@ export class SearchService implements OnModuleInit {
       });
 
       console.log(`Created new Elasticsearch index: ${this.filmIndex} `);
+    }
+  }
+
+  async createIndexClone(index: string, indexMapping: any) {
+    const dataIndexExists = await this.elasticsearchService.indices.exists({
+      index: index,
+    });
+
+    console.log(`check ${index} index was created: `, dataIndexExists);
+
+    if (!dataIndexExists) {
+      await this.elasticsearchService.indices.create({
+        index: index,
+        body: {
+          settings: indexMapping.settings,
+          mappings: indexMapping.mappings,
+        },
+      });
+
+      console.log(`Created new Elasticsearch index: ${index} `);
     }
   }
 
