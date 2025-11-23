@@ -311,6 +311,41 @@ export class FilmsService {
       const defaultLimit = limit ? limit : 10;
       const defaultPage = page ? page : 1;
 
+      // If client requested 'All', return all films (no country filter)
+      if (countryValueEn && countryValueEn.trim().toLowerCase() === 'all') {
+        const totalItems = await this.filmsRepository.createQueryBuilder('film').where('film.deletedAt IS NULL').getCount();
+        const totalPages = Math.ceil(totalItems / defaultLimit);
+
+        const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+        joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+        queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+        queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+        joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+        const films = await queryBuilder
+          .where('film.deletedAt IS NULL')
+          .orderBy('film.createdAt', 'DESC')
+          .skip(offset)
+          .take(defaultLimit)
+          .getMany();
+
+        return {
+          EC: 0,
+          EM: 'Get films by country success (all countries)',
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: totalPages,
+            total: totalItems,
+          },
+          result: plainToInstance(FilmPaginationDto, films),
+        };
+      }
+
       const countryAllCode = await this.filmsRepository
         .createQueryBuilder('film')
         .leftJoinAndSelect('film.country', 'country')
@@ -407,6 +442,7 @@ export class FilmsService {
       const defaultLimit = limit ? limit : 10;
       const defaultPage = page ? page : 1;
 
+
       const allCodeRepository = this.filmsRepository.manager.getRepository('AllCode');
       const genre = await allCodeRepository.findOne({
         where: {
@@ -417,7 +453,40 @@ export class FilmsService {
 
       const genreCode = genre?.keyMap;
 
-      console.log('[v0] Genre lookup - valueEn:', genreValueEn, 'genreCode:', genreCode);
+      if (genreValueEn && genreValueEn.trim().toLowerCase() === 'all') {
+        const totalItems = await this.filmsRepository.createQueryBuilder('film').where('film.deletedAt IS NULL').getCount();
+        const totalPages = Math.ceil(totalItems / defaultLimit);
+
+        const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+        joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+        queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+        queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+        joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+        const films = await queryBuilder
+          .where('film.deletedAt IS NULL')
+          .orderBy('film.createdAt', 'DESC')
+          .skip(offset)
+          .take(defaultLimit)
+          .getMany();
+
+        return {
+          EC: 0,
+          EM: 'Get films by country success (all countries)',
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: totalPages,
+            total: totalItems,
+          },
+          result: plainToInstance(FilmPaginationDto, films),
+        };
+      }
+
 
       if (!genreCode) {
         return {
@@ -460,7 +529,6 @@ export class FilmsService {
         .take(defaultLimit)
         .getMany();
 
-      console.log('[v0] Films found for genre', genreValueEn, ':', films.length);
 
       if (films.length === 0) {
         return {
@@ -519,7 +587,6 @@ export class FilmsService {
 
       const typeCode = type?.keyMap;
 
-      console.log('[v0] Type lookup - valueEn:', typeValueEn, 'typeCode:', typeCode);
 
       if (!typeCode) {
         return {
@@ -561,7 +628,6 @@ export class FilmsService {
         .take(defaultLimit)
         .getMany();
 
-      console.log('[v0] Films found for type', typeValueEn, ':', films.length);
 
       if (films.length === 0) {
         return {
