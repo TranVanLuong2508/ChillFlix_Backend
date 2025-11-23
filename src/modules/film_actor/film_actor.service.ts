@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsOrder, Repository } from 'typeorm';
 import { FilmActor } from './entities/film_actor.entity';
@@ -8,9 +13,10 @@ import { CreateFilmActorDto } from './dto/create-film_actor.dto';
 import { UpdateFilmActorDto } from './dto/update-film_actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
-import { plainToInstance } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ListFilm } from '../films/dto/list-film.dto';
 import { FilmImage } from '../films/entities/film_image.entity';
+import _ from 'lodash';
 
 @Injectable()
 export class FilmActorService {
@@ -29,7 +35,9 @@ export class FilmActorService {
     if (!entity) return null;
 
     const clean = (obj: any) =>
-      Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null && v !== undefined && v !== ''));
+      Object.fromEntries(
+        Object.entries(obj).filter(([_, v]) => v != null && v !== undefined && v !== ''),
+      );
 
     const film = entity.film
       ? clean({
@@ -205,7 +213,13 @@ export class FilmActorService {
     try {
       const filmActor = await this.filmActorRepo.findOne({
         where: { id },
-        relations: ['film', 'film.filmImages', 'actor', 'actor.genderActor', 'actor.nationalityActor'],
+        relations: [
+          'film',
+          'film.filmImages',
+          'actor',
+          'actor.genderActor',
+          'actor.nationalityActor',
+        ],
       });
       if (!filmActor) return { EC: 0, EM: `Film-Actor ${id} not found!` };
 
@@ -408,6 +422,73 @@ export class FilmActorService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from deleteFilmActorById service',
+      });
+    }
+  }
+
+  async groupFilmsByActorLodash() {
+    try {
+      const rows = await this.filmActorRepo.find({
+        relations: [
+          'film',
+          'film.age',
+          'film.type',
+          'film.country',
+          'film.language',
+          'film.publicStatus',
+          'actor',
+        ],
+      });
+      const clean = (obj) =>
+        _.omit(obj, [
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+          'createdBy',
+          'updatedBy',
+          'deletedBy',
+          'view',
+          'age',
+          'type',
+          'country',
+          'language',
+          'publicStatus',
+          'ageCode',
+          'typeCode',
+          'countryCode',
+          'langCode',
+          'publicStatusCode',
+        ]);
+
+      const result = _(rows)
+        .groupBy((x) => x.actor.actorName)
+        .map((value, key) => ({
+          actor: key,
+          filmList: value.map((v) => {
+            const film = instanceToPlain(v.film);
+
+            return {
+              ...clean(film),
+              age: film.age?.valueVi,
+              type: film.type?.valueVi,
+              country: film.country?.valueVi,
+              language: film.language?.valueVi,
+              publicStatus: film.publicStatus?.valueVi,
+            };
+          }),
+        }))
+        .value();
+
+      return {
+        EC: 1,
+        EM: 'Group films by director successfully',
+        result,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error group films by director',
       });
     }
   }

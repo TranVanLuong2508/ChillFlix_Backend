@@ -26,7 +26,6 @@ export class DirectorController {
     return await this.directorService.createDirector(dto, user);
   }
 
-  @Public()
   @Get('get-all-directors')
   @ResponseMessage('Get all directors with pagination, filtering, and sorting')
   async getAllDirectors(@Query() query: PaginationDto) {
