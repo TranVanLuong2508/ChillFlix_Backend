@@ -16,16 +16,30 @@ import { CreateFilmDto } from './dto/create-film.dto';
 import { UpdateFilmDto } from './dto/update-film.dto';
 import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
+import { AdminFilmService } from './admin-film/admin-film.service';
 
 @Controller('films')
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmsController {
-  constructor(private readonly filmsService: FilmsService) { }
+  constructor(
+    private readonly filmsService: FilmsService,
+    private readonly adminFilmService: AdminFilmService,
+  ) {}
 
   @Post()
   create(@Body() createFilmDto: CreateFilmDto, @User() user: IUser) {
-    return this.filmsService.create(createFilmDto, user);
+    return this.adminFilmService.create(createFilmDto, user);
+  }
+
+  @Public()
+  @Get('/admin')
+  findAllAdmin(
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+    @Query() qs: string,
+  ) {
+    return this.adminFilmService.findAll(page, limit, qs);
   }
 
   @Public()
@@ -49,33 +63,45 @@ export class FilmsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateFilmDto: UpdateFilmDto, @User() user: IUser) {
-    return this.filmsService.update(id, updateFilmDto, user);
+    return this.adminFilmService.update(id, updateFilmDto, user);
   }
 
   @Delete(':id')
   @ResponseMessage('Soft delete film')
   remove(@Param('id') id: string, @User() user: IUser) {
-    return this.filmsService.remove(id, user);
+    return this.adminFilmService.remove(id, user);
   }
 
   @Public()
   @SkipCheckPermission()
   @Get('by-country/:countryValueEn')
-  findByCountry(@Param('countryValueEn') countryValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+  findByCountry(
+    @Param('countryValueEn') countryValueEn: string,
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+  ) {
     return this.filmsService.findByCountry(countryValueEn, page, limit);
   }
 
   @Public()
   @SkipCheckPermission()
   @Get('by-genre/:genreValueEn')
-  findByGenre(@Param('genreValueEn') genreValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+  findByGenre(
+    @Param('genreValueEn') genreValueEn: string,
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+  ) {
     return this.filmsService.findByGenre(genreValueEn, page, limit);
   }
 
   @Public()
   @SkipCheckPermission()
   @Get('by-type/:typeValueEn')
-  findByType(@Param('typeValueEn') typeValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+  findByType(
+    @Param('typeValueEn') typeValueEn: string,
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+  ) {
     return this.filmsService.findByType(typeValueEn, page, limit);
   }
 
