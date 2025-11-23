@@ -210,7 +210,7 @@ export class ActorSearchService {
   }
 
   // *chung
-  async updateActorDocument(id: string, doc: any, index: string) {
+  async updateDocument(id: string, doc: any, index: string) {
     try {
       const response = await this.elasticsearchService.update({
         index: index,

@@ -7,6 +7,8 @@ import { CreateDirectorDto } from './dto-director/create-director.dto';
 import { UpdateDirectorDto } from './dto-director/update-director.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { DirectorSearchService } from '../search/directorSearch.service';
+import { ActorSearchService } from '../search/actorSearch.service';
 
 @Injectable()
 export class DirectorService {
@@ -16,6 +18,9 @@ export class DirectorService {
 
     @InjectRepository(AllCode)
     private readonly allcodeRepo: Repository<AllCode>,
+
+    private searchService: DirectorSearchService,
+    private commonSearchService: ActorSearchService,
   ) {}
 
   async createDirector(dto: CreateDirectorDto, user: IUser): Promise<any> {
@@ -53,6 +58,9 @@ export class DirectorService {
       });
 
       const data = await this.directorRepo.save(director);
+      // search
+      await this.searchService.indexDirector(director);
+      // search
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -216,7 +224,8 @@ export class DirectorService {
         const exists = await this.directorRepo.findOne({
           where: { directorName: dto.directorName },
         });
-        if (exists && exists.directorId !== id) return { EC: 0, EM: 'Director name already exists!' };
+        if (exists && exists.directorId !== id)
+          return { EC: 0, EM: 'Director name already exists!' };
 
         director.directorName = dto.directorName;
         director.slug = dto.directorName.toLowerCase().replace(/\s+/g, '-');
@@ -241,10 +250,17 @@ export class DirectorService {
         director.nationalityCodeRL = nationality;
       }
       const d = dto.birthDate as any;
-      director.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+      director.birthDate = new Date(
+        typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d,
+      );
 
       director.updatedBy = user.userId;
       const data = await this.directorRepo.save(director);
+
+      // search
+      await this.commonSearchService.updateDocument(data.directorId.toString(), data, 'directors');
+      // search
+
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -285,6 +301,10 @@ export class DirectorService {
       if (!director) return { EC: 0, EM: `Director ${directorId} not found!` };
       await this.directorRepo.update(directorId, { deletedBy: user.userId });
       await this.directorRepo.softDelete({ directorId });
+      // search
+      await this.commonSearchService.removeFromIndex(director.directorId.toString(), 'directors');
+      // search
+
       return { EC: 1, EM: 'Delete director successfully' };
     } catch (error: any) {
       console.error('Error in deleteDirectorById:', error);

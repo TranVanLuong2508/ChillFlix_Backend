@@ -8,6 +8,8 @@ import { FilmsService } from '../films/films.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Film } from '../films/entities/film.entity';
 import { ActorSearchService } from './actorSearch.service';
+import { DirectorSearchService } from './directorSearch.service';
+import { ProducerSearchService } from './producerSearch.service';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { ActorSearchService } from './actorSearch.service';
     }),
   ],
   controllers: [SearchController],
-  providers: [SearchService, ActorSearchService],
-  exports: [SearchService, ActorSearchService],
+  providers: [SearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
+  exports: [SearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
 })
 export class SearchModule {}

@@ -195,7 +195,6 @@ export class AdminFilmService {
       }
 
       this.filmsRepository.merge(filmDataRaw, otherFilmData);
-      await this.searchService.updateFilmDocument(filmDataRaw); //luong add
 
       if (slug !== '' && slug !== filmDataRaw.slug) {
         const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
@@ -209,6 +208,7 @@ export class AdminFilmService {
       filmDataRaw.updatedBy = user.userId.toString();
 
       await this.filmsRepository.save(filmDataRaw);
+      await this.searchService.updateFilmDocument(filmDataRaw); //luong add
 
       if (filmImages) {
         await this.updateFilmImage(filmId, filmImages);

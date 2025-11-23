@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Actor } from './entities/actor.entity';
@@ -7,6 +12,7 @@ import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { ActorSearchService } from '../search/actorSearch.service';
 
 @Injectable()
 export class ActorService {
@@ -16,6 +22,8 @@ export class ActorService {
 
     @InjectRepository(AllCode)
     private readonly allcodeRepo: Repository<AllCode>,
+
+    private searchService: ActorSearchService,
   ) {}
 
   async createListActor(listData: CreateActorDto[], user: IUser) {
@@ -46,7 +54,8 @@ export class ActorService {
       });
       if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
 
-      if (!dto.actorName || dto.actorName.trim() === '') return { EC: 0, EM: 'Actor name is required!' };
+      if (!dto.actorName || dto.actorName.trim() === '')
+        return { EC: 0, EM: 'Actor name is required!' };
 
       const exists = await this.actorRepo.findOne({
         where: { actorName: dto.actorName },
@@ -65,6 +74,11 @@ export class ActorService {
         createdBy: user.userId,
       });
       const data = await this.actorRepo.save(actor);
+
+      // search
+      await this.searchService.indexActor(actor);
+      // search
+
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -230,7 +244,8 @@ export class ActorService {
         const exists = await this.actorRepo.findOne({
           where: { actorName: dto.actorName },
         });
-        if (exists && exists.actorId !== actorId) return { EC: 0, EM: 'Actor name already exists!' };
+        if (exists && exists.actorId !== actorId)
+          return { EC: 0, EM: 'Actor name already exists!' };
 
         actor.actorName = dto.actorName;
         actor.slug = dto.actorName.toLowerCase().replace(/\s+/g, '-');
@@ -254,10 +269,16 @@ export class ActorService {
 
       if (dto.avatarUrl) actor.avatarUrl = dto.avatarUrl;
       const d = dto.birthDate as any;
-      actor.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+      actor.birthDate = new Date(
+        typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d,
+      );
 
       actor.updatedBy = user.userId;
       const data = await this.actorRepo.save(actor);
+      // search
+      await this.searchService.updateDocument(actor.actorId.toString(), actor, 'actors');
+      // search
+
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -296,6 +317,10 @@ export class ActorService {
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
       await this.actorRepo.update(actorId, { deletedBy: user.userId });
       await this.actorRepo.softDelete({ actorId });
+      // search
+      await this.searchService.removeFromIndex(actor.actorId.toString(), 'actors');
+      // search
+
       return { EC: 1, EM: 'Delete actor successfully' };
     } catch (error: any) {
       console.error('Error in deleteActorById:', error.message);
