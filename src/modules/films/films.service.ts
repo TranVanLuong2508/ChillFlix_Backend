@@ -735,15 +735,35 @@ export class FilmsService {
 
         console.log('Age filter values received:', ageList);
 
-        for (const ageValueEn of ageList) {
-          const ageCode = await this.getAllCodeKeyMap(ageValueEn, 'RANK');
-          console.log(`Looking up age value "${ageValueEn}" -> keyMap: ${ageCode}`);
+        const allCodeRepo = this.filmsRepository.manager.getRepository('AllCode');
+        for (const ageValue of ageList) {
+          let ageCode: string | null = null;
+
+          // If client passed a keyMap (e.g. R_T18), accept it directly when it exists
+          if (/^[A-Z0-9_]+$/.test(ageValue)) {
+            const ac = await allCodeRepo.findOne({ where: { keyMap: ageValue, type: 'RANK' } });
+            if (ac) {
+              ageCode = ac.keyMap;
+            } else {
+              // If client passed the short form (e.g. "T18"), try the prefixed keyMap ("R_T18")
+              if (!ageValue.includes('_')) {
+                const acPrefixed = await allCodeRepo.findOne({ where: { keyMap: `R_${ageValue}`, type: 'RANK' } });
+                if (acPrefixed) {
+                  ageCode = acPrefixed.keyMap;
+                }
+              }
+            }
+          }
+
+          // Otherwise try lookup by valueEn (case-insensitive) or fallback to getAllCodeKeyMap
+          if (!ageCode) {
+            ageCode = await this.getAllCodeKeyMap(ageValue, 'RANK');
+          }
+
           if (ageCode) {
             ageCodes.push(ageCode);
           }
         }
-
-        console.log('Age codes to filter by:', ageCodes);
 
         if (ageCodes.length > 0) {
           queryBuilder.andWhere('film.ageCode IN (:...ageCodes)', { ageCodes });
