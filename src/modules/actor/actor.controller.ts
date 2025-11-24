@@ -34,6 +34,12 @@ export class ActorController {
   async getActorById(@Param('actorId') actorId: number) {
     return await this.actorService.getActorById(actorId);
   }
+  @Public()
+  @Get('get-actor-by-slug/:actorSlug')
+  @ResponseMessage('Get actor by Slug')
+  async getActorBySlug(@Param('actorSlug') actorSlug: string) {
+    return await this.actorService.getActorBySlug(actorSlug);
+  }
 
   @Patch('update-actor/:actorId')
   @ResponseMessage('Update actor by ID')

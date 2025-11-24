@@ -368,6 +368,76 @@ export class FilmActorService {
       });
     }
   }
+   async getFilmsByActorSlug(slug: string, query: any = {}) {
+    try {
+      query = query || {};
+      const { filter, sort } = aqp(query);
+
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 12;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'DESC' };
+
+      const [data, total] = await this.filmActorRepo.findAndCount({
+        where: { actor: { slug }, ...filter },
+        relations: ['actor'],
+        order,
+        skip,
+        take: limit,
+      });
+
+      if (total === 0) {
+        return {
+          EC: 1,
+          EM: 'No films found for this actor!',
+          meta: { page, limit, total, totalPages: 0 },
+          data: [],
+        };
+      }
+
+      const actor = await this.actorRepo.findOne({
+        where: { slug },
+        relations: [
+          'filmActors',
+          'filmActors.film',
+          'filmActors.film.filmGenres',
+          'filmActors.film.filmGenres.genre',
+          'filmActors.film.filmImages',
+          'filmActors.film.age',
+        ],
+      });
+
+      if (!actor) return { EC: 0, EM: `Actor ${slug} not found!` };
+
+      const filmDataRaw = actor.filmActors.map((i) => i.film);
+
+      let films = plainToInstance(ListFilm, filmDataRaw);
+      const paginated = films.slice(skip, skip + limit);
+      return {
+        EC: 1,
+        EM: 'Get films by actor successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: paginated,
+      };
+    } catch (error) {
+      console.error('Error in getFilmsByActor:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getFilmsByActor service',
+      });
+    }
+  }
 
   async updateFilmActor(id: number, dto: UpdateFilmActorDto, user: IUser) {
     try {

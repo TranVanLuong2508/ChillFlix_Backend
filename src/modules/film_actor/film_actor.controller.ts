@@ -81,4 +81,11 @@ export class FilmActorController {
   async getFilmsGroupedByActorLodash() {
     return await this.filmActorService.groupFilmsByActorLodash();
   }
+
+  @Public()
+  @Get('get-films-by-actor-slug/:actorSlug')
+  @ResponseMessage('Get films by actor slug')
+  async getFilmsByActorSlug(@Param('actorSlug') actorSlug: string, @Query() query: PaginationFaDto) {
+    return await this.filmActorService.getFilmsByActorSlug(actorSlug, query);
+  }
 }

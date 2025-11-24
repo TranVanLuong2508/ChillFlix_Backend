@@ -59,6 +59,13 @@ export class FilmDirectorController {
     return this.filmDirectorService.getFilmsByDirector(directorId, query);
   }
 
+  @Public()
+  @Get('by-director-slug/:directorSlug')
+  @ResponseMessage('Get films by director slug')
+  getFilmsByDirectorSlug(@Param('directorSlug') directorSlug: string, @Query() query: PaginationfdDto) {
+    return this.filmDirectorService.getFilmsByDirectorSlug(directorSlug, query);
+  }
+
   @Patch('edit-film-director/:id')
   @ResponseMessage('Update film-director relation')
   updateFilmDirector(

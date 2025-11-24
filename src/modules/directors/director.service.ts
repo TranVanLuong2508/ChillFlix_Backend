@@ -7,6 +7,7 @@ import { CreateDirectorDto } from './dto-director/create-director.dto';
 import { UpdateDirectorDto } from './dto-director/update-director.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { SlugUtil } from '../../common/utils/slug.util';
 
 @Injectable()
 export class DirectorService {
@@ -39,7 +40,8 @@ export class DirectorService {
       });
       if (exists) return { EC: 0, EM: 'Director name already exists!' };
 
-      const slug = dto.directorName.toLowerCase().replace(/\s+/g, '-');
+      const baseSlug = SlugUtil.slugifyVietnamese(dto.directorName);
+      const slug = await SlugUtil.generateUniqueSlug(baseSlug, this.directorRepo);
 
       const director = this.directorRepo.create({
         directorName: dto.directorName,
@@ -203,6 +205,42 @@ export class DirectorService {
     }
   }
 
+  async getDirectorBySlug(slug: string): Promise<any> {
+    try {
+      const director = await this.directorRepo.findOne({
+        where: { slug },
+        relations: ['genderCodeRL', 'nationalityCodeRL'],
+      });
+      if (!director) return { EC: 0, EM: `Director with slug ${slug} not found!` };
+      const { createdAt, updatedAt, createdBy, ...newData } = director as any;
+      Object.entries(director).forEach(([k, v]) => {
+        if (typeof v === 'object' && v !== null && 'keyMap' in v) {
+          newData[k] = {
+            keyMap: v.keyMap,
+            type: v.type,
+            valueEn: v.valueEn,
+            valueVi: v.valueVi,
+            description: v.description,
+          };
+        }
+      });
+      Object.entries(newData)
+        .filter(([_, v]) => v === null || v === undefined)
+        .forEach(([k]) => delete newData[k]);
+      return {
+        EC: 1,
+        EM: 'Get director successfully',
+        ...newData,
+      };
+    } catch (error: any) {
+      console.error('Error in getDirectorBySlug:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getDirectorBySlug service',
+      });
+    }
+  }
+
   async updateDirector(id: number, dto: UpdateDirectorDto, user: IUser): Promise<any> {
     try {
       const director = await this.directorRepo.findOne({
@@ -216,10 +254,12 @@ export class DirectorService {
         const exists = await this.directorRepo.findOne({
           where: { directorName: dto.directorName },
         });
-        if (exists && exists.directorId !== id) return { EC: 0, EM: 'Director name already exists!' };
+        if (exists && exists.directorId !== id)
+          return { EC: 0, EM: 'Director name already exists!' };
 
         director.directorName = dto.directorName;
-        director.slug = dto.directorName.toLowerCase().replace(/\s+/g, '-');
+        const baseSlug = SlugUtil.slugifyVietnamese(dto.directorName);
+        director.slug = await SlugUtil.generateUniqueSlug(baseSlug, this.directorRepo);
       }
 
       if (dto.story) director.story = dto.story;
@@ -241,7 +281,9 @@ export class DirectorService {
         director.nationalityCodeRL = nationality;
       }
       const d = dto.birthDate as any;
-      director.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+      director.birthDate = new Date(
+        typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d,
+      );
 
       director.updatedBy = user.userId;
       const data = await this.directorRepo.save(director);

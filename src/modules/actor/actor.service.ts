@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Actor } from './entities/actor.entity';
@@ -7,6 +12,7 @@ import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
+import { SlugUtil } from '../../common/utils/slug.util';
 
 @Injectable()
 export class ActorService {
@@ -46,14 +52,16 @@ export class ActorService {
       });
       if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
 
-      if (!dto.actorName || dto.actorName.trim() === '') return { EC: 0, EM: 'Actor name is required!' };
+      if (!dto.actorName || dto.actorName.trim() === '')
+        return { EC: 0, EM: 'Actor name is required!' };
 
       const exists = await this.actorRepo.findOne({
         where: { actorName: dto.actorName },
       });
       if (exists) return { EC: 0, EM: 'Actor name already exists!' };
 
-      const slug = dto.actorName.toLowerCase().replace(/\s+/g, '-');
+      const baseSlug = SlugUtil.slugifyVietnamese(dto.actorName);
+      const slug = await SlugUtil.generateUniqueSlug(baseSlug, this.actorRepo);
       const actor = this.actorRepo.create({
         actorName: dto.actorName,
         slug,
@@ -218,6 +226,39 @@ export class ActorService {
     }
   }
 
+  async getActorBySlug(slug: string): Promise<any> {
+    try {
+      const actor = await this.actorRepo.findOne({
+        where: { slug },
+        relations: ['genderActor', 'nationalityActor'],
+      });
+      if (!actor) return { EC: 0, EM: `Actor ${slug} not found` };
+      const { createdAt, updatedAt, createdBy, ...newData } = actor as any;
+      Object.entries(actor).forEach(([k, v]) => {
+        if (typeof v === 'object' && v !== null && 'keyMap' in v) {
+          newData[k] = {
+            keyMap: v.keyMap,
+            type: v.type,
+            valueEn: v.valueEn,
+            valueVi: v.valueVi,
+            description: v.description,
+          };
+        }
+      });
+      Object.entries(newData)
+        .filter(([_, v]) => v === null || v === undefined)
+        .forEach(([k]) => delete newData[k]);
+
+      return { EC: 1, EM: 'Get actor successfully', ...newData };
+    } catch (error: any) {
+      console.error('Error in getActorBySlug:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getActorBySlug service',
+      });
+    }
+  }
+
   async updateActor(actorId: number, dto: UpdateActorDto, user: IUser): Promise<any> {
     try {
       const actor = await this.actorRepo.findOne({
@@ -230,10 +271,12 @@ export class ActorService {
         const exists = await this.actorRepo.findOne({
           where: { actorName: dto.actorName },
         });
-        if (exists && exists.actorId !== actorId) return { EC: 0, EM: 'Actor name already exists!' };
+        if (exists && exists.actorId !== actorId)
+          return { EC: 0, EM: 'Actor name already exists!' };
 
         actor.actorName = dto.actorName;
-        actor.slug = dto.actorName.toLowerCase().replace(/\s+/g, '-');
+        const baseSlug = SlugUtil.slugifyVietnamese(dto.actorName);
+        actor.slug = await SlugUtil.generateUniqueSlug(baseSlug, this.actorRepo);
       }
 
       if (dto.genderCode) {
@@ -254,7 +297,9 @@ export class ActorService {
 
       if (dto.avatarUrl) actor.avatarUrl = dto.avatarUrl;
       const d = dto.birthDate as any;
-      actor.birthDate = new Date(typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d);
+      actor.birthDate = new Date(
+        typeof d === 'string' && d.includes('/') ? d.split('/').reverse().join('-') : d,
+      );
 
       actor.updatedBy = user.userId;
       const data = await this.actorRepo.save(actor);

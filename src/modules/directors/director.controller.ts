@@ -39,6 +39,13 @@ export class DirectorController {
     return await this.directorService.getDirectorById(directorId);
   }
 
+  @Public()
+  @Get('get-director-by-slug/:directorSlug')
+  @ResponseMessage('Get director by slug')
+  async getDirectorBySlug(@Param('directorSlug') directorSlug: string) {
+    return await this.directorService.getDirectorBySlug(directorSlug);
+  }
+
   @Patch('edit-director/:directorId')
   @ResponseMessage('Edit director by ID')
   async updateDirector(

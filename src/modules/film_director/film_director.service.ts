@@ -371,6 +371,74 @@ export class FilmDirectorService {
     }
   }
 
+  async getFilmsByDirectorSlug(directorSlug: string, query: any = {}) {
+    try {
+      query = query || {};
+      const { filter, sort } = aqp(query);
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 12;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'DESC' };
+
+      const director = await this.directorRepo.findOne({
+        where: { slug: directorSlug },
+        relations: [
+          'filmDirectors',
+          'filmDirectors.film',
+          'filmDirectors.film.filmGenres',
+          'filmDirectors.film.filmGenres.genre',
+          'filmDirectors.film.filmImages',
+          'filmDirectors.film.age',
+        ],
+      });
+
+      if (!director) {
+        return { EC: 0, EM: `Director ${directorSlug} not found!` };
+      }
+
+      const filmDataRaw = director.filmDirectors.map((i) => i.film);
+
+      let films = plainToInstance(ListFilm, filmDataRaw);
+
+      if (order) {
+        const [key, dir] = Object.entries(order)[0];
+        const direction = String(dir).toUpperCase();
+        films = films.sort((a, b) =>
+          direction === 'ASC'
+            ? String(a[key])?.localeCompare(String(b[key]))
+            : String(b[key])?.localeCompare(String(a[key])),
+        );
+      }
+
+      const total = films.length;
+      const paginated = films.slice(skip, skip + limit);
+
+      return {
+        EC: 1,
+        EM: 'Get films by director successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: paginated,
+      };
+    } catch (error: any) {
+      console.error('Error in getFilmsByDirector:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getFilmsByDirector service',
+      });
+    }
+  }
+
   async updateFilmDirector(id: number, dto: UpdateFilmDirectorDto, user: IUser) {
     try {
       const relation = await this.filmDirectorRepo.findOne({
