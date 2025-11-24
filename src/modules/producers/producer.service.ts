@@ -62,6 +62,18 @@ export class ProducerService {
     }
   }
 
+  async getAll() {
+    try {
+      return await this.producerRepo.find();
+    } catch (error) {
+      console.error('Error in get all producer:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from producer service',
+      });
+    }
+  }
+
   async getAllProducers(query: any): Promise<any> {
     try {
       const { filter, sort } = aqp(query);

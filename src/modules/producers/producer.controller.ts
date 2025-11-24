@@ -1,20 +1,37 @@
-import { Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe, Body } from "@nestjs/common"
-import { ProducerService } from "./producer.service"
-import { CreateProducerDto } from "./dto/create-producer.dto"
-import { UpdateProducerDto } from "./dto/update-producer.dto"
-import { PaginationDto } from "./dto/pagination.dto"
-import { Public, ResponseMessage, User, SkipCheckPermission } from "src/decorators/customize"
-import type { IUser } from "../users/interface/user.interface"
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  ParseIntPipe,
+  Body,
+} from '@nestjs/common';
+import { ProducerService } from './producer.service';
+import { CreateProducerDto } from './dto/create-producer.dto';
+import { UpdateProducerDto } from './dto/update-producer.dto';
+import { PaginationDto } from './dto/pagination.dto';
+import { Public, ResponseMessage, User, SkipCheckPermission } from 'src/decorators/customize';
+import type { IUser } from '../users/interface/user.interface';
 
-@Controller("producer")
+@Controller('producer')
 export class ProducerController {
-  constructor(private readonly producerService: ProducerService) { }
+  constructor(private readonly producerService: ProducerService) {}
 
-  @Post("create-producer")
+  @Post('create-producer')
   @SkipCheckPermission()
-  @ResponseMessage("Create a new producer")
+  @ResponseMessage('Create a new producer')
   async createProducer(@Body() dto: CreateProducerDto, @User() user: IUser) {
-    return await this.producerService.createProducer(dto, user)
+    return await this.producerService.createProducer(dto, user);
+  }
+
+  @SkipCheckPermission()
+  @Public()
+  @Get('all')
+  async getAll() {
+    return await this.producerService.getAll();
   }
 
   @Get('get-all-producers')
@@ -30,26 +47,32 @@ export class ProducerController {
     return await this.producerService.getProducerById(producerId);
   }
 
-  @Patch("edit-producer/:producerId")
-  @ResponseMessage("Edit producer by ID")
+  @Patch('edit-producer/:producerId')
+  @ResponseMessage('Edit producer by ID')
   async updateProducer(
     @Param('producerId', ParseIntPipe) producerId: number,
     dto: UpdateProducerDto,
     @User() user: IUser,
   ) {
-    return await this.producerService.updateProducer(producerId, dto, user)
+    return await this.producerService.updateProducer(producerId, dto, user);
   }
 
-  @Delete("delete-producer-by-id/:producerId")
-  @ResponseMessage("Delete producer by ID")
-  async deleteProducerById(@Param('producerId', ParseIntPipe) producerId: number, @User() user: IUser) {
-    return await this.producerService.deleteProducerById(producerId, user)
+  @Delete('delete-producer-by-id/:producerId')
+  @ResponseMessage('Delete producer by ID')
+  async deleteProducerById(
+    @Param('producerId', ParseIntPipe) producerId: number,
+    @User() user: IUser,
+  ) {
+    return await this.producerService.deleteProducerById(producerId, user);
   }
 
   @Public()
-  @Get("get-films-by-producer/:producerId")
-  @ResponseMessage("Get all films by producer ID")
-  async getFilmsByProducerId(@Param('producerId', ParseIntPipe) producerId: number, @Query() query: PaginationDto) {
-    return await this.producerService.getFilmsByProducerId(producerId, query)
+  @Get('get-films-by-producer/:producerId')
+  @ResponseMessage('Get all films by producer ID')
+  async getFilmsByProducerId(
+    @Param('producerId', ParseIntPipe) producerId: number,
+    @Query() query: PaginationDto,
+  ) {
+    return await this.producerService.getFilmsByProducerId(producerId, query);
   }
 }
