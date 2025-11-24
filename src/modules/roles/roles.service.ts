@@ -3,12 +3,14 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { IUser } from '../users/interface/user.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
 import { plainToInstance } from 'class-transformer';
 import { RoleResponseDto } from './dto/role-response.dto';
 import { RolePermission } from '../role_permission/entities/role_permission.entity';
+import { User } from '../users/entities/user.entity';
+import { ReassignRoleDto } from './dto/reassign-role.dto';
 
 @Injectable()
 export class RolesService {
@@ -18,6 +20,9 @@ export class RolesService {
 
     @InjectRepository(RolePermission)
     private rolePermissionRepository: Repository<RolePermission>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
   async create(createRoleDto: CreateRoleDto, user: IUser) {
     try {
@@ -72,7 +77,6 @@ export class RolesService {
   async findAll() {
     try {
       const result = await this.roleRepository.find({
-        where: { isDeleted: false },
         select: {
           roleId: true,
           roleName: true,
@@ -102,7 +106,7 @@ export class RolesService {
   async findOne(id: number) {
     try {
       const isExist = await this.roleRepository.exists({
-        where: { roleId: id, isDeleted: false },
+        where: { roleId: id, isDeleted: false, isActive: true },
       });
       if (!isExist) {
         return {
@@ -179,12 +183,13 @@ export class RolesService {
           ...roleFields,
           updatedAt: new Date(),
           updatedBy: user.userId,
+          roleId: id,
         },
       );
 
       // Nếu không cập nhật permission
       if (!permissionIds) {
-        return { EC: 1, EM: 'Update role success' };
+        return { EC: 1, EM: 'Update role success', roleId: id };
       }
 
       // Lấy permission cũ
@@ -196,10 +201,10 @@ export class RolesService {
 
       // Xác định cần thêm và cần xoá, t mệt vl
       const idToAdds = permissionIds.filter((pid) => !oldIds.includes(pid));
-      console.log('check to add: ', idToAdds);
+      // console.log('check to add: ', idToAdds);
 
       const idToRemoves = oldIds.filter((pid) => !permissionIds.includes(pid));
-      console.log('check to toRemove: ', idToRemoves);
+      // console.log('check to toRemove: ', idToRemoves);
 
       // Thêm mới
       if (idToAdds.length > 0) {
@@ -222,6 +227,7 @@ export class RolesService {
       return {
         EC: 1,
         EM: 'Update Role success',
+        roleId: id,
       };
     } catch (error: any) {
       console.error('Error in update Role:', error.message);
@@ -232,8 +238,142 @@ export class RolesService {
     }
   }
 
+  async checkRoleBeforDelete(roleId: number) {
+    try {
+      const role = await this.roleRepository.findOne({
+        where: { roleId: roleId, isDeleted: false },
+      });
+
+      if (!role) {
+        return {
+          EC: 0,
+          EM: 'Role not found',
+        };
+      }
+
+      //current user in role
+      const userInRoleCount = await this.userRepository.count({
+        where: { roleId: roleId, isDeleted: false },
+      });
+
+      //alternative roles : !== roleId, isDeleted: false, isActive: true
+      const alternativeRoles = await this.roleRepository.find({
+        where: { roleId: Not(roleId), isDeleted: false, isActive: true },
+        select: {
+          roleId: true,
+          roleName: true,
+        },
+      });
+
+      return {
+        EC: 1,
+        EM: 'Check role before delete success',
+        userCount: userInRoleCount,
+        alternativeRoles,
+      };
+    } catch (error) {
+      console.error('Error in checkBeforeDelete role:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from checkBeforeDelete role service',
+      });
+    }
+  }
+
+  // all users have roleId ==> targetRoleId, soft delete role + (optional) soft delete role_permission
+  async reassignAndDelete(roleId: number, dto: ReassignRoleDto, user: IUser) {
+    const { targetRoleId } = dto;
+    try {
+      if (roleId === targetRoleId) {
+        return {
+          EC: 0,
+          EM: 'Target role must be different from current role',
+        };
+      }
+
+      const [role, targetRole] = await Promise.all([
+        this.roleRepository.findOne({
+          where: { roleId: roleId, isDeleted: false },
+        }),
+        this.roleRepository.findOne({
+          where: { roleId: targetRoleId, isActive: true, isDeleted: false },
+        }),
+      ]);
+
+      if (!role) {
+        return {
+          EC: 0,
+          EM: 'Role not found',
+        };
+      }
+
+      if (!targetRole) {
+        return {
+          EC: 0,
+          EM: 'Target role not found or inactive',
+        };
+      }
+
+      await this.roleRepository.manager.transaction(async (manager) => {
+        await manager.update(
+          User,
+          { roleId: roleId, isDeleted: false },
+          {
+            roleId: targetRoleId,
+            updatedAt: new Date(),
+            updatedBy: user.userId,
+          },
+        );
+
+        await manager.update(
+          Role,
+          { roleId: roleId },
+          {
+            isDeleted: true,
+            deletedAt: new Date(),
+            deletedBy: user.userId,
+          },
+        );
+
+        await manager.update(
+          RolePermission,
+          { roleId: roleId },
+          {
+            isDeleted: true,
+            deletedAt: new Date(),
+            deletedBy: user.userId,
+          },
+        );
+      });
+
+      return {
+        EC: 1,
+        EM: 'Reassign users and delete role success',
+        roleId: roleId,
+        targetRoleId,
+      };
+    } catch (error) {
+      console.error('Error in reassignAndDelete Role:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from reassignAndDelete Role service',
+      });
+    }
+  }
+
   async remove(id: number, user: IUser) {
     try {
+      const userCount = await this.userRepository.count({
+        where: { roleId: id, isDeleted: false },
+      });
+
+      if (userCount > 0) {
+        return {
+          EC: 2,
+          EM: 'Role is being used by users, need reassignment',
+          data: { userCount },
+        };
+      }
       const result = await this.roleRepository.update(
         {
           roleId: id,

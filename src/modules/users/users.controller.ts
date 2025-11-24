@@ -26,7 +26,6 @@ export class UsersController {
     return this.usersService.getUsersWithPagination(+currentPage, +limit, qs);
   }
 
-  @Public()
   @Get()
   @ResponseMessage('get All Users')
   findAll() {

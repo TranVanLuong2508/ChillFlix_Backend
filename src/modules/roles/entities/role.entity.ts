@@ -23,7 +23,7 @@ export class Role {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: true, default: false })
+  @Column({ default: false })
   isDeleted: boolean;
 
   @CreateDateColumn()

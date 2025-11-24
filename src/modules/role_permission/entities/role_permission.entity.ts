@@ -42,7 +42,7 @@ export class RolePermission {
   @Column({ nullable: true })
   deletedBy: number;
 
-  @ManyToOne(() => Role, (role) => role.rolePermission)
+  @ManyToOne(() => Role, (role) => role.rolePermission, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'role_id', referencedColumnName: 'roleId' })
   role: Role;
 

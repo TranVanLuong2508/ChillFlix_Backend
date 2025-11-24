@@ -15,6 +15,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
+import { ReassignRoleDto } from './dto/reassign-role.dto';
 
 @Controller('roles')
 export class RolesController {
@@ -63,8 +64,17 @@ export class RolesController {
     return this.rolesService.remove(+id, user);
   }
 
-  @Patch(':id/permission/add')
+  @Get(':id/check-delete')
   @SkipCheckPermission()
-  @ResponseMessage('Add a permission to role')
-  addPermissions(@Param('id') id: string) {}
+  @ResponseMessage('Check role before delete')
+  checkBeforeDelete(@Param('id') id: string) {
+    return this.rolesService.checkRoleBeforDelete(+id);
+  }
+
+  @Post(':id/reassign-and-delete')
+  @ResponseMessage('Reassign users and delete role')
+  @SkipCheckPermission()
+  reassignAndDelete(@Param('id') id: string, @Body() dto: ReassignRoleDto, @User() user: IUser) {
+    return this.rolesService.reassignAndDelete(+id, dto, user);
+  }
 }
