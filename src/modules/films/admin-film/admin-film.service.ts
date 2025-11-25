@@ -196,9 +196,10 @@ export class AdminFilmService {
 
       this.filmsRepository.merge(filmDataRaw, otherFilmData);
 
-      if (slug !== '' && slug !== filmDataRaw.slug) {
-        const slug = await SlugUtil.generateUniqueSlug(filmDataRaw.slug, this.filmsRepository);
-        filmDataRaw.slug = slug;
+      console.log('Check slug: ', slug, ' - ', filmDataRaw.slug);
+      if (slug && slug !== '' && slug !== filmDataRaw.slug) {
+        const newSlug = await SlugUtil.generateUniqueSlug(slug, this.filmsRepository);
+        filmDataRaw.slug = newSlug;
       }
 
       if (filmGenres !== undefined) {
@@ -206,7 +207,6 @@ export class AdminFilmService {
       }
 
       filmDataRaw.updatedBy = user.userId.toString();
-
       await this.filmsRepository.save(filmDataRaw);
       await this.searchService.updateFilmDocument(filmDataRaw); //luong add
 
