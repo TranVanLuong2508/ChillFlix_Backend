@@ -52,6 +52,8 @@ export class DirectorService {
         createdBy: user.userId,
         genderCodeRL: gender,
         nationalityCodeRL: nationality,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const data = await this.directorRepo.save(director);
@@ -117,7 +119,7 @@ export class DirectorService {
         };
       const directors = data.map((d) => {
         const slug = d.slug;
-        const { createdAt, updatedAt, createdBy, ...newData } = d as any;
+        const { createdBy, ...newData } = d as any;
 
         const genderCodeRL = newData.genderCodeRL
           ? {

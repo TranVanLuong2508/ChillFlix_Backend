@@ -71,6 +71,8 @@ export class ActorService {
         birthDate: dto.birthDate,
         nationalityActor: nationality,
         createdBy: user.userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const data = await this.actorRepo.save(actor);
       const result = Object.fromEntries(
@@ -142,7 +144,7 @@ export class ActorService {
         };
       const actors = data.map((a) => {
         const slug = a.slug;
-        const { createdAt, updatedAt, createdBy, ...newData } = a as any;
+        const { createdBy, ...newData } = a as any;
 
         const genderCodeActor = newData.genderCodeActor
           ? {

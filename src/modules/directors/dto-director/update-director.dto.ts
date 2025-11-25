@@ -23,4 +23,7 @@ export class UpdateDirectorDto {
   @IsOptional()
   @IsString()
   nationalityCode?: string;
+
+  @IsOptional()
+  updatedAt?: Date;
 }
