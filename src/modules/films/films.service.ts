@@ -147,7 +147,7 @@ export class FilmsService {
         });
       }
 
-      const directorsRes = await this.filmDirectorService.getDirectorsByFilm(id);
+      const directorsRes = await this.filmDirectorService.getDirectorsByFilm(film.filmId);
       if (directorsRes.EC) {
         throw new InternalServerErrorException({
           EC: 4,
@@ -168,7 +168,7 @@ export class FilmsService {
         EM: 'Get film by Id success',
 
         film: plainToInstance(FilmResponseDto, { ...film, ratingEverage: ratingEverage.average }),
-        directors: directorsRes.directors,
+        directors: directorsRes.result,
         actors: actorsRes.result,
         producers: producersRes.result,
       };

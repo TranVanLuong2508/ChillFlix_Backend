@@ -1,13 +1,13 @@
-import { IsBoolean, IsNotEmpty } from "class-validator"
+import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class UpdateFilmProducerDto {
-  @IsNotEmpty()
-  filmId: string
+  @IsOptional()
+  filmId?: string;
 
   @IsNotEmpty()
-  producerId: number
+  producerId: number;
 
   @IsNotEmpty()
   @IsBoolean()
-  isMain: boolean
+  isMain: boolean;
 }

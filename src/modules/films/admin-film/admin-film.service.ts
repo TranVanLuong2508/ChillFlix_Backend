@@ -269,23 +269,34 @@ export class AdminFilmService {
 
   async updateFilmDirector(
     filmId: string,
-    directors: { filmId: string; directorId: number; isMain: boolean }[],
+    directors: { filmId?: string; directorId: number; isMain: boolean }[],
     user: IUser,
   ) {
     try {
-      const existDirector = await this.filmDirectorRepository.find({
-        where: { film: { filmId } },
-        relations: ['film', 'director'],
-      });
+      // const existDirector = await this.filmDirectorRepository.find({
+      //   where: { film: { filmId } },
+      //   relations: ['film', 'director'],
+      // });
 
+      // for (const director of directors) {
+      //   const found = existDirector.find((d) => d.director.directorId === director.directorId);
+      //   let response: any = null;
+      //   if (found) {
+      //     response = await this.filmDirectorService.updateFilmDirector(found.id, director, user);
+      //   } else {
+      //     response = await this.filmDirectorService.createFilmDirector(director, user);
+      //   }
+      //   if (!response.EC) {
+      //     return response;
+      //   }
+      // }
+
+      await this.filmDirectorRepository.delete({ film: { filmId } });
       for (const director of directors) {
-        const found = existDirector.find((d) => d.director.directorId === director.directorId);
-        let response: any = null;
-        if (found) {
-          response = await this.filmDirectorService.updateFilmDirector(found.id, director, user);
-        } else {
-          response = await this.filmDirectorService.createFilmDirector(director, user);
-        }
+        const response = await this.filmDirectorService.createFilmDirector(
+          { ...director, filmId },
+          user,
+        );
         if (!response.EC) {
           return response;
         }
@@ -301,23 +312,34 @@ export class AdminFilmService {
 
   async updateFilmProducer(
     filmId: string,
-    producers: { filmId: string; producerId: number; isMain: boolean }[],
+    producers: { filmId?: string; producerId: number; isMain: boolean }[],
     user: IUser,
   ) {
     try {
-      const existProducer = await this.filmProducerRepository.find({
-        where: { film: { filmId } },
-        relations: ['film', 'producer'],
-      });
+      // const existProducer = await this.filmProducerRepository.find({
+      //   where: { film: { filmId } },
+      //   relations: ['film', 'producer'],
+      // });
 
+      // for (const producer of producers) {
+      //   const found = existProducer.find((p) => p.producer.producerId === producer.producerId);
+      //   let response: any = null;
+      //   if (found) {
+      //     response = await this.filmProducerService.updateFilmProducer(found.id, producer, user);
+      //   } else {
+      //     response = await this.filmProducerService.createFilmProducer(producer, user);
+      //   }
+      //   if (!response.EC) {
+      //     return response;
+      //   }
+      // }
+
+      await this.filmProducerRepository.delete({ film: { filmId } });
       for (const producer of producers) {
-        const found = existProducer.find((p) => p.producer.producerId === producer.producerId);
-        let response: any = null;
-        if (found) {
-          response = await this.filmProducerService.updateFilmProducer(found.id, producer, user);
-        } else {
-          response = await this.filmProducerService.createFilmProducer(producer, user);
-        }
+        const response = await this.filmProducerService.createFilmProducer(
+          { ...producer, filmId },
+          user,
+        );
         if (!response.EC) {
           return response;
         }
@@ -333,23 +355,31 @@ export class AdminFilmService {
 
   async updateFilmActor(
     filmId: string,
-    actors: { filmId: string; actorId: number; characterName: string }[],
+    actors: { filmId?: string; actorId: number; characterName: string }[],
     user: IUser,
   ) {
     try {
-      const existActor = await this.filmActorRepository.find({
-        where: { film: { filmId } },
-        relations: ['film', 'actor'],
-      });
+      // const existActor = await this.filmActorRepository.find({
+      //   where: { film: { filmId } },
+      //   relations: ['film', 'actor'],
+      // });
 
+      // for (const actor of actors) {
+      //   const found = existActor.find((d) => d.actor.actorId === actor.actorId);
+      //   let response: any = null;
+      //   if (found) {
+      //     response = await this.filmActorService.updateFilmActor(found.id, actor, user);
+      //   } else {
+      //     response = await this.filmActorService.createFilmActor(actor, user);
+      //   }
+      //   if (!response.EC) {
+      //     return response;
+      //   }
+      // }
+
+      await this.filmActorRepository.delete({ film: { filmId } });
       for (const actor of actors) {
-        const found = existActor.find((d) => d.actor.actorId === actor.actorId);
-        let response: any = null;
-        if (found) {
-          response = await this.filmActorService.updateFilmActor(found.id, actor, user);
-        } else {
-          response = await this.filmActorService.createFilmActor(actor, user);
-        }
+        const response = await this.filmActorService.createFilmActor({ ...actor, filmId }, user);
         if (!response.EC) {
           return response;
         }
@@ -369,6 +399,8 @@ export class AdminFilmService {
         throw new BadRequestException({
           EC: 1,
           EM: `Invalid UUID format: ${filmId}`,
+          id: filmId,
+          deleted: false,
         });
       }
       const isExist = await this.filmsRepository.exists({ where: { filmId } });
@@ -376,18 +408,27 @@ export class AdminFilmService {
         throw new NotFoundException({
           EC: 2,
           EM: `Film with filmId ${filmId} not found`,
+          id: filmId,
+          deleted: false,
         });
       }
       await this.filmsRepository.update(filmId, { deletedBy: user.userId.toString() });
       await this.filmsRepository.softDelete(filmId);
       await this.searchService.removeFilmFromIndex(filmId); //luong add
 
-      return { EC: 0, EM: 'Delet film success', deleted: 'success' };
+      return {
+        EC: 0,
+        EM: 'Film had deleted success',
+        id: filmId,
+        deleted: true,
+      };
     } catch (error) {
       console.log('Error in film service delete film: ', error || error.message);
       throw new InternalServerErrorException({
         EC: 3,
         EM: 'Error in film service delete film',
+        id: filmId,
+        deleted: false,
       });
     }
   }
