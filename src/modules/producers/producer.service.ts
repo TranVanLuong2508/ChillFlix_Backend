@@ -195,60 +195,60 @@ export class ProducerService {
     }
   }
 
-  async getFilmsByProducerId(producerId: number, query: any): Promise<any> {
-    try {
-      const producer = await this.producerRepo.findOne({
-        where: { producerId },
-      })
+  // async getFilmsByProducerId(producerId: number, query: any): Promise<any> {
+  //   try {
+  //     const producer = await this.producerRepo.findOne({
+  //       where: { producerId },
+  //     })
 
-      if (!producer) return { EC: 0, EM: `Producer ${producerId} not found!` }
+  //     if (!producer) return { EC: 0, EM: `Producer ${producerId} not found!` }
 
-      const { filter, sort } = aqp(query)
-      const page = query.page || 1
-      const limit = query.limit || 10
-      const skip = (page - 1) * limit
+  //     const { filter, sort } = aqp(query)
+  //     const page = query.page || 1
+  //     const limit = query.limit || 10
+  //     const skip = (page - 1) * limit
 
-      delete filter.page
-      delete filter.limit
-      delete filter.skip
+  //     delete filter.page
+  //     delete filter.limit
+  //     delete filter.skip
 
-      const order = sort || { filmId: "DESC" }
+  //     const order = sort || { filmId: "DESC" }
 
-      const [filmProducers, total] = await this.filmProducerRepo.findAndCount({
-        where: { producer: { producerId }, ...filter },
-        relations: ["film"],
-        order,
-        skip,
-        take: limit,
-      })
+  //     const [filmProducers, total] = await this.filmProducerRepo.findAndCount({
+  //       where: { producer: { producerId }, ...filter },
+  //       relations: ["film"],
+  //       order,
+  //       skip,
+  //       take: limit,
+  //     })
 
-      if (total === 0)
-        return {
-          EC: 1,
-          EM: "No films found for this producer!",
-          meta: { page, limit, total, totalPages: 0 },
-          films: [],
-        }
+  //     if (total === 0)
+  //       return {
+  //         EC: 1,
+  //         EM: "No films found for this producer!",
+  //         meta: { page, limit, total, totalPages: 0 },
+  //         films: [],
+  //       }
 
-      const films = filmProducers.map((fp) => fp.film)
+  //     const films = filmProducers.map((fp) => fp.film)
 
-      return {
-        EC: 1,
-        EM: "Get films by producer successfully",
-        meta: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-        films,
-      }
-    } catch (error: any) {
-      console.error("Error in getFilmsByProducerId:", error)
-      throw new InternalServerErrorException({
-        EC: 0,
-        EM: "Error from getFilmsByProducerId service",
-      })
-    }
-  }
+  //     return {
+  //       EC: 1,
+  //       EM: "Get films by producer successfully",
+  //       meta: {
+  //         page,
+  //         limit,
+  //         total,
+  //         totalPages: Math.ceil(total / limit),
+  //       },
+  //       films,
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Error in getFilmsByProducerId:", error)
+  //     throw new InternalServerErrorException({
+  //       EC: 0,
+  //       EM: "Error from getFilmsByProducerId service",
+  //     })
+  //   }
+  // }
 }

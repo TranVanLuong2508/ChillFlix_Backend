@@ -42,7 +42,7 @@ export class FilmsService {
     private searchService: SearchService, //luong add
     private filmProducerService: FilmProducerService,
     private ratingService: RatingService,
-  ) {}
+  ) { }
 
   async create(createFilmDto: CreateFilmDto, user: IUser) {
     try {
@@ -311,6 +311,41 @@ export class FilmsService {
       const defaultLimit = limit ? limit : 10;
       const defaultPage = page ? page : 1;
 
+      // If client requested 'All', return all films (no country filter)
+      if (countryValueEn && countryValueEn.trim().toLowerCase() === 'all') {
+        const totalItems = await this.filmsRepository.createQueryBuilder('film').where('film.deletedAt IS NULL').getCount();
+        const totalPages = Math.ceil(totalItems / defaultLimit);
+
+        const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+        joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+        queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+        queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+        joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+        const films = await queryBuilder
+          .where('film.deletedAt IS NULL')
+          .orderBy('film.createdAt', 'DESC')
+          .skip(offset)
+          .take(defaultLimit)
+          .getMany();
+
+        return {
+          EC: 0,
+          EM: 'Get films by country success (all countries)',
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: totalPages,
+            total: totalItems,
+          },
+          result: plainToInstance(FilmPaginationDto, films),
+        };
+      }
+
       const countryAllCode = await this.filmsRepository
         .createQueryBuilder('film')
         .leftJoinAndSelect('film.country', 'country')
@@ -407,6 +442,7 @@ export class FilmsService {
       const defaultLimit = limit ? limit : 10;
       const defaultPage = page ? page : 1;
 
+
       const allCodeRepository = this.filmsRepository.manager.getRepository('AllCode');
       const genre = await allCodeRepository.findOne({
         where: {
@@ -417,7 +453,40 @@ export class FilmsService {
 
       const genreCode = genre?.keyMap;
 
-      console.log('[v0] Genre lookup - valueEn:', genreValueEn, 'genreCode:', genreCode);
+      if (genreValueEn && genreValueEn.trim().toLowerCase() === 'all') {
+        const totalItems = await this.filmsRepository.createQueryBuilder('film').where('film.deletedAt IS NULL').getCount();
+        const totalPages = Math.ceil(totalItems / defaultLimit);
+
+        const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
+        joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+        joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+        queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+        queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+        joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+
+        const films = await queryBuilder
+          .where('film.deletedAt IS NULL')
+          .orderBy('film.createdAt', 'DESC')
+          .skip(offset)
+          .take(defaultLimit)
+          .getMany();
+
+        return {
+          EC: 0,
+          EM: 'Get films by country success (all countries)',
+          meta: {
+            current: defaultPage,
+            pageSize: defaultLimit,
+            pages: totalPages,
+            total: totalItems,
+          },
+          result: plainToInstance(FilmPaginationDto, films),
+        };
+      }
+
 
       if (!genreCode) {
         return {
@@ -460,7 +529,6 @@ export class FilmsService {
         .take(defaultLimit)
         .getMany();
 
-      console.log('[v0] Films found for genre', genreValueEn, ':', films.length);
 
       if (films.length === 0) {
         return {
@@ -519,7 +587,6 @@ export class FilmsService {
 
       const typeCode = type?.keyMap;
 
-      console.log('[v0] Type lookup - valueEn:', typeValueEn, 'typeCode:', typeCode);
 
       if (!typeCode) {
         return {
@@ -561,7 +628,6 @@ export class FilmsService {
         .take(defaultLimit)
         .getMany();
 
-      console.log('[v0] Films found for type', typeValueEn, ':', films.length);
 
       if (films.length === 0) {
         return {
@@ -597,152 +663,231 @@ export class FilmsService {
     }
   }
 
-  // async findWithFilters(
-  //   filters: {
-  //     country?: string;
-  //     type?: string;
-  //     rating?: string;
-  //     genre?: string;
-  //     version?: string;
-  //     year?: string;
-  //   },
-  //   sort?: string,
-  //   page: number = 1,
-  //   limit: number = 10,
-  // ) {
-  //   try {
-  //     const offset = (page - 1) * limit;
-  //     const defaultLimit = limit ? limit : 10;
-  //     const defaultPage = page ? page : 1;
+  async findWithFilters(
+    filters: {
+      country?: string;
+      type?: string;
+      age_code?: string;
+      genre?: string;
+      version?: string;  // Language/version filter using langCode (e.g., Dubbed, Subtitled, Original)
+      year?: string;
+    },
+    sort?: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    try {
+      const offset = (page - 1) * limit;
+      const defaultLimit = limit ? limit : 10;
+      const defaultPage = page ? page : 1;
 
-  //     const queryBuilder = this.filmsRepository.createQueryBuilder('film');
-  //     joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
-  //     joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
-  //     joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
-  //     joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
-  //     joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
-  //     queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
-  //     queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
-  //     joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
+      const queryBuilder = this.filmsRepository.createQueryBuilder('film');
+      joinWithCommonFields(queryBuilder, 'film.language', 'language', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
+      joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+      queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
+      queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
+      joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
 
-  //     // Base condition: not deleted
-  //     queryBuilder.where('film.deletedAt IS NULL');
+      // Base condition: not deleted
+      queryBuilder.where('film.deletedAt IS NULL');
 
-  //     // Filter by country
-  //     if (filters.country && filters.country.trim() !== '') {
-  //       const countryValueEn = filters.country.trim();
-  //       const countryCode = await this.getAllCodeKeyMap(countryValueEn, 'COUNTRY');
-  //       if (countryCode) {
-  //         queryBuilder.andWhere('film.countryCode = :countryCode', { countryCode });
-  //       }
-  //     }
+      // Filter by country - support comma-separated values, skip if 'All'
+      if (filters.country && filters.country.trim() !== '' && filters.country.toLowerCase() !== 'all') {
+        const countryList = filters.country.split(',').map((c: string) => c.trim()).filter(c => c.toLowerCase() !== 'all');
+        const countryCodes: string[] = [];
 
-  //     // Filter by type
-  //     if (filters.type && filters.type.trim() !== '') {
-  //       const typeValueEn = filters.type.trim();
-  //       const typeCode = await this.getAllCodeKeyMap(typeValueEn, 'TYPE');
-  //       if (typeCode) {
-  //         queryBuilder.andWhere('film.typeCode = :typeCode', { typeCode });
-  //       }
-  //     }
+        for (const countryValueEn of countryList) {
+          const countryCode = await this.getAllCodeKeyMap(countryValueEn, 'COUNTRY');
+          if (countryCode) {
+            countryCodes.push(countryCode);
+          }
+        }
 
-  //     // Filter by rating (age rating)
-  //     if (filters.rating && filters.rating.trim() !== '') {
-  //       const ratingValueEn = filters.rating.trim();
-  //       const ratingCode = await this.getAllCodeKeyMap(ratingValueEn, 'AGE');
-  //       if (ratingCode) {
-  //         queryBuilder.andWhere('film.ageCode = :ageCode', { ageCode: ratingCode });
-  //       }
-  //     }
+        if (countryCodes.length > 0) {
+          queryBuilder.andWhere('film.countryCode IN (:...countryCodes)', { countryCodes });
+        }
+      }
 
-  //     // Filter by genre(s) - support comma-separated values or array
-  //     if (filters.genre && filters.genre.trim() !== '') {
-  //       const genreList = filters.genre.split(',').map((g: string) => g.trim());
-  //       const genreCodes: string[] = [];
+      // Filter by type - support comma-separated values, skip if 'All'
+      if (filters.type && filters.type.trim() !== '' && filters.type.toLowerCase() !== 'all') {
+        const typeList = filters.type.split(',').map((t: string) => t.trim()).filter(t => t.toLowerCase() !== 'all');
+        const typeCodes: string[] = [];
 
-  //       for (const genreValueEn of genreList) {
-  //         const genreCode = await this.getAllCodeKeyMap(genreValueEn, 'GENRE');
-  //         if (genreCode) {
-  //           genreCodes.push(genreCode);
-  //         }
-  //       }
+        for (const typeValueEn of typeList) {
+          const typeCode = await this.getAllCodeKeyMap(typeValueEn, 'FILM_TYPE');
+          if (typeCode) {
+            typeCodes.push(typeCode);
+          }
+        }
 
-  //       if (genreCodes.length > 0) {
-  //         queryBuilder.andWhere('filmGenres.genreCode IN (:...genreCodes)', { genreCodes });
-  //       }
-  //     }
+        if (typeCodes.length > 0) {
+          queryBuilder.andWhere('film.typeCode IN (:...typeCodes)', { typeCodes });
+        }
+      }
 
-  //     // Filter by version
-  //     if (filters.version && filters.version.trim() !== '') {
-  //       const versionValueEn = filters.version.trim();
-  //       const versionCode = await this.getAllCodeKeyMap(versionValueEn, 'VERSION');
-  //       if (versionCode) {
-  //         queryBuilder.andWhere('film.versionCode = :versionCode', { versionCode });
-  //       }
-  //     }
+      // Filter by age rating - support comma-separated values, skip if 'All'
+      if (filters.age_code && filters.age_code.trim() !== '' && filters.age_code.toLowerCase() !== 'all') {
+        const ageList = filters.age_code.split(',').map((a: string) => a.trim()).filter(a => a.toLowerCase() !== 'all');
+        const ageCodes: string[] = [];
 
-  //     // Filter by year - support single year or range (e.g., "2023" or "2020-2023")
-  //     if (filters.year && filters.year.trim() !== '') {
-  //       const yearValue = filters.year.trim();
-  //       if (yearValue.includes('-')) {
-  //         const [startYear, endYear] = yearValue.split('-');
-  //         queryBuilder.andWhere('film.year >= :startYear AND film.year <= :endYear', {
-  //           startYear: startYear.trim(),
-  //           endYear: endYear.trim(),
-  //         });
-  //       } else {
-  //         queryBuilder.andWhere('film.year = :year', { year: yearValue });
-  //       }
-  //     }
+        console.log('Age filter values received:', ageList);
 
-  //     // Apply sorting
-  //     if (sort) {
-  //       switch (sort.toLowerCase()) {
-  //         case 'latest':
-  //           queryBuilder.orderBy('film.createdAt', 'DESC');
-  //           break;
-  //         case 'imdb':
-  //           queryBuilder.orderBy('film.imdbScore', 'DESC');
-  //           break;
-  //         case 'views':
-  //           queryBuilder.orderBy('film.view', 'DESC');
-  //           break;
-  //         case 'release_date':
-  //           queryBuilder.orderBy('film.releaseDate', 'DESC');
-  //           break;
-  //         default:
-  //           queryBuilder.orderBy('film.createdAt', 'DESC');
-  //       }
-  //     } else {
-  //       queryBuilder.orderBy('film.createdAt', 'DESC');
-  //     }
+        const allCodeRepo = this.filmsRepository.manager.getRepository('AllCode');
+        for (const ageValue of ageList) {
+          let ageCode: string | null = null;
 
-  //     // Get total count before pagination
-  //     const totalItems = await queryBuilder.getCount();
-  //     const totalPages = Math.ceil(totalItems / defaultLimit);
+          // If client passed a keyMap (e.g. R_T18), accept it directly when it exists
+          if (/^[A-Z0-9_]+$/.test(ageValue)) {
+            const ac = await allCodeRepo.findOne({ where: { keyMap: ageValue, type: 'RANK' } });
+            if (ac) {
+              ageCode = ac.keyMap;
+            } else {
+              // If client passed the short form (e.g. "T18"), try the prefixed keyMap ("R_T18")
+              if (!ageValue.includes('_')) {
+                const acPrefixed = await allCodeRepo.findOne({ where: { keyMap: `R_${ageValue}`, type: 'RANK' } });
+                if (acPrefixed) {
+                  ageCode = acPrefixed.keyMap;
+                }
+              }
+            }
+          }
 
-  //     // Apply pagination
-  //     const films = await queryBuilder.skip(offset).take(defaultLimit).getMany();
+          // Otherwise try lookup by valueEn (case-insensitive) or fallback to getAllCodeKeyMap
+          if (!ageCode) {
+            ageCode = await this.getAllCodeKeyMap(ageValue, 'RANK');
+          }
 
-  //     return {
-  //       EC: 0,
-  //       EM: 'Get films with filters success',
-  //       meta: {
-  //         current: defaultPage,
-  //         pageSize: defaultLimit,
-  //         pages: totalPages,
-  //         total: totalItems,
-  //       },
-  //       result: plainToInstance(FilmPaginationDto, films),
-  //     };
-  //   } catch (error) {
-  //     console.error('Error in film service get films with filters:', error.message);
-  //     throw new InternalServerErrorException({
-  //       EC: 5,
-  //       EM: 'Error in film service get films with filters',
-  //     });
-  //   }
-  // }
+          if (ageCode) {
+            ageCodes.push(ageCode);
+          }
+        }
+
+        if (ageCodes.length > 0) {
+          queryBuilder.andWhere('film.ageCode IN (:...ageCodes)', { ageCodes });
+        }
+      }
+
+      // Filter by genre(s) - support comma-separated values, skip if 'All'
+      if (filters.genre && filters.genre.trim() !== '' && filters.genre.toLowerCase() !== 'all') {
+        const genreList = filters.genre.split(',').map((g: string) => g.trim()).filter(g => g.toLowerCase() !== 'all');
+        const genreCodes: string[] = [];
+
+        for (const genreValueEn of genreList) {
+          const genreCode = await this.getAllCodeKeyMap(genreValueEn, 'GENRE');
+          if (genreCode) {
+            genreCodes.push(genreCode);
+          }
+        }
+
+        if (genreCodes.length > 0) {
+          queryBuilder.andWhere('filmGenres.genreCode IN (:...genreCodes)', { genreCodes });
+        }
+      }
+
+      // Filter by version/language - support comma-separated values, skip if 'All'
+      if (filters.version && filters.version.trim() !== '' && filters.version.toLowerCase() !== 'all') {
+        const versionList = filters.version.split(',').map((v: string) => v.trim()).filter(v => v.toLowerCase() !== 'all');
+        const versionCodes: string[] = [];
+
+        for (const versionValueEn of versionList) {
+          const versionCode = await this.getAllCodeKeyMap(versionValueEn, 'VERSION');
+          if (versionCode) {
+            versionCodes.push(versionCode);
+          }
+        }
+
+        if (versionCodes.length > 0) {
+          queryBuilder.andWhere('film.langCode IN (:...versionCodes)', { versionCodes });
+        }
+      }
+
+      // Filter by year - support single year, range (e.g., "2023" or "2020-2023"), or comma-separated years, skip if 'All'
+      if (filters.year && filters.year.trim() !== '' && filters.year.toLowerCase() !== 'all') {
+        const yearValue = filters.year.trim();
+
+        // Check if it's a range (contains hyphen)
+        if (yearValue.includes('-') && !yearValue.includes(',')) {
+          const [startYear, endYear] = yearValue.split('-');
+          queryBuilder.andWhere('film.year >= :startYear AND film.year <= :endYear', {
+            startYear: parseInt(startYear.trim()),
+            endYear: parseInt(endYear.trim()),
+          });
+        } else if (yearValue.includes(',')) {
+          // Handle multiple comma-separated years
+          const yearList = yearValue.split(',').map((y: string) => y.trim()).filter(y => y.toLowerCase() !== 'all');
+          const years: number[] = [];
+
+          for (const yearStr of yearList) {
+            const year = parseInt(yearStr);
+            if (!isNaN(year)) {
+              years.push(year);
+            }
+          }
+
+          if (years.length > 0) {
+            queryBuilder.andWhere('film.year IN (:...years)', { years });
+          }
+        } else {
+          // Single year
+          const year = parseInt(yearValue);
+          if (!isNaN(year)) {
+            queryBuilder.andWhere('film.year = :year', { year });
+          }
+        }
+      }
+
+      // Apply sorting
+      if (sort) {
+        switch (sort.toLowerCase()) {
+          case 'latest':
+            queryBuilder.orderBy('film.createdAt', 'DESC');
+            break;
+          case 'imdb':
+            // Use view count as fallback since imdbScore doesn't exist
+            queryBuilder.orderBy('film.view', 'DESC');
+            break;
+          case 'views':
+            queryBuilder.orderBy('film.view', 'DESC');
+            break;
+          case 'release_date':
+            queryBuilder.orderBy('film.releaseDate', 'DESC');
+            break;
+          default:
+            queryBuilder.orderBy('film.createdAt', 'DESC');
+        }
+      } else {
+        queryBuilder.orderBy('film.createdAt', 'DESC');
+      }
+
+      // Get total count before pagination
+      const totalItems = await queryBuilder.getCount();
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+
+      // Apply pagination
+      const films = await queryBuilder.skip(offset).take(defaultLimit).getMany();
+
+      return {
+        EC: 0,
+        EM: 'Get films with filters success',
+        meta: {
+          current: defaultPage,
+          pageSize: defaultLimit,
+          pages: totalPages,
+          total: totalItems,
+        },
+        result: plainToInstance(FilmPaginationDto, films),
+      };
+    } catch (error) {
+      console.error('Error in film service get films with filters:', error.message);
+      throw new InternalServerErrorException({
+        EC: 5,
+        EM: 'Error in film service get films with filters',
+      });
+    }
+  }
 
   async update(filmId: string, updateFilmDto: UpdateFilmDto, user: IUser) {
     try {
@@ -954,12 +1099,23 @@ export class FilmsService {
   async getAllCodeKeyMap(valueEn: string, type: string): Promise<string | null> {
     try {
       const allCodeRepository = this.filmsRepository.manager.getRepository('AllCode');
-      const allCode = await allCodeRepository.findOne({
-        where: {
-          valueEn,
-          type,
-        },
-      });
+
+      // First try to find by keyMap (exact match)
+      let allCode = await allCodeRepository
+        .createQueryBuilder('allCode')
+        .where('allCode.keyMap = :keyMap', { keyMap: valueEn })
+        .andWhere('allCode.type = :type', { type })
+        .getOne();
+
+      // If not found by keyMap, try to find by valueEn (case-insensitive)
+      if (!allCode) {
+        allCode = await allCodeRepository
+          .createQueryBuilder('allCode')
+          .where('LOWER(allCode.valueEn) = LOWER(:valueEn)', { valueEn })
+          .andWhere('allCode.type = :type', { type })
+          .getOne();
+      }
+
       return allCode?.keyMap || null;
     } catch (error) {
       console.log('Error in film service get all code key map: ', error || error.message);

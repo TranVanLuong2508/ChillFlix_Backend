@@ -18,6 +18,8 @@ export class ProducerController {
   }
 
   @Get('get-all-producers')
+  @SkipCheckPermission()
+  @Public()
   @ResponseMessage('Get all producers with pagination, filtering, and sorting')
   async getAllProducers(@Query() query: PaginationDto) {
     return await this.producerService.getAllProducers(query);
@@ -32,24 +34,28 @@ export class ProducerController {
 
   @Patch("edit-producer/:producerId")
   @ResponseMessage("Edit producer by ID")
+  @SkipCheckPermission()
   async updateProducer(
     @Param('producerId', ParseIntPipe) producerId: number,
-    dto: UpdateProducerDto,
+    @Body() dto: UpdateProducerDto,
     @User() user: IUser,
   ) {
+    console.log('[DEBUG] updateProducer called', { producerId, dto, user: user ? { userId: user.userId, roles: (user as any).roles } : null })
     return await this.producerService.updateProducer(producerId, dto, user)
   }
 
   @Delete("delete-producer-by-id/:producerId")
   @ResponseMessage("Delete producer by ID")
+  @SkipCheckPermission()
   async deleteProducerById(@Param('producerId', ParseIntPipe) producerId: number, @User() user: IUser) {
+    console.log('[DEBUG] deleteProducerById called', { producerId, user: user ? { userId: user.userId, roles: (user as any).roles } : null })
     return await this.producerService.deleteProducerById(producerId, user)
   }
 
-  @Public()
-  @Get("get-films-by-producer/:producerId")
-  @ResponseMessage("Get all films by producer ID")
-  async getFilmsByProducerId(@Param('producerId', ParseIntPipe) producerId: number, @Query() query: PaginationDto) {
-    return await this.producerService.getFilmsByProducerId(producerId, query)
-  }
+  // @Public()
+  // @Get("get-films-by-producer/:producerId")
+  // @ResponseMessage("Get all films by producer ID")
+  // async getFilmsByProducerId(@Param('producerId', ParseIntPipe) producerId: number, @Query() query: PaginationDto) {
+  //   return await this.producerService.getFilmsByProducerId(producerId, query)
+  // }
 }

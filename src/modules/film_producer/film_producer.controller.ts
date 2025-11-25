@@ -10,6 +10,8 @@ import {
   ClassSerializerInterceptor,
   SerializeOptions,
   Body,
+  ParseIntPipe,
+  BadRequestException,
 } from "@nestjs/common"
 import { FilmProducerService } from "./film_producer.service"
 import { CreateFilmProducerDto } from "./dto/create-film_producer.dto"
@@ -31,6 +33,7 @@ export class FilmProducerController {
     return this.filmProducerService.createFilmProducer(dto, user)
   }
 
+  @Public()
   @Get('all-film-producers')
   @ResponseMessage('Get all film-producer relations')
   GetAllFilmProducers(@Query() query: PaginationfpDto) {
@@ -40,7 +43,7 @@ export class FilmProducerController {
   @Public()
   @Get('get-film-producer-by-id/:id')
   @ResponseMessage('Get film-producer relation by id')
-  getFilmProducerById(@Param('id') id: number) {
+  getFilmProducerById(@Param('id', ParseIntPipe) id: number) {
     return this.filmProducerService.getFilmProducerById(id);
   }
 
@@ -60,13 +63,16 @@ export class FilmProducerController {
 
   @Patch("edit-film-producer/:id")
   @ResponseMessage("Update film-producer relation")
-  updateFilmProducer(@Param('id') id: number, @Body() dto: UpdateFilmProducerDto, @User() user: IUser) {
+  updateFilmProducer(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFilmProducerDto, @User() user: IUser) {
     return this.filmProducerService.updateFilmProducer(id, dto, user)
   }
 
   @Delete("delete-film-producer/:id")
   @ResponseMessage("Delete film-producer relation")
-  deleteFilmProducer(@Param('id') id: number, @User() user: IUser) {
+  deleteFilmProducer(@Param('id', ParseIntPipe) id: number, @User() user: IUser) {
+    if (!user || !user.userId) {
+      throw new BadRequestException({ EC: 0, EM: 'User is required to delete relation' })
+    }
     return this.filmProducerService.deleteFilmProducer(id, user)
   }
 }

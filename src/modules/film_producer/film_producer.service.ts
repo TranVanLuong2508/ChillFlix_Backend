@@ -295,7 +295,6 @@ export class FilmProducerService {
           'filmProducers.film',
           'filmProducers.film.filmImages',
           'filmProducers.film.filmGenres.genre',
-          'filmProducers.film.filmImages',
           'filmProducers.film.age',],
       })
 
@@ -316,7 +315,27 @@ export class FilmProducerService {
       }
 
       const total = films.length
-      const paginated = films.slice(skip, skip + limit)
+
+      // Explicitly map the entity to a plain object to avoid serialization issues (empty objects)
+      const paginated = films.slice(skip, skip + limit).map((film) => ({
+        filmId: film.filmId,
+        title: film.title,
+        originalTitle: film.originalTitle,
+        description: film.description,
+        releaseDate: film.releaseDate,
+        year: film.year,
+        thumbUrl: film.thumbUrl,
+        filmImages: film.filmImages?.map((img: FilmImage) => ({
+          filmImageId: img.id,
+          imageUrl: img.url,
+        })),
+        slug: film.slug,
+        age: film.ageCode,
+        type: film.typeCode,
+        country: film.countryCode,
+        language: film.langCode,
+        publicStatus: film.publicStatusCode,
+      }))
 
       return {
         EC: 1,

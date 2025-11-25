@@ -79,16 +79,16 @@ export class FilmsController {
     return this.filmsService.findByType(typeValueEn, page, limit);
   }
 
-  // @Public()
-  // @SkipCheckPermission()
-  // @Get('filter/search')
-  // findWithFilters(@Query('country') country?: string, @Query('type') type?: string, @Query('rating') rating?: string, @Query('genre') genre?: string, @Query('version') version?: string, @Query('year') year?: string, @Query('sort') sort?: string, @Query('current') page: number = 1, @Query('limit') limit: number = 10,
-  // ) {
-  //   return this.filmsService.findWithFilters(
-  //     { country, type, rating, genre, version, year },
-  //     sort,
-  //     page,
-  //     limit,
-  //   );
-  // }
+  @Public()
+  @SkipCheckPermission()
+  @Get('filter/search')
+  findWithFilters(@Query('country') country?: string, @Query('type') type?: string, @Query('age_code') age_code?: string, @Query('genre') genre?: string, @Query('version') version?: string, @Query('year') year?: string, @Query('sort') sort?: string, @Query('current') page: number = 1, @Query('limit') limit: number = 10,
+  ) {
+    return this.filmsService.findWithFilters(
+      { country, type, age_code, genre, version, year },
+      sort,
+      page,
+      limit,
+    );
+  }
 }
