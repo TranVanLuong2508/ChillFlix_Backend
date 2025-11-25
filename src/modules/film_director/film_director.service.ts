@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { CreateFilmDirectorDto } from './dto/create-film_director.dto';
@@ -9,9 +14,10 @@ import { Director } from '../directors/entities/director.entity';
 import { PaginationfdDto } from './dto/pagination-fd.dto';
 import { IUser } from '../users/interface/user.interface';
 import aqp from 'api-query-params';
-import { plainToInstance } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ListFilm } from '../films/dto/list-film.dto';
 import { FilmImage } from '../films/entities/film_image.entity';
+import _ from 'lodash';
 
 @Injectable()
 export class FilmDirectorService {
@@ -27,7 +33,9 @@ export class FilmDirectorService {
     if (!entity) return null;
 
     const clean = (obj: any) =>
-      Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null && v !== undefined && v !== ''));
+      Object.fromEntries(
+        Object.entries(obj).filter(([_, v]) => v != null && v !== undefined && v !== ''),
+      );
 
     const film = entity.film
       ? clean({
@@ -182,7 +190,10 @@ export class FilmDirectorService {
 
       return {
         EC: 1,
-        EM: total > 0 ? 'Get all film-director relations successfully' : 'No film-director relations found',
+        EM:
+          total > 0
+            ? 'Get all film-director relations successfully'
+            : 'No film-director relations found',
         meta: {
           page,
           limit,
@@ -204,7 +215,13 @@ export class FilmDirectorService {
     try {
       const filmDirector = await this.filmDirectorRepo.findOne({
         where: { id },
-        relations: ['film', 'film.filmImages', 'director', 'director.genderCodeRL', 'director.nationalityCodeRL'],
+        relations: [
+          'film',
+          'film.filmImages',
+          'director',
+          'director.genderCodeRL',
+          'director.nationalityCodeRL',
+        ],
       });
 
       if (!filmDirector) return { EC: 0, EM: `FilmDirector ${id} not found!` };
@@ -354,6 +371,74 @@ export class FilmDirectorService {
     }
   }
 
+  async getFilmsByDirectorSlug(directorSlug: string, query: any = {}) {
+    try {
+      query = query || {};
+      const { filter, sort } = aqp(query);
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 12;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const order = sort || { createdAt: 'DESC' };
+
+      const director = await this.directorRepo.findOne({
+        where: { slug: directorSlug },
+        relations: [
+          'filmDirectors',
+          'filmDirectors.film',
+          'filmDirectors.film.filmGenres',
+          'filmDirectors.film.filmGenres.genre',
+          'filmDirectors.film.filmImages',
+          'filmDirectors.film.age',
+        ],
+      });
+
+      if (!director) {
+        return { EC: 0, EM: `Director ${directorSlug} not found!` };
+      }
+
+      const filmDataRaw = director.filmDirectors.map((i) => i.film);
+
+      let films = plainToInstance(ListFilm, filmDataRaw);
+
+      if (order) {
+        const [key, dir] = Object.entries(order)[0];
+        const direction = String(dir).toUpperCase();
+        films = films.sort((a, b) =>
+          direction === 'ASC'
+            ? String(a[key])?.localeCompare(String(b[key]))
+            : String(b[key])?.localeCompare(String(a[key])),
+        );
+      }
+
+      const total = films.length;
+      const paginated = films.slice(skip, skip + limit);
+
+      return {
+        EC: 1,
+        EM: 'Get films by director successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        result: paginated,
+      };
+    } catch (error: any) {
+      console.error('Error in getFilmsByDirector:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getFilmsByDirector service',
+      });
+    }
+  }
+
   async updateFilmDirector(id: number, dto: UpdateFilmDirectorDto, user: IUser) {
     try {
       const relation = await this.filmDirectorRepo.findOne({
@@ -436,6 +521,73 @@ export class FilmDirectorService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from deleteFilmDirector service',
+      });
+    }
+  }
+  async groupFilmsByDirectorLodash() {
+    try {
+      const rows = await this.filmDirectorRepo.find({
+        relations: [
+          'film',
+          'film.age',
+          'film.type',
+          'film.country',
+          'film.language',
+          'film.publicStatus',
+          'director',
+        ],
+      });
+      const clean = (obj) =>
+        _.omit(obj, [
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+          'createdBy',
+          'updatedBy',
+          'deletedBy',
+          'view',
+          'age',
+          'type',
+          'country',
+          'language',
+          'publicStatus',
+          'ageCode',
+          'typeCode',
+          'countryCode',
+          'langCode',
+          'publicStatusCode',
+        ]);
+
+      const result = _(rows)
+        .groupBy((x) => x.director.directorName)
+        .map((value, key) => ({
+          director: key,
+
+          filmList: value.map((v) => {
+            const film = instanceToPlain(v.film);
+
+            return {
+              ...clean(film),
+              age: film.age?.valueVi,
+              type: film.type?.valueVi,
+              country: film.country?.valueVi,
+              language: film.language?.valueVi,
+              publicStatus: film.publicStatus?.valueVi,
+            };
+          }),
+        }))
+        .value();
+
+      return {
+        EC: 1,
+        EM: 'Group films by director successfully',
+        result,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error group films by director',
       });
     }
   }

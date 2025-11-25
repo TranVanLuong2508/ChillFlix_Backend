@@ -21,7 +21,6 @@ export class CommentGateway implements OnGatewayConnection {
   private userSockets = new Map<string, Set<string>>();
 
   handleConnection(client: Socket) {
-    console.log(`[COMMENT SOCKET] Client connected: ${client.id}`);
     client.on('disconnect', () => {
       for (const [userId, socketSet] of this.userSockets.entries()) {
         if (socketSet.has(client.id)) {
@@ -39,7 +38,6 @@ export class CommentGateway implements OnGatewayConnection {
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
     if (data?.userId) {
       const userIdStr = String(data.userId);
-      console.log(`[COMMENT SOCKET] User ${userIdStr} registered with socket ${client.id}`);
       if (!this.userSockets.has(userIdStr)) {
         this.userSockets.set(userIdStr, new Set());
       }
@@ -58,12 +56,10 @@ export class CommentGateway implements OnGatewayConnection {
   }
 
   sendReplyNotification(targetUserId: string, data: any) {
-    console.log(`[COMMENT SOCKET] Sending reply notification to user ${targetUserId}`, data);
     this.emitToUser(targetUserId, 'replyNotification', data);
   }
 
   sendReactionNotification(targetUserId: string, data: any) {
-    console.log(`[COMMENT SOCKET] Sending reaction notification to user ${targetUserId}`, data);
     this.emitToUser(targetUserId, 'reactionNotification', data);
   }
 

@@ -61,7 +61,11 @@ export class FilmActorController {
 
   @Patch('edit-film-actor/:id')
   @ResponseMessage('Update film-actor relation by id')
-  async updateFilmActor(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFilmActorDto, @User() user: IUser) {
+  async updateFilmActor(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateFilmActorDto,
+    @User() user: IUser,
+  ) {
     return await this.filmActorService.updateFilmActor(id, dto, user);
   }
 
@@ -69,5 +73,19 @@ export class FilmActorController {
   @ResponseMessage('Delete film-actor relation by id')
   async deleteFilmActorById(@Param('id', ParseIntPipe) id: number, @User() user: IUser) {
     return await this.filmActorService.deleteFilmActorById(id, user);
+  }
+
+  @Public()
+  @Get('group-films-by-actor-lodash')
+  @ResponseMessage('Get films grouped by actor using lodash')
+  async getFilmsGroupedByActorLodash() {
+    return await this.filmActorService.groupFilmsByActorLodash();
+  }
+
+  @Public()
+  @Get('get-films-by-actor-slug/:actorSlug')
+  @ResponseMessage('Get films by actor slug')
+  async getFilmsByActorSlug(@Param('actorSlug') actorSlug: string, @Query() query: PaginationFaDto) {
+    return await this.filmActorService.getFilmsByActorSlug(actorSlug, query);
   }
 }

@@ -19,7 +19,7 @@ export class RatingGateway implements OnGatewayConnection {
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log(`[RATING SOCKET] Client connected: ${client.id}`);
+    // Connection handling 
   }
 
   broadcastRatingUpdate(data: {
@@ -28,12 +28,10 @@ export class RatingGateway implements OnGatewayConnection {
     totalRatings: number;
     newRating?: any;
   }) {
-    console.log('[RATING] Broadcasting rating update for film:', data.filmId);
     this.server.emit('ratingUpdated', data);
   }
 
   broadcastRatingDelete(data: { filmId: string; ratingId: string }) {
-    console.log('[RATING] Broadcasting rating delete:', data.ratingId);
     this.server.emit('ratingDeleted', data);
   }
 }

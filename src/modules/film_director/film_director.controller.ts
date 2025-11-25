@@ -22,7 +22,7 @@ import type { IUser } from '../users/interface/user.interface';
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmDirectorController {
-  constructor(private readonly filmDirectorService: FilmDirectorService) { }
+  constructor(private readonly filmDirectorService: FilmDirectorService) {}
 
   @Post('create-film-director')
   @ResponseMessage('Create relation between film and director')
@@ -59,9 +59,20 @@ export class FilmDirectorController {
     return this.filmDirectorService.getFilmsByDirector(directorId, query);
   }
 
+  @Public()
+  @Get('by-director-slug/:directorSlug')
+  @ResponseMessage('Get films by director slug')
+  getFilmsByDirectorSlug(@Param('directorSlug') directorSlug: string, @Query() query: PaginationfdDto) {
+    return this.filmDirectorService.getFilmsByDirectorSlug(directorSlug, query);
+  }
+
   @Patch('edit-film-director/:id')
   @ResponseMessage('Update film-director relation')
-  updateFilmDirector(@Param('id') id: number, @Body() dto: UpdateFilmDirectorDto, @User() user: IUser) {
+  updateFilmDirector(
+    @Param('id') id: number,
+    @Body() dto: UpdateFilmDirectorDto,
+    @User() user: IUser,
+  ) {
     return this.filmDirectorService.updateFilmDirector(id, dto, user);
   }
 
@@ -69,5 +80,12 @@ export class FilmDirectorController {
   @ResponseMessage('Delete film-director relation')
   deleteFilmDirector(@Param('id') id: number, @User() user: IUser) {
     return this.filmDirectorService.deleteFilmDirector(id, user);
+  }
+
+  @Public()
+  @Get('group-directors-and-films-lodash')
+  @ResponseMessage('Get grouped directors and films by lodash')
+  getGroupedDirectorsAndFilms() {
+    return this.filmDirectorService.groupFilmsByDirectorLodash();
   }
 }

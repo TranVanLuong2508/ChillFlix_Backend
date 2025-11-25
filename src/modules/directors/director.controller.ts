@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { DirectorService } from './director.service';
 import { CreateDirectorDto } from './dto-director/create-director.dto';
 import { UpdateDirectorDto } from './dto-director/update-director.dto';
@@ -29,6 +39,13 @@ export class DirectorController {
     return await this.directorService.getDirectorById(directorId);
   }
 
+  @Public()
+  @Get('get-director-by-slug/:directorSlug')
+  @ResponseMessage('Get director by slug')
+  async getDirectorBySlug(@Param('directorSlug') directorSlug: string) {
+    return await this.directorService.getDirectorBySlug(directorSlug);
+  }
+
   @Patch('edit-director/:directorId')
   @ResponseMessage('Edit director by ID')
   async updateDirector(
@@ -41,7 +58,10 @@ export class DirectorController {
 
   @Delete('delete-director-by-id/:directorId')
   @ResponseMessage('Delete director by ID')
-  async deleteDirectorById(@Param('directorId', ParseIntPipe) directorId: number, @User() user: IUser) {
+  async deleteDirectorById(
+    @Param('directorId', ParseIntPipe) directorId: number,
+    @User() user: IUser,
+  ) {
     return await this.directorService.deleteDirectorById(directorId, user);
   }
 }
