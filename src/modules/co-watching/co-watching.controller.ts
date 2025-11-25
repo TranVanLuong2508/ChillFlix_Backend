@@ -16,10 +16,16 @@ export class CoWatchingController {
 
   @Public()
   @Get()
-  findAll(@Query('current') page: number, @Query('pageSize') limit: number, @Query() qs: string) {
-    return this.coWatchingService.findAll(page, limit, qs);
+  findAll(
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+    @Query('isMain') isMain: boolean,
+    @Query() qs: string,
+  ) {
+    return this.coWatchingService.findAll(page, limit, isMain, qs);
   }
 
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.coWatchingService.findOne(id);

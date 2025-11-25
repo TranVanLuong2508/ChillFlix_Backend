@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import aqp from 'api-query-params';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
 import { isEmpty, isUUID } from 'class-validator';
@@ -38,10 +38,14 @@ export class CoWatchingService {
       });
       const newRoom = await this.coWatchingRepository.save(roomData);
 
+      const room = await this.coWatchingRepository.findOne({
+        where: { roomId: newRoom.roomId },
+        relations: ['host'],
+      });
       const dataFilm = await this.filmService.findOne(newRoom.filmId);
 
       const data = {
-        room: plainToInstance(CoWatchingRes, newRoom, {
+        room: plainToInstance(CoWatchingRes, room, {
           excludeExtraneousValues: true,
         }),
         film: dataFilm.film,
@@ -66,13 +70,29 @@ export class CoWatchingService {
     }
   }
 
-  async findAll(page: number, limit: number, queryString: string) {
+  async findAll(page: number, limit: number, isMain: boolean, queryString: string) {
     try {
       const { filter, projection } = aqp(queryString);
       let { sort } = aqp(queryString);
 
       delete filter.current;
       delete filter.pageSize;
+      delete filter.isMain;
+
+      const host_id = filter.hostId;
+      delete filter.hostId;
+
+      const whereCondition: any = { ...filter };
+
+      if (host_id) {
+        if (isMain) {
+          whereCondition.hostId = Not(host_id);
+          whereCondition.isLive = true;
+          whereCondition.isPrivate = false;
+        } else {
+          whereCondition.hostId = host_id;
+        }
+      }
 
       if (isEmpty(sort)) {
         sort = { createdAt: -1 };
@@ -81,11 +101,11 @@ export class CoWatchingService {
       const offset = (page - 1) * limit;
       const defaultLimit = limit ? limit : 10;
 
-      const totalItems = await this.coWatchingRepository.count({ where: filter });
+      const totalItems = await this.coWatchingRepository.count({ where: whereCondition });
       const totalPages = Math.ceil(totalItems / defaultLimit);
 
       const result = await this.coWatchingRepository.find({
-        where: filter,
+        where: whereCondition,
         order: sort,
         skip: offset,
         take: defaultLimit,
@@ -129,14 +149,18 @@ export class CoWatchingService {
       if (cached) {
         return {
           EC: 0,
-          EM: 'Get room by id success',
+          EM: 'Get room by id success (redis)',
           ...cached,
         };
       }
 
       const roomData = await this.coWatchingRepository.findOne({
         where: { roomId: id },
+        relations: ['host'],
       });
+
+      console.log('Check data detail: ', roomData);
+
       if (!roomData) {
         throw new NotFoundException({
           EC: 2,
@@ -193,8 +217,8 @@ export class CoWatchingService {
 
       return {
         EC: 0,
-        EM: 'Get room by id success',
-        data: updatedRoom,
+        EM: 'Update live room success',
+        ...updatedRoom,
       };
     } catch (error) {
       console.error(

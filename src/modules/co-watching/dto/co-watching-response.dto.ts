@@ -1,6 +1,27 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 
 @Exclude()
+export class Film {
+  @Expose()
+  originalTitle: string;
+
+  @Expose()
+  title: string;
+
+  @Expose()
+  slug: string;
+}
+
+@Exclude()
+export class Host {
+  @Expose()
+  fullName: string;
+
+  @Expose()
+  avatarUrl: string;
+}
+
+@Exclude()
 export class CoWatchingRes {
   @Expose()
   roomId: string;
@@ -10,6 +31,10 @@ export class CoWatchingRes {
 
   @Expose()
   hostId: number;
+
+  @Expose()
+  @Type(() => Host)
+  host: Host;
 
   @Expose()
   filmId: string;
@@ -40,33 +65,8 @@ export class CoWatchingRes {
 }
 
 @Exclude()
-export class Film {
-  @Expose()
-  originalTitle: string;
-
-  @Expose()
-  title: string;
-
-  @Expose()
-  slug: string;
-}
-
-@Exclude()
-export class Host {
-  @Expose()
-  fullName: string;
-
-  @Expose()
-  avatarUrl: string;
-}
-
-@Exclude()
 export class RoomPaginate extends CoWatchingRes {
   @Expose()
   @Type(() => Film)
   film: Film;
-
-  @Expose()
-  @Type(() => Host)
-  host: Host;
 }
