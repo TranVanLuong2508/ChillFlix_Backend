@@ -379,7 +379,7 @@ async function loadChildrenRecursive(
       isHidden: false,
       deletedAt: IsNull(),
     },
-    relations: ['user', 'reactions', 'reactions.user'],
+    relations: ['user', 'reactions', 'reactions.user', 'parent', 'parent.user'],
     order: { createdAt: 'ASC' },
   });
   for (const child of children) {
