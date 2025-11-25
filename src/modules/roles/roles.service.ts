@@ -116,7 +116,11 @@ export class RolesService {
       }
 
       const queryBuilder = this.roleRepository.createQueryBuilder('role');
-      queryBuilder.leftJoinAndSelect('role.rolePermission', 'rolePermission');
+      queryBuilder.leftJoinAndSelect(
+        'role.rolePermission',
+        'rolePermission',
+        'rolePermission.isDeleted = false AND rolePermission.roleId = role.roleId',
+      );
       joinWithCommonFields(queryBuilder, 'rolePermission.permission', 'permission');
 
       const role = await queryBuilder.where('role.roleId = :roleId', { roleId: id }).getOne();
@@ -394,7 +398,6 @@ export class RolesService {
         return {
           EC: 1,
           EM: `Role is deleted`,
-          ...result,
         };
       }
     } catch (error: any) {
@@ -402,6 +405,71 @@ export class RolesService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from delete Role service',
+      });
+    }
+  }
+
+  async restore(id: number, user: IUser) {
+    try {
+      const deletedRole = await this.roleRepository.findOne({
+        where: { roleId: id, isDeleted: true },
+        relations: {
+          rolePermission: true,
+        },
+        select: {
+          roleId: true,
+          roleName: true,
+          description: true,
+          isActive: true,
+          isDeleted: true,
+          rolePermission: true,
+        },
+      });
+
+      if (!deletedRole) {
+        return {
+          EC: 0,
+          EM: 'Role not found or not deleted',
+        };
+      }
+
+      await this.roleRepository.manager.transaction(async (manager) => {
+        await manager.update(
+          Role,
+          { roleId: id },
+          {
+            isDeleted: false,
+            deletedAt: null as any,
+            deletedBy: null as any,
+            updatedAt: new Date(),
+            updatedBy: user.userId,
+          },
+        );
+
+        await manager.update(
+          RolePermission,
+          { roleId: id, isDeleted: true },
+          {
+            isDeleted: false,
+            deletedAt: null as any,
+            deletedBy: null as any,
+            updatedAt: new Date(),
+            updatedBy: user.userId,
+          },
+        );
+      });
+
+      return {
+        EC: 1,
+        EM: 'Restore role success',
+        roleId: id,
+        roleName: deletedRole.roleName,
+      };
+    } catch (error) {
+      console.error('Error in restore Role:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from restore Role service',
       });
     }
   }

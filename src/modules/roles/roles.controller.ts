@@ -77,4 +77,11 @@ export class RolesController {
   reassignAndDelete(@Param('id') id: string, @Body() dto: ReassignRoleDto, @User() user: IUser) {
     return this.rolesService.reassignAndDelete(+id, dto, user);
   }
+
+  @Patch(':id/restore')
+  @ResponseMessage('Restore a role')
+  @SkipCheckPermission()
+  restore(@Param('id') id: string, @User() user: IUser) {
+    return this.rolesService.restore(+id, user);
+  }
 }
