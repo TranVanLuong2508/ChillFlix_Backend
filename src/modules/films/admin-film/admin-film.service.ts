@@ -228,7 +228,7 @@ export class AdminFilmService {
 
       return {
         EC: 0,
-        EM: 'Update film success',
+        EM: 'Film had updated success',
         message: 'Update Film successful',
         affectedRows: 1,
       };
