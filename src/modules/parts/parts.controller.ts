@@ -34,6 +34,12 @@ export class PartsController {
   }
 
   @Public()
+  @Post('admin/film')
+  findAllAdmin(@Body() { filmId }: { filmId: string }) {
+    return this.partsService.findAllAdmin(filmId);
+  }
+
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.partsService.findOne(id);
