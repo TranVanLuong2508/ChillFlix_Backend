@@ -57,6 +57,7 @@ export class ProducerController {
   @Permission('Update producer by ID', 'PRODUCER')
   @ResponseMessage('Edit producer by ID')
   @SkipCheckPermission()
+  @ResponseMessage('Edit producer by ID')
   async updateProducer(
     @Param('producerId', ParseIntPipe) producerId: number,
     @Body() dto: UpdateProducerDto,
@@ -66,13 +67,14 @@ export class ProducerController {
   }
 
   @Delete('delete-producer-by-id/:producerId')
+  @SkipCheckPermission()
   @Permission('Delete producer by ID', 'PRODUCER')
   @ResponseMessage('Delete producer by ID')
-  @SkipCheckPermission()
   async deleteProducerById(
     @Param('producerId', ParseIntPipe) producerId: number,
-    @User() user: IUser,
+    @Query('newProducerId', new ParseIntPipe({ optional: true })) newProducerId?: number,
+    @User() user?: IUser,
   ) {
-    return await this.producerService.deleteProducerById(producerId, user);
+    return await this.producerService.deleteProducerById(producerId, newProducerId, user);
   }
 }

@@ -198,18 +198,43 @@ export class ProducerService {
     }
   }
 
-  async deleteProducerById(producerId: number, user: IUser): Promise<any> {
+  async deleteProducerById(producerId: number, newProducerId?: number, user?: IUser): Promise<any> {
     try {
       const producer = await this.producerRepo.findOne({
         where: { producerId },
       });
       if (!producer) return { EC: 0, EM: `Producer ${producerId} not found!` };
 
-      await this.producerRepo.update(producerId, { deletedBy: user.userId });
+      // If newProducerId provided, reassign all films from deleted producer to new producer
+      if (newProducerId && newProducerId !== producerId) {
+        const targetProducer = await this.producerRepo.findOne({
+          where: { producerId: newProducerId },
+        });
+        if (!targetProducer) return { EC: 0, EM: `Target producer ${newProducerId} not found!` };
+
+        // Get all film_producer records for this producer
+        const filmProducers = await this.filmProducerRepo.find({
+          where: { producer: { producerId } },
+          relations: ['film', 'producer'],
+        });
+
+        // Update each film_producer relation to point to new producer
+        for (const fp of filmProducers) {
+          fp.producer = targetProducer;
+          if (user) {
+            fp.updatedBy = user.userId;
+          }
+          await this.filmProducerRepo.save(fp);
+        }
+      }
+
+      if (user) {
+        producer.deletedBy = user.userId;
+        await this.producerRepo.save(producer);
+      }
+
       await this.producerRepo.softDelete({ producerId });
-      // search
-      await this.commonSearchService.removeFromIndex(producer.producerId.toString(), 'producers');
-      // search
+
       return { EC: 1, EM: 'Delete producer successfully' };
     } catch (error: any) {
       console.error('Error in deleteProducerById:', error);
