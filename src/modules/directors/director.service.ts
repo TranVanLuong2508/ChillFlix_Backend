@@ -8,6 +8,8 @@ import { UpdateDirectorDto } from './dto-director/update-director.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
 import { SlugUtil } from '../../common/utils/slug.util';
+import { DirectorSearchService } from '../search/directorSearch.service';
+import { ActorSearchService } from '../search/actorSearch.service';
 
 @Injectable()
 export class DirectorService {
@@ -17,6 +19,9 @@ export class DirectorService {
 
     @InjectRepository(AllCode)
     private readonly allcodeRepo: Repository<AllCode>,
+
+    private searchService: DirectorSearchService,
+    private commonSearchService: ActorSearchService,
   ) {}
 
   async createDirector(dto: CreateDirectorDto, user: IUser): Promise<any> {
@@ -52,6 +57,9 @@ export class DirectorService {
       });
 
       const data = await this.directorRepo.save(director);
+      // search
+      await this.searchService.indexDirector(director);
+      // search
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -278,6 +286,11 @@ export class DirectorService {
 
       director.updatedBy = user.userId;
       const data = await this.directorRepo.save(director);
+
+      // search
+      await this.commonSearchService.updateDocument(data.directorId.toString(), data, 'directors');
+      // search
+
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -318,6 +331,10 @@ export class DirectorService {
       if (!director) return { EC: 0, EM: `Director ${directorId} not found!` };
       await this.directorRepo.update(directorId, { deletedBy: user.userId });
       await this.directorRepo.softDelete({ directorId });
+      // search
+      await this.commonSearchService.removeFromIndex(director.directorId.toString(), 'directors');
+      // search
+
       return { EC: 1, EM: 'Delete director successfully' };
     } catch (error: any) {
       console.error('Error in deleteDirectorById:', error);

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePartDto } from './dto/create-part.dto';
 import { UpdatePartDto } from './dto/update-part.dto';
 import { IUser } from '../users/interface/user.interface';
@@ -8,18 +13,27 @@ import { Repository } from 'typeorm';
 import { Film } from '../films/entities/film.entity';
 import { isUUID } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { PartResponseFindAllByFilmId, PartResponseUser } from './dto/part-response.dto';
+import {
+  PartResponseFindAllByFilmId,
+  PartResponseFindAllByFilmIdAdmin,
+  PartResponsePaginate,
+  PartResponseUser,
+} from './dto/part-response.dto';
+import { EpisodesService } from '../episodes/episodes.service';
 
 @Injectable()
 export class PartsService {
   constructor(
     @InjectRepository(Part) private partRepository: Repository<Part>,
     @InjectRepository(Film) private filmRepository: Repository<Film>,
+    private readonly episodeService: EpisodesService,
   ) {}
 
   async create(createPartDto: CreatePartDto, user: IUser) {
     try {
-      const filmIsExist = await this.filmRepository.exists({ where: { filmId: createPartDto.filmId } });
+      const filmIsExist = await this.filmRepository.exists({
+        where: { filmId: createPartDto.filmId },
+      });
 
       if (!filmIsExist) {
         throw new NotFoundException({
@@ -32,14 +46,17 @@ export class PartsService {
         createPartDto.title = `Part ${createPartDto.partNumber}`;
       }
 
-      const newPart = this.partRepository.create({ ...createPartDto, createdBy: user.userId.toString() });
+      const newPart = this.partRepository.create({
+        ...createPartDto,
+        createdBy: user.userId.toString(),
+      });
       await this.partRepository.save(newPart);
 
       return {
         EC: 0,
-        EM: 'Create new part success',
+        EM: 'Tạo phần thành công',
         id: newPart.id,
-        createAt: newPart.createdAt,
+        createdAt: newPart.createdAt,
       };
     } catch (error) {
       console.error('Error in part service create new part:', error || error.message);
@@ -59,11 +76,42 @@ export class PartsService {
         });
       }
 
-      const result = await this.partRepository.find({ where: { filmId }, relations: ['episodes'] });
+      const result = await this.partRepository.find({
+        where: { filmId },
+        relations: ['episodes'],
+        order: { partNumber: 'ASC' },
+      });
       return {
         EC: 0,
         EM: 'Get all part success',
         partData: plainToInstance(PartResponseFindAllByFilmId, result),
+      };
+    } catch (error) {
+      console.error('Error in part service find all part by filmId:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 2,
+        EM: 'Error in part service find all part by filmId',
+      });
+    }
+  }
+
+  async findAllAdmin(filmId: string) {
+    try {
+      if (!isUUID(filmId)) {
+        throw new BadRequestException({
+          EC: 1,
+          EM: `Wrong format film id!`,
+        });
+      }
+
+      const result = await this.partRepository.find({
+        where: { filmId },
+        order: { partNumber: 'ASC' },
+      });
+      return {
+        EC: 0,
+        EM: 'Get all part success',
+        partData: plainToInstance(PartResponseFindAllByFilmIdAdmin, result),
       };
     } catch (error) {
       console.error('Error in part service find all part by filmId:', error || error.message);
@@ -83,18 +131,21 @@ export class PartsService {
         });
       }
 
-      const part = await this.partRepository.findOne({ where: { id }, relations: ['episodes'] });
+      const part = await this.partRepository.findOne({
+        where: { id },
+        relations: ['episodes'],
+      });
       if (!part) {
         throw new NotFoundException({
           EC: 2,
           EM: `Part with id: ${id} not found`,
         });
       }
-
+      console.log('Check data part: ', part);
       return {
         EC: 0,
         EM: 'Get part data success',
-        part: plainToInstance(PartResponseUser, part),
+        ...plainToInstance(PartResponsePaginate, part),
       };
     } catch (error) {
       console.error('Error in part service find one part by partId:', error || error.message);
@@ -121,7 +172,7 @@ export class PartsService {
       await this.partRepository.save(partData);
       return {
         EC: 0,
-        EM: 'Update part success',
+        EM: 'Cập nhật phần thành công',
         message: 'Update Part success',
         affectedRows: 1,
       };
@@ -146,12 +197,15 @@ export class PartsService {
       }
 
       await this.partRepository.update(id, { deletedBy: user.userId.toString() });
+
+      await this.episodeService.removeEpisodeByPart(id, user);
+
       await this.partRepository.softDelete(id);
-      return { EC: 0, EM: 'Delete part success', deleted: 'success' };
+      return { EC: 0, EM: 'Xóa phần thành công', deleted: true };
     } catch (error) {
       console.error('Error in part service delete part:', error || error.message);
       throw new InternalServerErrorException({
-        EC: 3,
+        EC: 1,
         EM: 'Error in part service delete part',
       });
     }

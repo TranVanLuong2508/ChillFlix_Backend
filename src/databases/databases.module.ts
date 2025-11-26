@@ -14,11 +14,22 @@ import { RolePermissionService } from 'src/modules/role_permission/role_permissi
 import { RolePermission } from 'src/modules/role_permission/entities/role_permission.entity';
 import { RolesService } from 'src/modules/roles/roles.service';
 import { Role } from 'src/modules/roles/entities/role.entity';
+import { SearchModule } from 'src/modules/search/search.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AllCode, User, Permission, Director, RolePermission, Role])],
+  imports: [
+    TypeOrmModule.forFeature([AllCode, User, Permission, Director, RolePermission, Role]),
+    SearchModule,
+  ],
   controllers: [DatabasesController],
-  providers: [DatabasesService, AllCodesService, UsersService, DirectorService, RolePermissionService, RolesService],
+  providers: [
+    DatabasesService,
+    AllCodesService,
+    UsersService,
+    DirectorService,
+    RolePermissionService,
+    RolesService,
+  ],
   exports: [AllCodesService, DatabasesService],
 })
 export class DatabasesModule {}

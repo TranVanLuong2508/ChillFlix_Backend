@@ -13,6 +13,7 @@ import { UpdateActorDto } from './dto/update-actor.dto';
 import aqp from 'api-query-params';
 import { IUser } from '../users/interface/user.interface';
 import { SlugUtil } from '../../common/utils/slug.util';
+import { ActorSearchService } from '../search/actorSearch.service';
 
 @Injectable()
 export class ActorService {
@@ -22,6 +23,8 @@ export class ActorService {
 
     @InjectRepository(AllCode)
     private readonly allcodeRepo: Repository<AllCode>,
+
+    private searchService: ActorSearchService,
   ) {}
 
   async createListActor(listData: CreateActorDto[], user: IUser) {
@@ -70,6 +73,11 @@ export class ActorService {
         updatedAt: new Date(),
       });
       const data = await this.actorRepo.save(actor);
+
+      // search
+      await this.searchService.indexActor(actor);
+      // search
+
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -294,6 +302,10 @@ export class ActorService {
 
       actor.updatedBy = user.userId;
       const data = await this.actorRepo.save(actor);
+      // search
+      await this.searchService.updateDocument(actor.actorId.toString(), actor, 'actors');
+      // search
+
       const result = Object.fromEntries(
         Object.entries(data)
           .map(([k, v]) =>
@@ -332,6 +344,10 @@ export class ActorService {
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
       await this.actorRepo.update(actorId, { deletedBy: user.userId });
       await this.actorRepo.softDelete({ actorId });
+      // search
+      await this.searchService.removeFromIndex(actor.actorId.toString(), 'actors');
+      // search
+
       return { EC: 1, EM: 'Delete actor successfully' };
     } catch (error: any) {
       console.error('Error in deleteActorById:', error.message);

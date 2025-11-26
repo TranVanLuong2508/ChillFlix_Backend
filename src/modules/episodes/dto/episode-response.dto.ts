@@ -27,15 +27,24 @@ export class EpisodeFindOne {
   duration: number;
 
   @Expose()
+  slug: string;
+
+  @Expose()
   videoUrl: string;
 
   @Expose()
   thumbUrl: string;
 
-  // @Expose()
-  // partId: string;
+  @Expose()
+  partId: string;
 
   @Expose()
   @Type(() => PartDto)
   part: PartDto;
+
+  @Expose()
+  createdAt: string;
+
+  @Expose()
+  updatedAt: string;
 }

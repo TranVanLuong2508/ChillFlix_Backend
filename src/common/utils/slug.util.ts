@@ -5,7 +5,7 @@ export class SlugUtil {
     baseSlug: string,
     repository: Repository<T>,
   ): Promise<string> {
-    let slug = baseSlug;
+    let slug = this.slugifyVietnamese(baseSlug);
     let counter = 1;
 
     while (await repository.exists({ where: { slug } as any, withDeleted: true })) {

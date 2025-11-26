@@ -17,6 +17,7 @@ import { CoWatchingModule } from '../co-watching/co-watching.module';
 import { RatingModule } from '../rating/rating.module';
 
 import { FilmProducerModule } from '../film_producer/film_producer.module';
+import { AdminFilmService } from './admin-film/admin-film.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Film, FilmDirector, FilmGenre, FilmActor, FilmImage, FilmProducer]),
@@ -28,7 +29,7 @@ import { FilmProducerModule } from '../film_producer/film_producer.module';
     RatingModule,
   ],
   controllers: [FilmsController],
-  providers: [FilmsService],
+  providers: [FilmsService, AdminFilmService],
   exports: [FilmsService], //luong add
 })
 export class FilmsModule {}

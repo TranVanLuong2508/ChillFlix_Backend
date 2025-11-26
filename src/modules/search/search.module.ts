@@ -7,10 +7,16 @@ import { FilmsModule } from '../films/films.module';
 import { FilmsService } from '../films/films.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Film } from '../films/entities/film.entity';
+import { ActorSearchService } from './actorSearch.service';
+import { DirectorSearchService } from './directorSearch.service';
+import { ProducerSearchService } from './producerSearch.service';
+import { Actor } from '../actor/entities/actor.entity';
+import { Director } from '../directors/entities/director.entity';
+import { Producer } from '../producers/entities/producer.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Film]),
+    TypeOrmModule.forFeature([Film, Actor, Director, Producer]),
     forwardRef(() => FilmsModule),
     ElasticsearchModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
@@ -24,7 +30,7 @@ import { Film } from '../films/entities/film.entity';
     }),
   ],
   controllers: [SearchController],
-  providers: [SearchService],
-  exports: [SearchService],
+  providers: [SearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
+  exports: [SearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
 })
 export class SearchModule {}

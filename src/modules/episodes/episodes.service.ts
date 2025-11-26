@@ -63,7 +63,7 @@ export class EpisodesService {
       await this.episodeRepository.save(newEpisode);
       return {
         EC: 0,
-        EM: 'Create new episode success',
+        EM: 'Tạo tập mới thành công',
         id: newEpisode.id,
         createdAt: newEpisode.createdAt,
       };
@@ -85,7 +85,7 @@ export class EpisodesService {
       delete filter.pageSize;
 
       if (isEmpty(sort)) {
-        sort = { createdAt: -1 };
+        sort = { episodeNumber: 1 };
       }
 
       const offset = (page - 1) * limit;
@@ -207,6 +207,21 @@ export class EpisodesService {
       console.error('Error in episode service delete episode:', error || error.message);
       throw new InternalServerErrorException({
         EC: 3,
+        EM: 'Error in episode service delete episode',
+      });
+    }
+  }
+
+  async removeEpisodeByPart(partId: string, user: IUser) {
+    try {
+      await this.episodeRepository.update({ partId }, { deletedBy: user.userId.toString() });
+      await this.episodeRepository.softDelete({ partId });
+
+      return { EC: 0, EM: 'Delete episode by part id success' };
+    } catch (error) {
+      console.error('Error in episode service delete episode:', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 1,
         EM: 'Error in episode service delete episode',
       });
     }

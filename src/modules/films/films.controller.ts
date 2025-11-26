@@ -17,17 +17,31 @@ import { UpdateFilmDto } from './dto/update-film.dto';
 import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import { Permission } from 'src/decorators/permission.decorator';
 import type { IUser } from '../users/interface/user.interface';
+import { AdminFilmService } from './admin-film/admin-film.service';
 
 @Controller('films')
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmsController {
-  constructor(private readonly filmsService: FilmsService) { }
+  constructor(
+    private readonly filmsService: FilmsService,
+    private readonly adminFilmService: AdminFilmService,
+  ) {}
 
   @Post()
   @Permission('Create a film', 'FILMS')
   create(@Body() createFilmDto: CreateFilmDto, @User() user: IUser) {
-    return this.filmsService.create(createFilmDto, user);
+    return this.adminFilmService.create(createFilmDto, user);
+  }
+
+  @Public()
+  @Get('/admin')
+  findAllAdmin(
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+    @Query() qs: string,
+  ) {
+    return this.adminFilmService.findAll(page, limit, qs);
   }
 
   @Public()
@@ -55,21 +69,24 @@ export class FilmsController {
   @Patch(':id')
   @Permission('Update film', 'FILMS')
   update(@Param('id') id: string, @Body() updateFilmDto: UpdateFilmDto, @User() user: IUser) {
-    return this.filmsService.update(id, updateFilmDto, user);
+    return this.adminFilmService.update(id, updateFilmDto, user);
   }
 
   @Delete(':id')
   @Permission('Delete film', 'FILMS')
   @ResponseMessage('Soft delete film')
   remove(@Param('id') id: string, @User() user: IUser) {
-    return this.filmsService.remove(id, user);
+    return this.adminFilmService.remove(id, user);
   }
 
   @Public()
-  @SkipCheckPermission()
   @Get('by-country/:countryValueEn')
   @Permission('Get films by country', 'FILMS')
-  findByCountry(@Param('countryValueEn') countryValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+  findByCountry(
+    @Param('countryValueEn') countryValueEn: string,
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+  ) {
     return this.filmsService.findByCountry(countryValueEn, page, limit);
   }
 
@@ -77,7 +94,11 @@ export class FilmsController {
   @SkipCheckPermission()
   @Get('by-genre/:genreValueEn')
   @Permission('Get films by genre', 'FILMS')
-  findByGenre(@Param('genreValueEn') genreValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+  findByGenre(
+    @Param('genreValueEn') genreValueEn: string,
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+  ) {
     return this.filmsService.findByGenre(genreValueEn, page, limit);
   }
 
@@ -85,7 +106,11 @@ export class FilmsController {
   @SkipCheckPermission()
   @Get('by-type/:typeValueEn')
   @Permission('Get films by type', 'FILMS')
-  findByType(@Param('typeValueEn') typeValueEn: string, @Query('current') page: number, @Query('pageSize') limit: number,) {
+  findByType(
+    @Param('typeValueEn') typeValueEn: string,
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+  ) {
     return this.filmsService.findByType(typeValueEn, page, limit);
   }
 
@@ -93,7 +118,16 @@ export class FilmsController {
   @SkipCheckPermission()
   @Get('filter/search')
   @Permission('Search films with filters', 'FILMS')
-  findWithFilters(@Query('country') country?: string, @Query('type') type?: string, @Query('age_code') age_code?: string, @Query('genre') genre?: string, @Query('version') version?: string, @Query('year') year?: string, @Query('sort') sort?: string, @Query('current') page: number = 1, @Query('limit') limit: number = 10,
+  findWithFilters(
+    @Query('country') country?: string,
+    @Query('type') type?: string,
+    @Query('age_code') age_code?: string,
+    @Query('genre') genre?: string,
+    @Query('version') version?: string,
+    @Query('year') year?: string,
+    @Query('sort') sort?: string,
+    @Query('current') page: number = 1,
+    @Query('limit') limit: number = 10,
   ) {
     return this.filmsService.findWithFilters(
       { country, type, age_code, genre, version, year },

@@ -4,12 +4,24 @@ import { Public, ResponseMessage, SkipCheckPermission } from 'src/decorators/cus
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Film } from '../films/entities/film.entity';
+import { ActorSearchService } from './actorSearch.service';
+import { Actor } from '../actor/entities/actor.entity';
+import { Director } from '../directors/entities/director.entity';
+import { Producer } from '../producers/entities/producer.entity';
+import { ProducerSearchService } from './producerSearch.service';
+import { DirectorSearchService } from './directorSearch.service';
 
 @Controller('search')
 export class SearchController {
   constructor(
     private readonly searchService: SearchService,
+    private readonly actorSearchService: ActorSearchService,
+    private readonly directorSearchService: DirectorSearchService,
+    private readonly producerSearchService: ProducerSearchService,
     @InjectRepository(Film) private filmsRepository: Repository<Film>,
+    @InjectRepository(Actor) private readonly actorRepository: Repository<Actor>,
+    @InjectRepository(Director) private readonly directorRepository: Repository<Director>,
+    @InjectRepository(Producer) private readonly producerRepository: Repository<Producer>,
   ) {}
   @Get('/films')
   @Public()
@@ -17,6 +29,29 @@ export class SearchController {
   @ResponseMessage('search films')
   async searchFilms(@Query('q') q: string) {
     return this.searchService.searchFilms(q);
+  }
+
+  @Get('/actors')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('search actors')
+  async searchActors(@Query('q') q: string) {
+    return this.actorSearchService.searchActors(q);
+  }
+  @Get('/directors')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('search films')
+  async searchDirectors(@Query('q') q: string) {
+    return this.directorSearchService.searchDirectors(q);
+  }
+
+  @Get('/producers')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('search films')
+  async searchProducers(@Query('q') q: string) {
+    return this.producerSearchService.searchProducers(q);
   }
 
   @Delete('/films')
@@ -36,12 +71,47 @@ export class SearchController {
     return this.searchService.bulkIndexFilms(films);
   }
 
+  @Get('/sync/actors')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('bulk index actors')
+  async syncActors() {
+    const actors = await this.actorRepository.find();
+    return this.actorSearchService.bulkIndexActors(actors);
+  }
+
+  @Get('/sync/directors')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('bulk index actors')
+  async syncDirectors() {
+    const directors = await this.directorRepository.find();
+    return this.directorSearchService.bulkIndexDirectors(directors);
+  }
+
+  @Get('/sync/producers')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('bulk index actors')
+  async syncProducers() {
+    const producers = await this.producerRepository.find();
+    return this.producerSearchService.bulkIndexProducers(producers);
+  }
+
   @Get('/get-All-Films-From-Index')
   @Public()
   @SkipCheckPermission()
   @ResponseMessage('Get all films from films Index')
   async getAllFilmsFromIndex() {
     return this.searchService.getAllFilmDocument();
+  }
+
+  @Get('/get-All-From-Index')
+  @Public()
+  @SkipCheckPermission()
+  @ResponseMessage('Get all data from Index')
+  async getAllFromIndex() {
+    return this.actorSearchService.getAllDocument('actors');
   }
 
   @Get('/films/count')
