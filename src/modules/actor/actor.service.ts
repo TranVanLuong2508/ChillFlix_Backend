@@ -55,11 +55,6 @@ export class ActorService {
       if (!dto.actorName || dto.actorName.trim() === '')
         return { EC: 0, EM: 'Actor name is required!' };
 
-      const exists = await this.actorRepo.findOne({
-        where: { actorName: dto.actorName },
-      });
-      if (exists) return { EC: 0, EM: 'Actor name already exists!' };
-
       const baseSlug = SlugUtil.slugifyVietnamese(dto.actorName);
       const slug = await SlugUtil.generateUniqueSlug(baseSlug, this.actorRepo);
       const actor = this.actorRepo.create({
@@ -270,12 +265,6 @@ export class ActorService {
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
 
       if (dto.actorName) {
-        const exists = await this.actorRepo.findOne({
-          where: { actorName: dto.actorName },
-        });
-        if (exists && exists.actorId !== actorId)
-          return { EC: 0, EM: 'Actor name already exists!' };
-
         actor.actorName = dto.actorName;
         const baseSlug = SlugUtil.slugifyVietnamese(dto.actorName);
         actor.slug = await SlugUtil.generateUniqueSlug(baseSlug, this.actorRepo);

@@ -35,11 +35,6 @@ export class DirectorService {
       });
       if (!nationality) return { EC: 0, EM: `Nationality ${dto.nationalityCode} is not valid!` };
 
-      const exists = await this.directorRepo.findOne({
-        where: { directorName: dto.directorName },
-      });
-      if (exists) return { EC: 0, EM: 'Director name already exists!' };
-
       const baseSlug = SlugUtil.slugifyVietnamese(dto.directorName);
       const slug = await SlugUtil.generateUniqueSlug(baseSlug, this.directorRepo);
 
@@ -253,12 +248,6 @@ export class DirectorService {
       if (!director) return { EC: 0, EM: `Director ${id} not found!` };
 
       if (dto.directorName) {
-        const exists = await this.directorRepo.findOne({
-          where: { directorName: dto.directorName },
-        });
-        if (exists && exists.directorId !== id)
-          return { EC: 0, EM: 'Director name already exists!' };
-
         director.directorName = dto.directorName;
         const baseSlug = SlugUtil.slugifyVietnamese(dto.directorName);
         director.slug = await SlugUtil.generateUniqueSlug(baseSlug, this.directorRepo);

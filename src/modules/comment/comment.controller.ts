@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -10,10 +20,8 @@ import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 
 @Controller('comment')
 export class CommentController {
-  constructor(private readonly commentService: CommentService) { }
+  constructor(private readonly commentService: CommentService) {}
 
-  @UseGuards(AuthGuard('jwt'))
-  @Public()
   @Post('create-comment')
   @Permission('Create a new comment', 'COMMENT')
   @ResponseMessage('Create a new comment')
@@ -21,11 +29,14 @@ export class CommentController {
     return this.commentService.createComment(createCommentDto, user);
   }
 
-
   @Get('get-comments-by-film/:filmId')
   @Permission('Get comments by film (authenticated)', 'COMMENT')
   @ResponseMessage('Get comments by film ID')
-  getCommentsByFilmAuth(@Param('filmId') filmId: string, @Query() query: PaginationDto, @User() user: IUser) {
+  getCommentsByFilmAuth(
+    @Param('filmId') filmId: string,
+    @Query() query: PaginationDto,
+    @User() user: IUser,
+  ) {
     return this.commentService.findCommentsByFilm(query, filmId, user);
   }
 
@@ -37,7 +48,6 @@ export class CommentController {
     return this.commentService.findCommentsByFilm(query, filmId, null);
   }
 
-  @Public()
   @Get('get-comment/:commentId')
   @Permission('Get comment by ID', 'COMMENT')
   @ResponseMessage('Get comment by ID')
@@ -45,7 +55,6 @@ export class CommentController {
     return this.commentService.getComment(commentId);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Patch('update-comment/:commentId')
   @Permission('Update a comment', 'COMMENT')
   @ResponseMessage('Update comment by ID')
@@ -57,8 +66,6 @@ export class CommentController {
     return this.commentService.updateComment(commentId, updateCommentDto, user);
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Public()
   @Delete('delete-comment/:commentId')
   @Permission('Delete comment', 'COMMENT')
   @ResponseMessage('Remove comment by ID')
@@ -66,7 +73,6 @@ export class CommentController {
     return this.commentService.deleteComment(commentId, user);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Patch('toggle-hide/:commentId')
   @Permission('Toggle hide comment', 'COMMENT')
   toggleHideComment(@Param('commentId') id: string, @User() user: IUser) {

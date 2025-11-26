@@ -3,13 +3,11 @@ import { CommentReactionService } from './comment-reaction.service';
 import { CreateCommentReactionDto } from './dto/create-comment-reaction.dto';
 import { User } from 'src/decorators/customize';
 import type { IUser } from '../users/interface/user.interface';
-import { AuthGuard } from '@nestjs/passport';
 import { Permission } from 'src/decorators/permission.decorator';
 
 @Controller('comment-reactions')
-@UseGuards(AuthGuard('jwt'))
 export class CommentReactionController {
-  constructor(private readonly reactionService: CommentReactionService) { }
+  constructor(private readonly reactionService: CommentReactionService) {}
 
   @Post('create-reaction')
   @Permission('Create reaction to comment', 'COMMENT-REACTIONS')
