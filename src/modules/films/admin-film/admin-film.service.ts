@@ -82,7 +82,7 @@ export class AdminFilmService {
 
       return {
         EC: 0,
-        EM: 'Create new film success',
+        EM: 'Tạo mới phim thành công',
         id: newFilm.filmId,
         createdAt: newFilm.createdAt,
       };
@@ -196,7 +196,6 @@ export class AdminFilmService {
 
       this.filmsRepository.merge(filmDataRaw, otherFilmData);
 
-      console.log('Check slug: ', slug, ' - ', filmDataRaw.slug);
       if (slug && slug !== '' && slug !== filmDataRaw.slug) {
         const newSlug = await SlugUtil.generateUniqueSlug(slug, this.filmsRepository);
         filmDataRaw.slug = newSlug;
@@ -250,7 +249,7 @@ export class AdminFilmService {
 
       return {
         EC: 0,
-        EM: 'Film had updated success',
+        EM: 'Cập nhật phim thành công',
         message: 'Update Film successful',
         affectedRows: 1,
       };
@@ -386,7 +385,7 @@ export class AdminFilmService {
 
       return {
         EC: 0,
-        EM: 'Film had deleted success',
+        EM: 'Xóa phim thành công',
         id: filmId,
         deleted: true,
       };

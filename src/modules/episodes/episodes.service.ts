@@ -46,10 +46,10 @@ export class EpisodesService {
       });
 
       if (!partIsExist) {
-        throw new NotFoundException({
+        return {
           EC: 1,
           EM: `Part with id ${createEpisodeDto.partId} not found`,
-        });
+        };
       }
 
       if (!createEpisodeDto.title) {
@@ -161,12 +161,12 @@ export class EpisodesService {
   async update(id: string, updateEpisodeDto: UpdateEpisodeDto, user: IUser) {
     try {
       if (!isUUID(id)) {
-        throw new BadRequestException({ EC: 1, EM: 'Wrong format episode id!' });
+        return { EC: 1, EM: 'Wrong format episode id!' };
       }
 
       const episodeData = await this.episodeRepository.findOneBy({ id });
       if (!episodeData) {
-        throw new NotFoundException({ EC: 2, EM: `Episode with id: ${id} not found` });
+        return { EC: 2, EM: `Episode with id: ${id} not found` };
       }
 
       Object.assign(episodeData, updateEpisodeDto);
@@ -175,7 +175,7 @@ export class EpisodesService {
       await this.episodeRepository.save(episodeData);
       return {
         EC: 0,
-        EM: 'Update apisode success',
+        EM: 'Cập nhật tập phim thành công',
         message: 'Update Episode success',
         affectedRows: 1,
       };
@@ -202,7 +202,7 @@ export class EpisodesService {
       await this.episodeRepository.update(id, { deletedBy: user.userId.toString() });
       await this.episodeRepository.softDelete(id);
 
-      return { EC: 0, EM: 'Delete episode success', deleted: 'success' };
+      return { EC: 0, EM: 'Xóa tập phim thành công', deleted: 'success' };
     } catch (error) {
       console.error('Error in episode service delete episode:', error || error.message);
       throw new InternalServerErrorException({
