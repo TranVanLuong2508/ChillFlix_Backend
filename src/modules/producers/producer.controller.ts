@@ -4,6 +4,7 @@ import { CreateProducerDto } from "./dto/create-producer.dto"
 import { UpdateProducerDto } from "./dto/update-producer.dto"
 import { PaginationDto } from "./dto/pagination.dto"
 import { Public, ResponseMessage, User, SkipCheckPermission } from "src/decorators/customize"
+import { Permission } from "src/decorators/permission.decorator"
 import type { IUser } from "../users/interface/user.interface"
 
 @Controller("producer")
@@ -11,6 +12,7 @@ export class ProducerController {
   constructor(private readonly producerService: ProducerService) { }
 
   @Post("create-producer")
+  @Permission("Create a producer", "PRODUCER")
   @SkipCheckPermission()
   @ResponseMessage("Create a new producer")
   async createProducer(@Body() dto: CreateProducerDto, @User() user: IUser) {
@@ -18,6 +20,7 @@ export class ProducerController {
   }
 
   @Get('get-all-producers')
+  @Permission("Get all producers", "PRODUCER")
   @SkipCheckPermission()
   @Public()
   @ResponseMessage('Get all producers with pagination, filtering, and sorting')
@@ -27,12 +30,14 @@ export class ProducerController {
 
   @Public()
   @Get('get-producer-by-id/:producerId')
+  @Permission("Get producer by ID", "PRODUCER")
   @ResponseMessage('Get producer by ID')
   async getProducerById(@Param('producerId', ParseIntPipe) producerId: number) {
     return await this.producerService.getProducerById(producerId);
   }
 
   @Patch("edit-producer/:producerId")
+  @Permission("Update producer by ID", "PRODUCER")
   @ResponseMessage("Edit producer by ID")
   @SkipCheckPermission()
   async updateProducer(
@@ -45,6 +50,7 @@ export class ProducerController {
   }
 
   @Delete("delete-producer-by-id/:producerId")
+  @Permission("Delete producer by ID", "PRODUCER")
   @ResponseMessage("Delete producer by ID")
   @SkipCheckPermission()
   async deleteProducerById(@Param('producerId', ParseIntPipe) producerId: number, @User() user: IUser) {

@@ -5,13 +5,16 @@ import type { Request, Response } from 'express';
 import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
 import type { RefundRequestDto } from './dto/refund-vnpay.dto';
 import type { IUser } from '../users/interface/user.interface';
+import { Permission } from 'src/decorators/permission.decorator';
+
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   @Post()
   @ResponseMessage('create payment url')
   @SkipCheckPermission()
+  @Permission('Create a payment url', 'PAYMENTS')
   createPayment(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,

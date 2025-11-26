@@ -14,14 +14,16 @@ import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { ResponseMessage, SkipCheckPermission, User } from 'src/decorators/customize';
+import { Permission } from 'src/decorators/permission.decorator';
 import type { IUser } from '../users/interface/user.interface';
 import { ReassignRoleDto } from './dto/reassign-role.dto';
 
 @Controller('roles')
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) {}
+  constructor(private readonly rolesService: RolesService) { }
 
   @Post()
+  @Permission('Create a role', 'ROLES')
   @SkipCheckPermission()
   @ResponseMessage('Create a Role')
   create(@Body() createRoleDto: CreateRoleDto, @User() user: IUser) {
@@ -29,6 +31,7 @@ export class RolesController {
   }
 
   @Get()
+  @Permission('Get all roles', 'ROLES')
   @ResponseMessage('Get all roles')
   @SkipCheckPermission()
   findAll() {
@@ -36,6 +39,7 @@ export class RolesController {
   }
 
   @Get(':id')
+  @Permission('Get a role by ID', 'ROLES')
   @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
   @ResponseMessage('Get a role by id')
@@ -45,12 +49,14 @@ export class RolesController {
   }
 
   @Get('get-by-id/:id')
+  @Permission('Get role by ID for details', 'ROLES')
   @SkipCheckPermission()
   GetById(@Param('id') id: string) {
     return this.rolesService.finOneById(+id);
   }
 
   @Patch(':id')
+  @Permission('Update a role by ID', 'ROLES')
   @ResponseMessage('Update a role')
   @SkipCheckPermission()
   update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto, @User() user: IUser) {
@@ -58,6 +64,7 @@ export class RolesController {
   }
 
   @Delete(':id')
+  @Permission('Delete a role by ID', 'ROLES')
   @SkipCheckPermission()
   @ResponseMessage('Delete a role')
   remove(@Param('id') id: string, @User() user: IUser) {
@@ -65,6 +72,7 @@ export class RolesController {
   }
 
   @Get(':id/check-delete')
+  @Permission('Check role before deletion', 'ROLES')
   @SkipCheckPermission()
   @ResponseMessage('Check role before delete')
   checkBeforeDelete(@Param('id') id: string) {
@@ -72,6 +80,7 @@ export class RolesController {
   }
 
   @Post(':id/reassign-and-delete')
+  @Permission('Reassign users and delete role', 'ROLES')
   @ResponseMessage('Reassign users and delete role')
   @SkipCheckPermission()
   reassignAndDelete(@Param('id') id: string, @Body() dto: ReassignRoleDto, @User() user: IUser) {
@@ -79,6 +88,7 @@ export class RolesController {
   }
 
   @Patch(':id/restore')
+  @Permission('Restore a deleted role', 'ROLES')
   @ResponseMessage('Restore a role')
   @SkipCheckPermission()
   restore(@Param('id') id: string, @User() user: IUser) {
