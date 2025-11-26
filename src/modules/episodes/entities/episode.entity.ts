@@ -11,7 +11,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { RoomCoWatching } from 'src/modules/co-watching/entities/co-watching.entity';
 
 @Entity({ name: 'episodes' })
 export class Episode {

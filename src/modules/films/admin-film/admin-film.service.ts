@@ -215,14 +215,36 @@ export class AdminFilmService {
       }
 
       if (directors) {
+        const hasMain = directors.some((d) => d.isMain);
+        if (!hasMain) {
+          return {
+            EC: 4,
+            EM: 'Vui lòng chọn đạo diễn chính cho bộ phim',
+          };
+        }
         await this.updateFilmDirector(filmId, directors, user);
       }
 
       if (producers) {
+        const hasMain = producers.some((d) => d.isMain);
+        if (!hasMain) {
+          return {
+            EC: 5,
+            EM: 'Vui lòng chọn nhà sản xuất chính cho bộ phim',
+          };
+        }
         await this.updateFilmProducer(filmId, producers, user);
       }
 
       if (actors) {
+        const hasntCharacter = actors.some((d) => d.characterName === '');
+        if (hasntCharacter) {
+          return {
+            EC: 6,
+            EM: 'Vui lòng nhập tên nhân vật diễn viên đóng',
+          };
+        }
+
         await this.updateFilmActor(filmId, actors, user);
       }
 
@@ -235,7 +257,7 @@ export class AdminFilmService {
     } catch (error) {
       console.log('Error in service update film: ', error || error.message);
       throw new InternalServerErrorException({
-        EC: 3,
+        EC: 7,
         EM: 'Error in service update film',
       });
     }
@@ -273,24 +295,6 @@ export class AdminFilmService {
     user: IUser,
   ) {
     try {
-      // const existDirector = await this.filmDirectorRepository.find({
-      //   where: { film: { filmId } },
-      //   relations: ['film', 'director'],
-      // });
-
-      // for (const director of directors) {
-      //   const found = existDirector.find((d) => d.director.directorId === director.directorId);
-      //   let response: any = null;
-      //   if (found) {
-      //     response = await this.filmDirectorService.updateFilmDirector(found.id, director, user);
-      //   } else {
-      //     response = await this.filmDirectorService.createFilmDirector(director, user);
-      //   }
-      //   if (!response.EC) {
-      //     return response;
-      //   }
-      // }
-
       await this.filmDirectorRepository.delete({ film: { filmId } });
       for (const director of directors) {
         const response = await this.filmDirectorService.createFilmDirector(
@@ -316,24 +320,6 @@ export class AdminFilmService {
     user: IUser,
   ) {
     try {
-      // const existProducer = await this.filmProducerRepository.find({
-      //   where: { film: { filmId } },
-      //   relations: ['film', 'producer'],
-      // });
-
-      // for (const producer of producers) {
-      //   const found = existProducer.find((p) => p.producer.producerId === producer.producerId);
-      //   let response: any = null;
-      //   if (found) {
-      //     response = await this.filmProducerService.updateFilmProducer(found.id, producer, user);
-      //   } else {
-      //     response = await this.filmProducerService.createFilmProducer(producer, user);
-      //   }
-      //   if (!response.EC) {
-      //     return response;
-      //   }
-      // }
-
       await this.filmProducerRepository.delete({ film: { filmId } });
       for (const producer of producers) {
         const response = await this.filmProducerService.createFilmProducer(
@@ -359,24 +345,6 @@ export class AdminFilmService {
     user: IUser,
   ) {
     try {
-      // const existActor = await this.filmActorRepository.find({
-      //   where: { film: { filmId } },
-      //   relations: ['film', 'actor'],
-      // });
-
-      // for (const actor of actors) {
-      //   const found = existActor.find((d) => d.actor.actorId === actor.actorId);
-      //   let response: any = null;
-      //   if (found) {
-      //     response = await this.filmActorService.updateFilmActor(found.id, actor, user);
-      //   } else {
-      //     response = await this.filmActorService.createFilmActor(actor, user);
-      //   }
-      //   if (!response.EC) {
-      //     return response;
-      //   }
-      // }
-
       await this.filmActorRepository.delete({ film: { filmId } });
       for (const actor of actors) {
         const response = await this.filmActorService.createFilmActor({ ...actor, filmId }, user);
