@@ -33,23 +33,25 @@ export class ProducerController {
   }
 
   @Patch("edit-producer/:producerId")
-  @ResponseMessage("Edit producer by ID")
   @SkipCheckPermission()
+  @ResponseMessage("Edit producer by ID")
   async updateProducer(
     @Param('producerId', ParseIntPipe) producerId: number,
     @Body() dto: UpdateProducerDto,
     @User() user: IUser,
   ) {
-    console.log('[DEBUG] updateProducer called', { producerId, dto, user: user ? { userId: user.userId, roles: (user as any).roles } : null })
     return await this.producerService.updateProducer(producerId, dto, user)
   }
 
   @Delete("delete-producer-by-id/:producerId")
-  @ResponseMessage("Delete producer by ID")
   @SkipCheckPermission()
-  async deleteProducerById(@Param('producerId', ParseIntPipe) producerId: number, @User() user: IUser) {
-    console.log('[DEBUG] deleteProducerById called', { producerId, user: user ? { userId: user.userId, roles: (user as any).roles } : null })
-    return await this.producerService.deleteProducerById(producerId, user)
+  @ResponseMessage("Delete producer by ID")
+  async deleteProducerById(
+    @Param('producerId', ParseIntPipe) producerId: number,
+    @Query('newProducerId', new ParseIntPipe({ optional: true })) newProducerId?: number,
+    @User() user?: IUser,
+  ) {
+    return await this.producerService.deleteProducerById(producerId, newProducerId, user)
   }
 
   // @Public()
