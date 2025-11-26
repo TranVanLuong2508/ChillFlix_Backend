@@ -24,7 +24,6 @@ export class RolesController {
 
   @Post()
   @Permission('Create a role', 'ROLES')
-  @SkipCheckPermission()
   @ResponseMessage('Create a Role')
   create(@Body() createRoleDto: CreateRoleDto, @User() user: IUser) {
     return this.rolesService.create(createRoleDto, user);
@@ -33,7 +32,6 @@ export class RolesController {
   @Get()
   @Permission('Get all roles', 'ROLES')
   @ResponseMessage('Get all roles')
-  @SkipCheckPermission()
   findAll() {
     return this.rolesService.findAll();
   }
@@ -43,14 +41,12 @@ export class RolesController {
   @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
   @ResponseMessage('Get a role by id')
-  @SkipCheckPermission()
   findOne(@Param('id') id: string) {
     return this.rolesService.findOne(+id);
   }
 
   @Get('get-by-id/:id')
   @Permission('Get role by ID for details', 'ROLES')
-  @SkipCheckPermission()
   GetById(@Param('id') id: string) {
     return this.rolesService.finOneById(+id);
   }
@@ -58,14 +54,12 @@ export class RolesController {
   @Patch(':id')
   @Permission('Update a role by ID', 'ROLES')
   @ResponseMessage('Update a role')
-  @SkipCheckPermission()
   update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto, @User() user: IUser) {
     return this.rolesService.update(+id, updateRoleDto, user);
   }
 
   @Delete(':id')
   @Permission('Delete a role by ID', 'ROLES')
-  @SkipCheckPermission()
   @ResponseMessage('Delete a role')
   remove(@Param('id') id: string, @User() user: IUser) {
     return this.rolesService.remove(+id, user);
@@ -73,7 +67,6 @@ export class RolesController {
 
   @Get(':id/check-delete')
   @Permission('Check role before deletion', 'ROLES')
-  @SkipCheckPermission()
   @ResponseMessage('Check role before delete')
   checkBeforeDelete(@Param('id') id: string) {
     return this.rolesService.checkRoleBeforDelete(+id);
@@ -82,7 +75,6 @@ export class RolesController {
   @Post(':id/reassign-and-delete')
   @Permission('Reassign users and delete role', 'ROLES')
   @ResponseMessage('Reassign users and delete role')
-  @SkipCheckPermission()
   reassignAndDelete(@Param('id') id: string, @Body() dto: ReassignRoleDto, @User() user: IUser) {
     return this.rolesService.reassignAndDelete(+id, dto, user);
   }
@@ -90,7 +82,6 @@ export class RolesController {
   @Patch(':id/restore')
   @Permission('Restore a deleted role', 'ROLES')
   @ResponseMessage('Restore a role')
-  @SkipCheckPermission()
   restore(@Param('id') id: string, @User() user: IUser) {
     return this.rolesService.restore(+id, user);
   }
