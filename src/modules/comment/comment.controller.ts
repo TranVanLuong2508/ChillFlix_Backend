@@ -42,6 +42,7 @@ export class CommentController {
   }
 
   @SkipCheckPermission()
+  @Public()
   @Get('get-comments-by-film-guest/:filmId')
   @ResponseMessage('Get comments by film ID')
   getCommentsByFilmGuest(@Param('filmId') filmId: string, @Query() query: PaginationDto) {
