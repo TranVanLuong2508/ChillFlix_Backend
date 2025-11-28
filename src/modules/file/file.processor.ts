@@ -72,11 +72,12 @@ export class FileProcessor {
       await job.progress(100);
       this.logger.log(`[Job ${job.id}] Upload completed: ${result.url}`);
 
-      return {
-        success: true,
-        result,
-        processedAt: new Date(),
-      };
+      // return {
+      //   success: true,
+      //   result,
+      //   processedAt: new Date(),
+      // };
+      return { ...result };
     } catch (error) {
       this.logger.error(`[Job ${job.id}] Error:`, error.message);
 
