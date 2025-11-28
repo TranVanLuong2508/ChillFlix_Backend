@@ -13,6 +13,7 @@ export class ProducerSearchService {
     return {
       producerId: producer.producerId,
       producerName: producer.producerName,
+      slug: producer.slug,
     };
   }
 
@@ -47,6 +48,7 @@ export class ProducerSearchService {
         {
           producerId: producer.producerId,
           producerName: producer.producerName,
+          slug: producer.slug,
         },
       ]);
       const result = await this.elasticsearchService.bulk({

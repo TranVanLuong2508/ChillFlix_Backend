@@ -15,6 +15,9 @@ export const actorIndexMapping = {
       actorId: { type: 'keyword' as const },
       // SEARCHABLE FIELDS
       actorName: { type: 'text' as const, analyzer: 'vn_analyzer' },
+
+      avatarUrl: { type: 'text' as const, index: false },
+      slug: { type: 'text' as const, index: false },
     },
   },
 };

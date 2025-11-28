@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { SearchController } from './search.controller';
 import { ElasticsearchModule } from '@nestjs/elasticsearch';
-import { SearchService } from './search.service';
+import { FilmSearchService } from './filmSearch.service';
 import { ConfigService } from '@nestjs/config';
 import { FilmsModule } from '../films/films.module';
 import { FilmsService } from '../films/films.service';
@@ -30,7 +30,7 @@ import { Producer } from '../producers/entities/producer.entity';
     }),
   ],
   controllers: [SearchController],
-  providers: [SearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
-  exports: [SearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
+  providers: [FilmSearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
+  exports: [FilmSearchService, ActorSearchService, DirectorSearchService, ProducerSearchService],
 })
 export class SearchModule {}

@@ -13,6 +13,8 @@ export class DirectorSearchService {
     return {
       directorId: director.directorId,
       directorName: director.directorName,
+      slug: director.slug,
+      avatarUrl: director.avatarUrl,
     };
   }
 
@@ -47,6 +49,8 @@ export class DirectorSearchService {
         {
           directorId: director.directorId,
           directorName: director.directorName,
+          slug: director.slug,
+          avatarUrl: director.avatarUrl,
         },
       ]);
       const result = await this.elasticsearchService.bulk({

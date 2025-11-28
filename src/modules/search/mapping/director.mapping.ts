@@ -15,6 +15,9 @@ export const directorIndexMapping = {
       directorId: { type: 'keyword' as const },
       // SEARCHABLE FIELDS
       directorName: { type: 'text' as const, analyzer: 'vn_analyzer' },
+
+      avatarUrl: { type: 'text' as const, index: false },
+      slug: { type: 'text' as const, index: false },
     },
   },
 };

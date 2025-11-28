@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { filmIndexMapping } from './film.mapping';
+import { filmIndexMapping } from './mapping/film.mapping';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { IfilmIndex } from './interfaces/film-index.interface';
 import { Film } from '../films/entities/film.entity';
@@ -8,7 +8,7 @@ import { directorIndexMapping } from './mapping/director.mapping';
 import { producerIndexMapping } from './mapping/producer.mapping';
 
 @Injectable()
-export class SearchService implements OnModuleInit {
+export class FilmSearchService implements OnModuleInit {
   private readonly filmIndex = 'films';
   private readonly actorIndex = 'actors';
   private readonly directorIndex = 'directors';

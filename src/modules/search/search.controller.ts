@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
-import { SearchService } from './search.service';
+import { FilmSearchService } from './filmSearch.service';
 import { Public, ResponseMessage, SkipCheckPermission } from 'src/decorators/customize';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,7 +14,7 @@ import { DirectorSearchService } from './directorSearch.service';
 @Controller('search')
 export class SearchController {
   constructor(
-    private readonly searchService: SearchService,
+    private readonly filmSearchService: FilmSearchService,
     private readonly actorSearchService: ActorSearchService,
     private readonly directorSearchService: DirectorSearchService,
     private readonly producerSearchService: ProducerSearchService,
@@ -28,7 +28,7 @@ export class SearchController {
   @SkipCheckPermission()
   @ResponseMessage('search films')
   async searchFilms(@Query('q') q: string) {
-    return this.searchService.searchFilms(q);
+    return this.filmSearchService.searchFilms(q);
   }
 
   @Get('/actors')
@@ -59,7 +59,7 @@ export class SearchController {
   @SkipCheckPermission()
   @ResponseMessage('Delete Films index')
   async deleteIndex() {
-    return this.searchService.deleteIndexFilm();
+    return this.filmSearchService.deleteIndexFilm();
   }
 
   @Get('/sync/films')
@@ -68,7 +68,7 @@ export class SearchController {
   @ResponseMessage('bulk index film')
   async syncFilms() {
     const films = await this.filmsRepository.find(); // lấy toàn bộ films
-    return this.searchService.bulkIndexFilms(films);
+    return this.filmSearchService.bulkIndexFilms(films);
   }
 
   @Get('/sync/actors')
@@ -103,7 +103,7 @@ export class SearchController {
   @SkipCheckPermission()
   @ResponseMessage('Get all films from films Index')
   async getAllFilmsFromIndex() {
-    return this.searchService.getAllFilmDocument();
+    return this.filmSearchService.getAllFilmDocument();
   }
 
   @Get('/get-All-From-Index')
@@ -119,14 +119,14 @@ export class SearchController {
   @SkipCheckPermission()
   @ResponseMessage('Count film in films index')
   async countFilms() {
-    return this.searchService.countFilms();
+    return this.filmSearchService.countFilms();
   }
 
   @Delete('/films/:filmId')
   @Public()
   @SkipCheckPermission()
   async TESTdeleteFilmFromIndex(@Param('filmId') filmId: string) {
-    return this.searchService.removeFilmFromIndex(filmId);
+    return this.filmSearchService.removeFilmFromIndex(filmId);
   }
 
   @Delete('/delete-all')
@@ -134,6 +134,6 @@ export class SearchController {
   @SkipCheckPermission()
   @ResponseMessage('Delete all documents in  Films index')
   async deleteAllDocumentInFilmIndex() {
-    return this.searchService.clearDocumentInFilmIndex();
+    return this.filmSearchService.clearDocumentInFilmIndex();
   }
 }

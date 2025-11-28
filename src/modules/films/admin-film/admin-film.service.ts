@@ -14,7 +14,7 @@ import { FilmProducer } from 'src/modules/film_producer/entities/film_producer.e
 import { FilmActor } from 'src/modules/film_actor/entities/film_actor.entity';
 import { FilmDirectorService } from 'src/modules/film_director/film_director.service';
 import { FilmActorService } from 'src/modules/film_actor/film_actor.service';
-import { SearchService } from 'src/modules/search/search.service';
+import { FilmSearchService } from 'src/modules/search/filmSearch.service';
 import { FilmProducerService } from 'src/modules/film_producer/film_producer.service';
 import { RatingService } from 'src/modules/rating/rating.service';
 import aqp from 'api-query-params';
@@ -37,7 +37,7 @@ export class AdminFilmService {
     @InjectRepository(FilmActor) private filmActorRepository: Repository<FilmActor>,
     private filmDirectorService: FilmDirectorService,
     private filmActorService: FilmActorService,
-    private searchService: SearchService, //luong add
+    private filmSearchService: FilmSearchService, //luong add
     private filmProducerService: FilmProducerService,
     private ratingService: RatingService,
   ) {}
@@ -54,7 +54,7 @@ export class AdminFilmService {
         createdBy: user.userId.toString(),
       });
       await this.filmsRepository.save(newFilm);
-      await this.searchService.indexFilm(newFilm); //luong add
+      await this.filmSearchService.indexFilm(newFilm); //luong add
 
       if (directors) {
         for (const director of directors) {
@@ -207,7 +207,7 @@ export class AdminFilmService {
 
       filmDataRaw.updatedBy = user.userId.toString();
       await this.filmsRepository.save(filmDataRaw);
-      await this.searchService.updateFilmDocument(filmDataRaw); //luong add
+      await this.filmSearchService.updateFilmDocument(filmDataRaw); //luong add
 
       if (filmImages) {
         await this.updateFilmImage(filmId, filmImages);
@@ -381,7 +381,7 @@ export class AdminFilmService {
       }
       await this.filmsRepository.update(filmId, { deletedBy: user.userId.toString() });
       await this.filmsRepository.softDelete(filmId);
-      await this.searchService.removeFilmFromIndex(filmId); //luong add
+      await this.filmSearchService.removeFilmFromIndex(filmId); //luong add
 
       return {
         EC: 0,

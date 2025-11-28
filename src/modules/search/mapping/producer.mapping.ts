@@ -15,6 +15,8 @@ export const producerIndexMapping = {
       producerId: { type: 'keyword' as const },
       // SEARCHABLE FIELDS
       producerName: { type: 'text' as const, analyzer: 'vn_analyzer' },
+
+      slug: { type: 'text' as const, index: false },
     },
   },
 };

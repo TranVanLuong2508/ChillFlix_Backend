@@ -13,6 +13,8 @@ export class ActorSearchService {
     return {
       actorId: actor.actorId,
       actorName: actor.actorName,
+      slug: actor.slug,
+      avatarUrl: actor.avatarUrl,
     };
   }
 
@@ -47,6 +49,8 @@ export class ActorSearchService {
         {
           actorId: actor.actorId,
           actorName: actor.actorName,
+          slug: actor.slug,
+          avatarUrl: actor.avatarUrl,
         },
       ]);
       const result = await this.elasticsearchService.bulk({
