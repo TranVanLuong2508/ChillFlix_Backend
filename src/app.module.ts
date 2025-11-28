@@ -67,6 +67,8 @@ import { WatchGateway } from './modules/films/socket/watch-gateway';
 import { RedisModule } from './modules/redis/redis.module';
 import { CoWatchingModule } from './modules/co-watching/co-watching.module';
 import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entity';
+import { BullModule } from '@nestjs/bull';
+import { BullConfigService } from './config/bull.config';
 
 @Module({
   imports: [
@@ -126,7 +128,6 @@ import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entit
     RolePermissionModule,
     DirectorModule,
     FilmsModule,
-    FileModule,
     SubscriptionPlansModule,
     MarkdownsModule,
     PartsModule,
@@ -151,9 +152,16 @@ import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entit
     FilmProducerModule,
     FilmProducer,
 
-    RedisModule,
     CoWatchingModule,
+    RedisModule,
+
+    BullModule.forRootAsync({
+      imports: [RedisModule],
+      useClass: BullConfigService,
+    }),
+    FileModule,
   ],
+
   controllers: [AppController],
   providers: [AppService, WatchGateway],
 })
