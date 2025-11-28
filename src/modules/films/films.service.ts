@@ -13,7 +13,7 @@ import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
-import { plainToInstance } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
 import { IUser } from '../users/interface/user.interface';
 import { allcodeCommonFields } from 'src/common/utils/CommonField';
@@ -27,6 +27,7 @@ import { FilmActorService } from '../film_actor/film_actor.service';
 import { FilmSearchService } from '../search/filmSearch.service';
 import { FilmProducerService } from '../film_producer/film_producer.service';
 import { RatingService } from '../rating/rating.service';
+import _ from 'lodash';
 
 @Injectable()
 export class FilmsService {
@@ -903,6 +904,74 @@ export class FilmsService {
     } catch (error) {
       console.log('Error in film service get all code key map: ', error || error.message);
       return null;
+    }
+  }
+
+  async getFilmByTypeForChatBotData() {
+    try {
+      const dataRows = await this.filmGenreRepository.find({
+        relations: [
+          'film',
+          'genre',
+          'film.age',
+          'film.type',
+          'film.country',
+          'film.language',
+          'film.publicStatus',
+        ],
+      });
+      const clean = (obj) =>
+        _.omit(obj, [
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+          'createdBy',
+          'updatedBy',
+          'deletedBy',
+          'view',
+          'age',
+          'type',
+          'country',
+          'language',
+          'publicStatus',
+          'ageCode',
+          'typeCode',
+          'countryCode',
+          'langCode',
+          'publicStatusCode',
+          'thumbUrl',
+          'filmId',
+        ]);
+
+      const grouped = _(dataRows)
+        .groupBy((item) => item.genre.valueVi)
+        .map((films, genre) => ({
+          genre,
+          filmList: films.map((f) => {
+            const film = instanceToPlain(f.film);
+
+            return {
+              ...clean(film),
+              age: film.age?.valueVi,
+              type: film.type?.valueVi,
+              country: film.country?.valueVi,
+              language: film.language?.valueVi,
+              publicStatus: film.publicStatus?.valueVi,
+            };
+          }),
+        }))
+        .value();
+      return {
+        EC: 1,
+        EM: 'Fetch film for chatbot data by genre sucess',
+        result: instanceToPlain(grouped),
+      };
+    } catch (error) {
+      console.log('Error in film service getFilmForChatBotData: ', error || error.message);
+      return {
+        EC: 0,
+        EM: 'Error from film service getFilmForChatBotData',
+      };
     }
   }
 }

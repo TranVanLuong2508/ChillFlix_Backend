@@ -136,4 +136,10 @@ export class FilmsController {
       limit,
     );
   }
+
+  @Public()
+  @Get('/list-film-by-genre/chatbot')
+  getFilmDataForChatBotByGenre() {
+    return this.filmsService.getFilmByTypeForChatBotData();
+  }
 }

@@ -20,7 +20,7 @@ import { Rating } from 'src/modules/rating/entities/rating.entity';
 import { FilmImage } from './film_image.entity';
 import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
 import { PlaylistFilm } from 'src/modules/playlist-film/entities/playlist-film.entity';
-import { FilmProducer } from "src/modules/film_producer/entities/film_producer.entity"
+import { FilmProducer } from 'src/modules/film_producer/entities/film_producer.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -136,7 +136,6 @@ export class Film {
   playlistFilms: PlaylistFilm[];
   //
 
-  @OneToMany(() => FilmProducer, (filmProducer) => filmProducer.film,)
-  filmProducers: FilmProducer[]
-
+  @OneToMany(() => FilmProducer, (filmProducer) => filmProducer.film)
+  filmProducers: FilmProducer[];
 }

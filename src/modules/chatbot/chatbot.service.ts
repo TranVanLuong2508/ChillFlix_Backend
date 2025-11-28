@@ -54,7 +54,7 @@ export class ChatbotService {
     
     Trả về JSON:
     {
-      "intent": "film_detail|search_movie|recommend_genre|info_plan|popular|list_genre|actor_info|director_info|search_by_actor|search_by_director|general|all_user|thanks_you",
+      "intent": "find_film_by_genre|film_detail|search_movie|recommend_genre|info_plan|popular|list_genre|actor_info|director_info|search_by_actor|search_by_director|general|all_user|thanks_you",
       "keywords": ["keyword1", "keyword2"],
       "genre": "tìm genre code nếu có (G_ACTION, G_HORROR, G_ROMANCE, G_COMEDY, G_SCIFI, G_THRILLER, G_DETECTIVE, G_SCHOOL, G_WAR, G_FANTASY, G_HISTORY, G_DOC, G_FAMILY, G_MUSICAL...)",
       "country": "tìm country code nếu có (C_VN, C_US, C_KR, C_CN, C_JP, C_HK, C_FR, C_TH, C_UK, C_DE, C_TW, C_AU, C_CA...)",
@@ -68,6 +68,7 @@ export class ChatbotService {
     - Nếu hỏi "phim của đạo diễn Y" => intent: "search_by_director"
     - Nếu hỏi "thông tin diễn viên X" => intent: "actor_info"
     - Nếu hỏi các câu hỏi có nghĩa tương tự "danh sách người dùng" => intent: "all_user"
+    - Nếu hỏi các câu hỏi có nghĩa tương tự như "liệt kê thể loại phim/ tìm phim thể loại X/ liệt kê phim có thể loại X/ có phim nào có thể loại X hay không" ==> inten: "find_film_by_genre"
     - Nếu hỏi "phim X" nhưng dạng đầy đủ như xem "chi tiết phim / xem nội dung phim /  thông tin phim tên X" hoặc chỉ cần dính 1 tên phim cụ thể ==> intent: "film_detail"
     - Nếu câu được cung cấp là 1 câu có vẻ như "cảm ơn" vì  được giúp đỡ, có thể là hơi  hướng genZ một chút ==> intent: "thanks_you"
     
@@ -86,6 +87,10 @@ export class ChatbotService {
       let queryParams: (string | number)[] = [];
 
       switch (intent.intent) {
+        case 'find_film_by_genre':
+          dbQuery = BackenDBQuery.filmGenreFullData;
+          queryParams = [];
+          break;
         case 'all_user':
           dbQuery = BackenDBQuery.all_user;
           queryParams = [];
@@ -458,7 +463,9 @@ export class ChatbotService {
                   ? '[{User_userId, User_email, User_fullName, User_phoneNumber, User_avatarUrl, User_gender_code, User_age, User_role_id, User_birthDate, User_isVip, User_status_code, User_vipExpireDate}]'
                   : intent.intent === 'film_detail'
                     ? '[{ filmId, title, originalTitle, description, year, genres, country, age_rating, film_type, images }]'
-                    : ''
+                    : intent.intent === 'find_film_by_genre'
+                      ? 'tất cả dữ liệu liên quan'
+                      : ''
           }
     }
     
