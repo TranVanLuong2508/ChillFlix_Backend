@@ -1,4 +1,4 @@
-import { BullRootModuleOptions, SharedBullConfigurationFactory } from '@nestjs/bull';
+import { SharedBullConfigurationFactory } from '@nestjs/bull';
 import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
