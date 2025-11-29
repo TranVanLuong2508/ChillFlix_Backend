@@ -19,6 +19,7 @@ export class CommentGateway implements OnGatewayConnection {
   server: Server;
 
   private userSockets = new Map<string, Set<string>>();
+  private adminSockets = new Set<string>();
 
   handleConnection(client: Socket) {
     client.on('disconnect', () => {
@@ -31,11 +32,28 @@ export class CommentGateway implements OnGatewayConnection {
           break;
         }
       }
+
+      if (this.adminSockets.has(client.id)) {
+        this.adminSockets.delete(client.id);
+      }
     });
   }
 
   @SubscribeMessage('register')
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
+    if (data?.userId) {
+      const userIdStr = String(data.userId);
+      if (!this.userSockets.has(userIdStr)) {
+        this.userSockets.set(userIdStr, new Set());
+      }
+      this.userSockets.get(userIdStr)!.add(client.id);
+    }
+  }
+
+  @SubscribeMessage('registerAdmin')
+  handleRegisterAdmin(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
+    this.adminSockets.add(client.id);
+
     if (data?.userId) {
       const userIdStr = String(data.userId);
       if (!this.userSockets.has(userIdStr)) {
@@ -94,5 +112,21 @@ export class CommentGateway implements OnGatewayConnection {
 
   broadcastCountComments(data: { filmId: string; total: number }) {
     this.server.emit('countComments', data);
+  }
+
+  sendReportNotificationToAdmin(data: any) {
+    for (const socketId of this.adminSockets) {
+      this.server.to(socketId).emit('reportNotification', data);
+    }
+  }
+
+  sendReportNotificationToSpecificAdmin(userId: number, data: any) {
+    const userIdStr = String(userId);
+    const socketSet = this.userSockets.get(userIdStr);
+    if (socketSet && socketSet.size > 0) {
+      for (const socketId of socketSet) {
+        this.server.to(socketId).emit('reportNotification', data);
+      }
+    }
   }
 }

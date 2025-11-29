@@ -16,11 +16,17 @@ import type { IUser } from '../users/interface/user.interface';
 import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import { Permission } from 'src/decorators/permission.decorator';
 import { PaginationDto } from './dto/pagination.dto';
-import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
+
+  @Get('all-comments')
+  @Permission('Get all comments for admin', 'COMMENT')
+  @ResponseMessage('Get all comments')
+  getAllComments(@Query() query: PaginationDto, @User() user: IUser) {
+    return this.commentService.getAllComments(query, user);
+  }
 
   @Post('create-comment')
   @Permission('Create a new comment', 'COMMENT')
@@ -84,5 +90,20 @@ export class CommentController {
   @Permission('Count comments by film', 'COMMENT')
   countComments(@Param('filmId') filmId: string) {
     return this.commentService.countCommentsByFilm(filmId);
+  }
+
+  @Post('report-comment')
+  @Permission('Report comment', 'COMMENT')
+  @ResponseMessage('Report comment')
+  reportComment(
+    @Body() body: { commentId: string; reason: string; description?: string },
+    @User() user: IUser,
+  ) {
+    return this.commentService.reportComment(
+      body.commentId,
+      body.reason,
+      body.description || '',
+      user,
+    );
   }
 }

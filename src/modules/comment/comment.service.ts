@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
+import { User } from '../users/entities/user.entity';
 import { IUser } from '../users/interface/user.interface';
 import aqp from 'api-query-params';
 import { CommentGateway } from './socket/comment-gateway';
@@ -14,6 +15,8 @@ export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly commentGateway: CommentGateway,
     private readonly notificationsService: NotificationsService,
   ) {}
@@ -116,6 +119,57 @@ export class CommentService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from createComment service',
+      });
+    }
+  }
+
+  async getAllComments(query: any, user: IUser) {
+    try {
+      const { filter, sort } = aqp(query);
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      delete filter.page;
+      delete filter.limit;
+      delete filter.skip;
+      delete filter.sort;
+
+      const [data, total] = await this.commentRepo.findAndCount({
+        where: {
+          parent: IsNull(),
+          ...filter,
+        },
+        relations: ['user', 'film', 'reactions', 'reactions.user'],
+        order: { createdAt: 'DESC' },
+        skip,
+        take: limit,
+      });
+
+      // Load children comments recursively for each root comment
+      for (const root of data) {
+        root.children = await loadChildrenRecursive(this.commentRepo, root.commentId);
+      }
+
+      const userId = user?.userId || null;
+      const comments = data.map((comment) => buildTree(comment, userId));
+
+      return {
+        EC: 1,
+        EM: 'Get all comments successfully',
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        comments,
+      };
+    } catch (error) {
+      console.error('Error in getAllComments:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from getAllComments service',
       });
     }
   }
@@ -312,27 +366,33 @@ export class CommentService {
 
   async toggleHideComment(commentId: string, user: IUser) {
     try {
-      const comment = await this.commentRepo.findOne({ where: { commentId } });
+      const comment = await this.commentRepo.findOne({
+        where: { commentId },
+        relations: ['children'],
+      });
+
       if (!comment) return { EC: 0, EM: 'Comment not found' };
 
-      if (user.roleName !== 'ROLE_ADMIN' && user.roleName !== 'ROLE_MOD') {
+      if (user.roleName !== 'SYSTEM_ADMIN' && user.roleName !== 'ROLE_MOD') {
         return {
           EC: 0,
           EM: 'You are not allowed to hide/unhide this comment (only admin/moderator can perform this action)',
         };
       }
 
-      comment.isHidden = !comment.isHidden;
+      const newHiddenState = !comment.isHidden;
+      comment.isHidden = newHiddenState;
       comment.updatedBy = user.userId;
       await this.commentRepo.save(comment);
-      this.commentGateway.broadcastHideComment(commentId, comment.isHidden);
+      await this.toggleHideChildrenRecursive(commentId, newHiddenState, user.userId);
+      this.commentGateway.broadcastHideComment(commentId, newHiddenState);
 
       return {
         EC: 1,
-        EM: comment.isHidden ? 'Comment hidden successfully' : 'Comment is now visible',
+        EM: newHiddenState ? 'Comment hidden successfully' : 'Comment is now visible',
         data: {
           commentId: comment.commentId,
-          isHidden: comment.isHidden,
+          isHidden: newHiddenState,
         },
       };
     } catch (error) {
@@ -341,6 +401,22 @@ export class CommentService {
         EC: 0,
         EM: 'Error from toggleHideComment service',
       });
+    }
+  }
+  private async toggleHideChildrenRecursive(parentId: string, isHidden: boolean, userId: number) {
+    const children = await this.commentRepo.find({
+      where: { parent: { commentId: parentId } },
+      relations: ['children'],
+    });
+
+    for (const child of children) {
+      child.isHidden = isHidden;
+      child.updatedBy = userId;
+      await this.commentRepo.save(child);
+      this.commentGateway.broadcastHideComment(child.commentId, isHidden);
+      if (child.children && child.children.length > 0) {
+        await this.toggleHideChildrenRecursive(child.commentId, isHidden, userId);
+      }
     }
   }
 
@@ -367,6 +443,102 @@ export class CommentService {
       });
     }
   }
+
+  async reportComment(commentId: string, reason: string, description: string, user: IUser) {
+    try {
+      const comment = await this.commentRepo.findOne({
+        where: { commentId },
+        relations: ['user', 'film'],
+      });
+
+      if (!comment) {
+        return {
+          EC: 0,
+          EM: 'Comment not found',
+        };
+      }
+
+      if (comment.user.userId === user.userId) {
+        return {
+          EC: 0,
+          EM: 'Bạn không thể báo cáo bình luận của chính mình',
+        };
+      }
+
+      const targetRoles = ['SYSTEM_ADMIN', 'ROLE_MOD', 'ADMIN_CLIENT'];
+
+      const adminReceivers = await this.userRepo.find({
+        where: { role: { roleName: In(targetRoles) } },
+        relations: ['role'],
+      });
+
+      if (adminReceivers.length === 0) {
+        console.warn('No admin/mod accounts found to receive report notifications');
+      }
+
+      for (const admin of adminReceivers) {
+        const notification = await this.notificationsService.createNotification({
+          userId: admin.userId,
+          type: 'report',
+          message: `${user.fullName} đã báo cáo bình luận của ${comment.user.fullName} trong phim "${comment.film?.title || 'Unknown'}"`,
+          replierId: user.userId,
+          result: {
+            commentId: comment.commentId,
+            reporterId: user.userId,
+            reporterName: user.fullName,
+            reporterAvatar: user.avatarUrl,
+            commentContent: comment.content,
+            commentUserId: comment.user.userId,
+            commentUserName: comment.user.fullName,
+            filmId: comment.film?.filmId,
+            filmTitle: comment.film?.title,
+            filmSlug: comment.film?.slug,
+            reason,
+            description,
+          },
+        });
+
+        // Gửi socket real-time cho đúng admin/mod
+        this.commentGateway.sendReportNotificationToSpecificAdmin(admin.userId, {
+          notificationId: notification.notificationId,
+          reporter: {
+            userId: user.userId,
+            fullName: user.fullName,
+            avatarUrl: user.avatarUrl,
+          },
+          comment: {
+            commentId: comment.commentId,
+            content: comment.content,
+            user: {
+              userId: comment.user.userId,
+              fullName: comment.user.fullName,
+            },
+          },
+          film: comment.film
+            ? {
+                filmId: comment.film.filmId,
+                title: comment.film.title,
+                slug: comment.film.slug,
+              }
+            : null,
+          reason,
+          description,
+          createdAt: new Date(),
+        });
+      }
+
+      return {
+        EC: 1,
+        EM: 'Report submitted successfully',
+      };
+    } catch (error) {
+      console.error('Error in reportComment:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from reportComment service',
+      });
+    }
+  }
 }
 
 async function loadChildrenRecursive(
@@ -379,7 +551,7 @@ async function loadChildrenRecursive(
       isHidden: false,
       deletedAt: IsNull(),
     },
-    relations: ['user', 'reactions', 'reactions.user', 'parent', 'parent.user'],
+    relations: ['user', 'film', 'reactions', 'reactions.user', 'parent', 'parent.user'],
     order: { createdAt: 'ASC' },
   });
   for (const child of children) {
@@ -394,6 +566,7 @@ function buildTree(comment: any, userId: string | number | null): any {
     id: comment.commentId,
     content: comment.content,
     createdAt: comment.createdAt,
+    isHidden: comment.isHidden,
     totalLike: comment.totalLike,
     totalDislike: comment.totalDislike,
     totalChildrenComment: comment.totalChildrenComment,
@@ -403,6 +576,13 @@ function buildTree(comment: any, userId: string | number | null): any {
       name: comment.user.fullName,
       avatar: comment.user.avatarUrl,
     },
+    film: comment.film
+      ? {
+          filmId: comment.film.filmId,
+          title: comment.film.title,
+          slug: comment.film.slug,
+        }
+      : null,
     parent: comment.parent
       ? {
           id: comment.parent.commentId,
