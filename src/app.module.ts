@@ -69,6 +69,7 @@ import { CoWatchingModule } from './modules/co-watching/co-watching.module';
 import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entity';
 import { BullModule } from '@nestjs/bull';
 import { BullConfigService } from './config/bull.config';
+import { VideoModule } from './modules/video/video.module';
 
 @Module({
   imports: [
@@ -160,6 +161,7 @@ import { BullConfigService } from './config/bull.config';
       useClass: BullConfigService,
     }),
     FileModule,
+    VideoModule,
   ],
 
   controllers: [AppController],
