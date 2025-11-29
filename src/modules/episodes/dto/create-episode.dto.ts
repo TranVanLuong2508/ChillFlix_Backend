@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateEpisodeDto {
-  @IsNotEmpty({ message: 'episodeNumber must not be empty' })
-  @IsNumber({}, { message: 'episodeNumber must be NUMBER format' })
-  episodeNumber: number;
+  // @IsNotEmpty({ message: 'episodeNumber must not be empty' })
+  // @IsNumber({}, { message: 'episodeNumber must be NUMBER format' })
+  // episodeNumber: number;
 
   // @IsNotEmpty({ message: 'title must not be empty' })
   @IsOptional()

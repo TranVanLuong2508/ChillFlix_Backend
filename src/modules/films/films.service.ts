@@ -4,27 +4,17 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateFilmDto } from './dto/create-film.dto';
-import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { Repository } from 'typeorm';
-import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
 import { plainToInstance } from 'class-transformer';
 import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
-import { IUser } from '../users/interface/user.interface';
 import { allcodeCommonFields } from 'src/common/utils/CommonField';
-import { FilmGenre } from './entities/film_genre.entity';
-import { FilmImage } from './entities/film_image.entity';
-import { FilmDirector } from '../film_director/entities/film_director.entity';
-import { FilmActor } from '../film_actor/entities/film_actor.entity';
-import { FilmProducer } from '../film_producer/entities/film_producer.entity';
 import { FilmDirectorService } from '../film_director/film_director.service';
 import { FilmActorService } from '../film_actor/film_actor.service';
-import { SearchService } from '../search/search.service';
 import { FilmProducerService } from '../film_producer/film_producer.service';
 import { RatingService } from '../rating/rating.service';
 
@@ -32,17 +22,11 @@ import { RatingService } from '../rating/rating.service';
 export class FilmsService {
   constructor(
     @InjectRepository(Film) private filmsRepository: Repository<Film>,
-    @InjectRepository(FilmGenre) private filmGenreRepository: Repository<FilmGenre>,
-    @InjectRepository(FilmImage) private filmImageRepository: Repository<FilmImage>,
-    @InjectRepository(FilmDirector) private filmDirectorRepository: Repository<FilmDirector>,
-    @InjectRepository(FilmProducer) private filmProducerRepository: Repository<FilmProducer>,
-    @InjectRepository(FilmActor) private filmActorRepository: Repository<FilmActor>,
     private filmDirectorService: FilmDirectorService,
     private filmActorService: FilmActorService,
-    private searchService: SearchService, //luong add
     private filmProducerService: FilmProducerService,
     private ratingService: RatingService,
-  ) { }
+  ) {}
 
   async findAll(page: number, limit: number, queryString: string) {
     try {
@@ -260,7 +244,10 @@ export class FilmsService {
 
       // If client requested 'All', return all films (no country filter)
       if (countryValueEn && countryValueEn.trim().toLowerCase() === 'all') {
-        const totalItems = await this.filmsRepository.createQueryBuilder('film').where('film.deletedAt IS NULL').getCount();
+        const totalItems = await this.filmsRepository
+          .createQueryBuilder('film')
+          .where('film.deletedAt IS NULL')
+          .getCount();
         const totalPages = Math.ceil(totalItems / defaultLimit);
 
         const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
@@ -268,7 +255,12 @@ export class FilmsService {
         joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
         joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
         joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
-        joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+        joinWithCommonFields(
+          queryBuilder,
+          'film.publicStatus',
+          'publicStatus',
+          allcodeCommonFields,
+        );
         queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
         queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
         joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
@@ -389,7 +381,6 @@ export class FilmsService {
       const defaultLimit = limit ? limit : 10;
       const defaultPage = page ? page : 1;
 
-
       const allCodeRepository = this.filmsRepository.manager.getRepository('AllCode');
       const genre = await allCodeRepository.findOne({
         where: {
@@ -401,7 +392,10 @@ export class FilmsService {
       const genreCode = genre?.keyMap;
 
       if (genreValueEn && genreValueEn.trim().toLowerCase() === 'all') {
-        const totalItems = await this.filmsRepository.createQueryBuilder('film').where('film.deletedAt IS NULL').getCount();
+        const totalItems = await this.filmsRepository
+          .createQueryBuilder('film')
+          .where('film.deletedAt IS NULL')
+          .getCount();
         const totalPages = Math.ceil(totalItems / defaultLimit);
 
         const queryBuilder = await this.filmsRepository.createQueryBuilder('film');
@@ -409,7 +403,12 @@ export class FilmsService {
         joinWithCommonFields(queryBuilder, 'film.age', 'age', allcodeCommonFields);
         joinWithCommonFields(queryBuilder, 'film.type', 'type', allcodeCommonFields);
         joinWithCommonFields(queryBuilder, 'film.country', 'country', allcodeCommonFields);
-        joinWithCommonFields(queryBuilder, 'film.publicStatus', 'publicStatus', allcodeCommonFields);
+        joinWithCommonFields(
+          queryBuilder,
+          'film.publicStatus',
+          'publicStatus',
+          allcodeCommonFields,
+        );
         queryBuilder.leftJoinAndSelect('film.filmGenres', 'filmGenres');
         queryBuilder.leftJoinAndSelect('film.filmImages', 'filmImages');
         joinWithCommonFields(queryBuilder, 'filmGenres.genre', 'genre', allcodeCommonFields);
@@ -433,7 +432,6 @@ export class FilmsService {
           result: plainToInstance(FilmPaginationDto, films),
         };
       }
-
 
       if (!genreCode) {
         return {
@@ -475,7 +473,6 @@ export class FilmsService {
         .skip(offset)
         .take(defaultLimit)
         .getMany();
-
 
       if (films.length === 0) {
         return {
@@ -534,7 +531,6 @@ export class FilmsService {
 
       const typeCode = type?.keyMap;
 
-
       if (!typeCode) {
         return {
           EC: 0,
@@ -574,7 +570,6 @@ export class FilmsService {
         .skip(offset)
         .take(defaultLimit)
         .getMany();
-
 
       if (films.length === 0) {
         return {
@@ -616,7 +611,7 @@ export class FilmsService {
       type?: string;
       age_code?: string;
       genre?: string;
-      version?: string;  // Language/version filter using langCode (e.g., Dubbed, Subtitled, Original)
+      version?: string; // Language/version filter using langCode (e.g., Dubbed, Subtitled, Original)
       year?: string;
     },
     sort?: string,
@@ -642,8 +637,15 @@ export class FilmsService {
       queryBuilder.where('film.deletedAt IS NULL');
 
       // Filter by country - support comma-separated values, skip if 'All'
-      if (filters.country && filters.country.trim() !== '' && filters.country.toLowerCase() !== 'all') {
-        const countryList = filters.country.split(',').map((c: string) => c.trim()).filter(c => c.toLowerCase() !== 'all');
+      if (
+        filters.country &&
+        filters.country.trim() !== '' &&
+        filters.country.toLowerCase() !== 'all'
+      ) {
+        const countryList = filters.country
+          .split(',')
+          .map((c: string) => c.trim())
+          .filter((c) => c.toLowerCase() !== 'all');
         const countryCodes: string[] = [];
 
         for (const countryValueEn of countryList) {
@@ -660,7 +662,10 @@ export class FilmsService {
 
       // Filter by type - support comma-separated values, skip if 'All'
       if (filters.type && filters.type.trim() !== '' && filters.type.toLowerCase() !== 'all') {
-        const typeList = filters.type.split(',').map((t: string) => t.trim()).filter(t => t.toLowerCase() !== 'all');
+        const typeList = filters.type
+          .split(',')
+          .map((t: string) => t.trim())
+          .filter((t) => t.toLowerCase() !== 'all');
         const typeCodes: string[] = [];
 
         for (const typeValueEn of typeList) {
@@ -676,8 +681,15 @@ export class FilmsService {
       }
 
       // Filter by age rating - support comma-separated values, skip if 'All'
-      if (filters.age_code && filters.age_code.trim() !== '' && filters.age_code.toLowerCase() !== 'all') {
-        const ageList = filters.age_code.split(',').map((a: string) => a.trim()).filter(a => a.toLowerCase() !== 'all');
+      if (
+        filters.age_code &&
+        filters.age_code.trim() !== '' &&
+        filters.age_code.toLowerCase() !== 'all'
+      ) {
+        const ageList = filters.age_code
+          .split(',')
+          .map((a: string) => a.trim())
+          .filter((a) => a.toLowerCase() !== 'all');
         const ageCodes: string[] = [];
 
         console.log('Age filter values received:', ageList);
@@ -694,7 +706,9 @@ export class FilmsService {
             } else {
               // If client passed the short form (e.g. "T18"), try the prefixed keyMap ("R_T18")
               if (!ageValue.includes('_')) {
-                const acPrefixed = await allCodeRepo.findOne({ where: { keyMap: `R_${ageValue}`, type: 'RANK' } });
+                const acPrefixed = await allCodeRepo.findOne({
+                  where: { keyMap: `R_${ageValue}`, type: 'RANK' },
+                });
                 if (acPrefixed) {
                   ageCode = acPrefixed.keyMap;
                 }
@@ -719,7 +733,10 @@ export class FilmsService {
 
       // Filter by genre(s) - support comma-separated values, skip if 'All'
       if (filters.genre && filters.genre.trim() !== '' && filters.genre.toLowerCase() !== 'all') {
-        const genreList = filters.genre.split(',').map((g: string) => g.trim()).filter(g => g.toLowerCase() !== 'all');
+        const genreList = filters.genre
+          .split(',')
+          .map((g: string) => g.trim())
+          .filter((g) => g.toLowerCase() !== 'all');
         const genreCodes: string[] = [];
 
         for (const genreValueEn of genreList) {
@@ -735,8 +752,15 @@ export class FilmsService {
       }
 
       // Filter by version/language - support comma-separated values, skip if 'All'
-      if (filters.version && filters.version.trim() !== '' && filters.version.toLowerCase() !== 'all') {
-        const versionList = filters.version.split(',').map((v: string) => v.trim()).filter(v => v.toLowerCase() !== 'all');
+      if (
+        filters.version &&
+        filters.version.trim() !== '' &&
+        filters.version.toLowerCase() !== 'all'
+      ) {
+        const versionList = filters.version
+          .split(',')
+          .map((v: string) => v.trim())
+          .filter((v) => v.toLowerCase() !== 'all');
         const versionCodes: string[] = [];
 
         for (const versionValueEn of versionList) {
@@ -764,7 +788,10 @@ export class FilmsService {
           });
         } else if (yearValue.includes(',')) {
           // Handle multiple comma-separated years
-          const yearList = yearValue.split(',').map((y: string) => y.trim()).filter(y => y.toLowerCase() !== 'all');
+          const yearList = yearValue
+            .split(',')
+            .map((y: string) => y.trim())
+            .filter((y) => y.toLowerCase() !== 'all');
           const years: number[] = [];
 
           for (const yearStr of yearList) {

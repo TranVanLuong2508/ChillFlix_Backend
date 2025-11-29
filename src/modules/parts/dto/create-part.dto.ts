@@ -5,13 +5,13 @@ export class CreatePartDto {
   @IsString({ message: 'title must be STRING format' })
   title: string;
 
-  @IsNotEmpty({ message: 'description must not be empty' })
+  @IsOptional()
   @IsString({ message: 'description must be STRING format' })
-  description: string;
+  description?: string;
 
-  @IsNotEmpty({ message: 'partNumber must not be empty' })
+  @IsOptional()
   @IsNumber({}, { message: 'partNumber must be NUMBER format' })
-  partNumber: number;
+  partNumber?: number;
 
   @IsNotEmpty({ message: 'filmId must not be empty' })
   @IsUUID('4', { message: 'filmId must be UUID v4 format' })

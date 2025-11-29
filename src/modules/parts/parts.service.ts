@@ -42,12 +42,19 @@ export class PartsService {
         });
       }
 
+      const partNumber = await this.partRepository.count({
+        where: { filmId: createPartDto.filmId },
+      });
+
       if (!createPartDto.title) {
-        createPartDto.title = `Part ${createPartDto.partNumber}`;
+        createPartDto.title = `Part ${partNumber + 1}`;
       }
 
       const newPart = this.partRepository.create({
-        ...createPartDto,
+        title: createPartDto.title,
+        description: createPartDto.description || '',
+        filmId: createPartDto.filmId,
+        partNumber: partNumber + 1,
         createdBy: user.userId.toString(),
       });
       await this.partRepository.save(newPart);

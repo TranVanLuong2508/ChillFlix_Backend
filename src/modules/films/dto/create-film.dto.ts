@@ -14,7 +14,7 @@ import {
 } from 'class-validator';
 import { CreateFilmActorDto } from 'src/modules/film_actor/dto/create-film_actor.dto';
 import { CreateFilmDirectorDto } from 'src/modules/film_director/dto/create-film_director.dto';
-import { CreateFilmProducerDto } from "src/modules/film_producer/dto/create-film_producer.dto"
+import { CreateFilmProducerDto } from 'src/modules/film_producer/dto/create-film_producer.dto';
 
 export class CreateFilmImageDto {
   @Expose()
@@ -47,10 +47,10 @@ export class CreateFilmDto {
   description: string;
 
   @Expose()
-  @IsNotEmpty({ message: 'releaseDate must not be empty' })
+  @IsOptional()
   @IsDate({ message: 'releaseDate must be DATE format' })
   @Type(() => Date)
-  releaseDate: Date;
+  releaseDate?: Date;
 
   @Expose()
   @IsNotEmpty({ message: 'year must not be empty' })
@@ -116,10 +116,9 @@ export class CreateFilmDto {
   @Type(() => CreateFilmActorDto)
   actors: CreateFilmActorDto[];
 
-  
   @Expose()
-  @IsArray({ message: "Producers must be ARRAY format" })
+  @IsArray({ message: 'Producers must be ARRAY format' })
   @ValidateNested({ each: true })
   @Type(() => CreateFilmProducerDto)
-  producers: CreateFilmProducerDto[]
+  producers: CreateFilmProducerDto[];
 }
