@@ -140,6 +140,12 @@ export class FilmsController {
   @Public()
   @Get('/list-film-by-genre/chatbot')
   getFilmDataForChatBotByGenre() {
-    return this.filmsService.getFilmByTypeForChatBotData();
+    return this.filmsService.getFilmByGenreForChatBotData();
+  }
+
+  @Public()
+  @Get('/list-film-by-country/chatbot')
+  getFilmDataForChatBotByCountry() {
+    return this.filmsService.getFilmByCountryForChatBotData();
   }
 }

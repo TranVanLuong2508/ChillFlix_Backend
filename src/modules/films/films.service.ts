@@ -907,7 +907,7 @@ export class FilmsService {
     }
   }
 
-  async getFilmByTypeForChatBotData() {
+  async getFilmByGenreForChatBotData() {
     try {
       const dataRows = await this.filmGenreRepository.find({
         relations: [
@@ -957,6 +957,76 @@ export class FilmsService {
               country: film.country?.valueVi,
               language: film.language?.valueVi,
               publicStatus: film.publicStatus?.valueVi,
+            };
+          }),
+        }))
+        .value();
+      return {
+        EC: 1,
+        EM: 'Fetch film for chatbot data by genre sucess',
+        result: instanceToPlain(grouped),
+      };
+    } catch (error) {
+      console.log('Error in film service getFilmForChatBotData: ', error || error.message);
+      return {
+        EC: 0,
+        EM: 'Error from film service getFilmForChatBotData',
+      };
+    }
+  }
+
+  async getFilmByCountryForChatBotData() {
+    try {
+      const dataRows = await this.filmsRepository.find({
+        relations: [
+          'filmGenres',
+          'filmGenres.genre',
+          'age',
+          'type',
+          'country',
+          'language',
+          'publicStatus',
+        ],
+      });
+      const clean = (obj) =>
+        _.omit(obj, [
+          'createdAt',
+          'updatedAt',
+          'deletedAt',
+          'createdBy',
+          'updatedBy',
+          'deletedBy',
+          'view',
+          'age',
+          'type',
+          'country',
+          'language',
+          'publicStatus',
+          'ageCode',
+          'typeCode',
+          'countryCode',
+          'langCode',
+          'publicStatusCode',
+          'thumbUrl',
+          'filmId',
+          'filmGenres',
+        ]);
+
+      const grouped = _(dataRows)
+        .groupBy((item) => item.country.valueVi)
+        .map((films, country) => ({
+          country,
+          filmList: films.map((f) => {
+            const film = instanceToPlain(f);
+            const genres = film.filmGenres.map((g) => g.genre.valueVi);
+            return {
+              ...clean(film),
+              genres: genres,
+              // ...clean(film),
+              // type: film.type?.valueVi,
+              // country: film.country?.valueVi,
+              // language: film.language?.valueVi,
+              // publicStatus: film.publicStatus?.valueVi,
             };
           }),
         }))

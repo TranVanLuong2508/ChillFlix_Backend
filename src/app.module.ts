@@ -114,7 +114,7 @@ import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entit
           RoomCoWatching,
         ],
         synchronize: true,
-        logging: true,
+        // logging: true,
       }),
     }),
     UsersModule,

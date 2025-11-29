@@ -9,7 +9,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @Permission('Create a user', 'USERS')
@@ -56,7 +56,6 @@ export class UsersController {
   @SkipCheckPermission()
   @ResponseMessage('Update profle a user')
   updateProfile(@Body() updateProfileDto: UpdateProfileDto, @User() user: IUser) {
-    console.log('call update');
     return this.usersService.updateProfile(updateProfileDto, user);
   }
 

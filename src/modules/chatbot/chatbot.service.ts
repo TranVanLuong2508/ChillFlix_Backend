@@ -54,7 +54,7 @@ export class ChatbotService {
     
     Trả về JSON:
     {
-      "intent": "find_film_by_genre|film_detail|search_movie|recommend_genre|info_plan|popular|list_genre|actor_info|director_info|search_by_actor|search_by_director|general|all_user|thanks_you",
+      "intent": "find_film_by_genre|film_detail|thanks_you|find_film_by_country|find_film_by_director|find_film_by_actor",
       "keywords": ["keyword1", "keyword2"],
       "genre": "tìm genre code nếu có (G_ACTION, G_HORROR, G_ROMANCE, G_COMEDY, G_SCIFI, G_THRILLER, G_DETECTIVE, G_SCHOOL, G_WAR, G_FANTASY, G_HISTORY, G_DOC, G_FAMILY, G_MUSICAL...)",
       "country": "tìm country code nếu có (C_VN, C_US, C_KR, C_CN, C_JP, C_HK, C_FR, C_TH, C_UK, C_DE, C_TW, C_AU, C_CA...)",
@@ -64,13 +64,12 @@ export class ChatbotService {
     
     Lưu ý:
     - Nếu intent rơi vào trường hợp "film_detail", thì keywords chỉ lấy tên phim và viết hoa chữ cái đầu mỗi từ
-    - Nếu hỏi "phim có diễn viên X" hoặc "phim của diễn viên X" => intent: "search_by_actor"
-    - Nếu hỏi "phim của đạo diễn Y" => intent: "search_by_director"
-    - Nếu hỏi "thông tin diễn viên X" => intent: "actor_info"
-    - Nếu hỏi các câu hỏi có nghĩa tương tự "danh sách người dùng" => intent: "all_user"
-    - Nếu hỏi các câu hỏi có nghĩa tương tự như "liệt kê thể loại phim/ tìm phim thể loại X/ liệt kê phim có thể loại X/ có phim nào có thể loại X hay không" ==> inten: "find_film_by_genre"
-    - Nếu hỏi "phim X" nhưng dạng đầy đủ như xem "chi tiết phim / xem nội dung phim /  thông tin phim tên X" hoặc chỉ cần dính 1 tên phim cụ thể ==> intent: "film_detail"
+    - Nếu câu hỏi có ý ngĩa tương tự như "Phim theo quốc gia nào/Có các phim của các quốc gia nào/ phim của một quốc gia X/ Quốc gia X có phim nào/ Nguồn gốc của phim Y/ Phim Y là phim của nước nào" ==> intent: "find_film_by_country"
+    - Nếu hỏi các câu hỏi có nghĩa tương tự như "liệt kê thể loại phim/ tìm phim thể loại X/ liệt kê phim có thể loại X/ có phim nào có thể loại X hay không" ==> intent: "find_film_by_genre"
+    - Nếu câu hỏi có ý ngĩa tương tự như  "phim X" nhưng dạng đầy đủ như xem "chi tiết phim / xem nội dung phim /  thông tin phim tên X" hoặc chỉ cần dính 1 tên phim cụ thể ==> intent: "film_detail"
     - Nếu câu được cung cấp là 1 câu có vẻ như "cảm ơn" vì  được giúp đỡ, có thể là hơi  hướng genZ một chút ==> intent: "thanks_you"
+    - Nếu câu hỏi có ý ngĩa tương tự như "Liệt kê phim theo diễn viên/ danh sách phim của diễn viên X/ diễn viên X có phim nào/ phim Y là của diễn viên nào" ==> intent: "find_film_by_actor"
+    - Nếu câu hỏi có ý ngĩa tương tự như "Liệt kê phim theo đạo diễn/ danh sách phim của đạo diễn X/ đạo diễn X có phim nào/ phim Y là của đạo diễn nào" ==> intent: "find_film_by_director"
     
     CHỈ trả về JSON.
     `;
@@ -91,15 +90,26 @@ export class ChatbotService {
           dbQuery = BackenDBQuery.filmGenreFullData;
           queryParams = [];
           break;
-        case 'all_user':
-          dbQuery = BackenDBQuery.all_user;
+
+        case 'find_film_by_country':
+          dbQuery = BackenDBQuery.filmCountryFullData;
           queryParams = [];
           break;
+
+        case 'find_film_by_actor':
+          dbQuery = BackenDBQuery.film_by_actor;
+          queryParams = [];
+          break;
+        case 'find_film_by_director':
+          dbQuery = BackenDBQuery.film_by_director;
+          queryParams = [];
+          break;
+
         case 'thanks_you':
           const prompt = `Bạn tên là FlixAI. Khi người dùng nói "cảm ơn" hoặc tương tự, hãy trả về một câu trả lời ngắn, thân thiện, hơi GenZ nhưng phù hợp với ChillFlix. CHỈ TRẢ VỀ 1 DÒNG TEXT, KHÔNG DÙNG JSON, KHÔNG DÙNG MARKDOWN.`;
           const content = await this.model.generateContent(prompt);
+
           let finalText = content.response.text().trim();
-          // optional: remove surrounding ``` nếu có
           finalText = finalText.replace(/^```(?:\w+)?\n?|```$/g, '').trim();
 
           return { answer: finalText, data: [] };
@@ -110,276 +120,6 @@ export class ChatbotService {
           const slug = this.toSlug(filmName);
           queryParams = [slug];
 
-          break;
-        case 'search_movie':
-          // Tìm phim theo tên với GROUP BY đầy đủ
-          dbQuery = `
-          SELECT 
-            f."filmId", 
-            f.title, 
-            f."originalTitle",
-            f.description,
-            f.year,
-            f."thumbUrl",
-            f.slug,
-            f.view,
-            f."releaseDate",
-            ac_age."valueVi" as age_rating,
-            ac_type."valueVi" as film_type,
-            ac_country."valueVi" as country,
-            ac_lang."valueVi" as language,
-            STRING_AGG(DISTINCT ac_genre."valueVi", ', ') as genres
-          FROM films f
-          LEFT JOIN all_code ac_age ON f."ageCode" = ac_age."keyMap"
-          LEFT JOIN all_code ac_type ON f."typeCode" = ac_type."keyMap"
-          LEFT JOIN all_code ac_country ON f."countryCode" = ac_country."keyMap"
-          LEFT JOIN all_code ac_lang ON f."langCode" = ac_lang."keyMap"
-          LEFT JOIN film_genre fg ON f."filmId" = fg."filmId"
-          LEFT JOIN all_code ac_genre ON fg."genreCode" = ac_genre."keyMap"
-          WHERE 
-            f."deletedAt" IS NULL AND
-            (f.title ILIKE $1 OR f."originalTitle" ILIKE $1 OR f.description ILIKE $1)
-          GROUP BY 
-            f."filmId", f.title, f."originalTitle", f.description, f.year, 
-            f."thumbUrl", f.slug, f.view, f."releaseDate",
-            ac_age."valueVi", ac_type."valueVi", ac_country."valueVi", ac_lang."valueVi"
-          ORDER BY f.view DESC
-          LIMIT 10
-        `;
-          queryParams = [`%${intent.keywords.join(' ')}%`];
-          break;
-
-        case 'recommend_genre':
-          if (intent.genre) {
-            dbQuery = `
-            SELECT 
-              f."filmId", 
-              f.title, 
-              f."originalTitle",
-              f.description,
-              f.year,
-              f."thumbUrl",
-              f.slug,
-              f.view,
-              ac_type."valueVi" as film_type,
-              ac_country."valueVi" as country,
-              STRING_AGG(DISTINCT ac_genre."valueVi", ', ') as genres
-            FROM films f
-            LEFT JOIN all_code ac_type ON f."typeCode" = ac_type."keyMap"
-            LEFT JOIN all_code ac_country ON f."countryCode" = ac_country."keyMap"
-            LEFT JOIN film_genre fg ON f."filmId" = fg."filmId"
-            LEFT JOIN all_code ac_genre ON fg."genreCode" = ac_genre."keyMap"
-            WHERE 
-              f."deletedAt" IS NULL AND
-              EXISTS (
-                SELECT 1 FROM film_genre fg2 
-                WHERE fg2."filmId" = f."filmId" AND fg2."genreCode" = $1
-              )
-            GROUP BY 
-              f."filmId", f.title, f."originalTitle", f.description, f.year, 
-              f."thumbUrl", f.slug, f.view,
-              ac_type."valueVi", ac_country."valueVi"
-            ORDER BY f.view DESC
-            LIMIT 10
-          `;
-            queryParams = [intent.genre];
-          }
-          break;
-
-        case 'popular':
-          dbQuery = `
-          SELECT 
-            f."filmId", 
-            f.title,
-            f."originalTitle",
-            f.description,
-            f.year,
-            f."thumbUrl",
-            f.slug,
-            f.view,
-            ac_country."valueVi" as country,
-            ac_type."valueVi" as film_type,
-            STRING_AGG(DISTINCT ac_genre."valueVi", ', ') as genres
-          FROM films f
-          LEFT JOIN all_code ac_country ON f."countryCode" = ac_country."keyMap"
-          LEFT JOIN all_code ac_type ON f."typeCode" = ac_type."keyMap"
-          LEFT JOIN film_genre fg ON f."filmId" = fg."filmId"
-          LEFT JOIN all_code ac_genre ON fg."genreCode" = ac_genre."keyMap"
-          WHERE f."deletedAt" IS NULL
-          GROUP BY 
-            f."filmId", f.title, f."originalTitle", f.description, f.year, 
-            f."thumbUrl", f.slug, f.view,
-            ac_country."valueVi", ac_type."valueVi"
-          ORDER BY f.view DESC
-          LIMIT 10
-        `;
-          break;
-
-        case 'list_genre':
-          dbQuery = `
-          SELECT 
-            ac."keyMap" as genre_code,
-            ac."valueVi" as genre_name,
-            ac."valueEn" as genre_name_en,
-            COUNT(DISTINCT fg."filmId") as film_count
-          FROM all_code ac
-          LEFT JOIN film_genre fg ON ac."keyMap" = fg."genreCode"
-          LEFT JOIN films f ON fg."filmId" = f."filmId" AND f."deletedAt" IS NULL
-          WHERE ac.type = 'GENRE' AND ac."keyMap" != 'G_ALL'
-          GROUP BY ac."keyMap", ac."valueVi", ac."valueEn"
-          ORDER BY film_count DESC
-        `;
-          break;
-
-        case 'actor_info':
-          dbQuery = `
-          SELECT 
-            a.actor_id,
-            a.actor_name,
-            a.slug,
-            a."shortBio",
-            a.birth_date,
-            ac_gender."valueVi" as gender,
-            ac_country."valueVi" as nationality,
-            a.avatar_url,
-            COUNT(DISTINCT fa.film_id) as film_count,
-            STRING_AGG(DISTINCT f.title, ', ') as films
-          FROM actors a
-          LEFT JOIN all_code ac_gender ON a.gender_code = ac_gender."keyMap"
-          LEFT JOIN all_code ac_country ON a.nationality_code = ac_country."keyMap"
-          LEFT JOIN film_actors fa ON a.actor_id = fa.actor_id
-          LEFT JOIN films f ON fa.film_id = f."filmId" AND f."deletedAt" IS NULL
-          WHERE 
-            a."deletedAt" IS NULL AND
-            a.actor_name ILIKE $1
-          GROUP BY 
-            a.actor_id, a.actor_name, a.slug, a."shortBio", 
-            a.birth_date, ac_gender."valueVi", ac_country."valueVi", a.avatar_url
-          LIMIT 5
-        `;
-          queryParams = [`%${intent.actor_name || intent.keywords.join(' ')}%`];
-          break;
-
-        case 'search_by_actor':
-          // Tìm phim theo diễn viên
-          dbQuery = `
-          SELECT 
-            f."filmId", 
-            f.title, 
-            f."originalTitle",
-            f.description,
-            f.year,
-            f."thumbUrl",
-            f.slug,
-            f.view,
-            ac_type."valueVi" as film_type,
-            ac_country."valueVi" as country,
-            STRING_AGG(DISTINCT ac_genre."valueVi", ', ') as genres,
-            STRING_AGG(DISTINCT a.actor_name, ', ') as actors
-          FROM films f
-          INNER JOIN film_actors fa ON f."filmId" = fa.film_id
-          INNER JOIN actors a ON fa.actor_id = a.actor_id
-          LEFT JOIN all_code ac_type ON f."typeCode" = ac_type."keyMap"
-          LEFT JOIN all_code ac_country ON f."countryCode" = ac_country."keyMap"
-          LEFT JOIN film_genre fg ON f."filmId" = fg."filmId"
-          LEFT JOIN all_code ac_genre ON fg."genreCode" = ac_genre."keyMap"
-          WHERE 
-            f."deletedAt" IS NULL AND
-            a."deletedAt" IS NULL AND
-            a.actor_name ILIKE $1
-          GROUP BY 
-            f."filmId", f.title, f."originalTitle", f.description, f.year, 
-            f."thumbUrl", f.slug, f.view,
-            ac_type."valueVi", ac_country."valueVi"
-          ORDER BY f.view DESC
-          LIMIT 10
-        `;
-          queryParams = [`%${intent.actor_name || intent.keywords.join(' ')}%`];
-          break;
-
-        case 'search_by_director':
-          // Tìm phim theo đạo diễn
-          dbQuery = `
-          SELECT 
-            f."filmId", 
-            f.title, 
-            f."originalTitle",
-            f.description,
-            f.year,
-            f."thumbUrl",
-            f.slug,
-            f.view,
-            ac_type."valueVi" as film_type,
-            ac_country."valueVi" as country,
-            STRING_AGG(DISTINCT ac_genre."valueVi", ', ') as genres,
-            STRING_AGG(DISTINCT d.director_name, ', ') as directors
-          FROM films f
-          INNER JOIN film_directors fd ON f."filmId" = fd.film_id
-          INNER JOIN directors d ON fd.director_id = d.director_id
-          LEFT JOIN all_code ac_type ON f."typeCode" = ac_type."keyMap"
-          LEFT JOIN all_code ac_country ON f."countryCode" = ac_country."keyMap"
-          LEFT JOIN film_genre fg ON f."filmId" = fg."filmId"
-          LEFT JOIN all_code ac_genre ON fg."genreCode" = ac_genre."keyMap"
-          WHERE 
-            f."deletedAt" IS NULL AND
-            d."deletedAt" IS NULL AND
-            d.director_name ILIKE $1
-          GROUP BY 
-            f."filmId", f.title, f."originalTitle", f.description, f.year, 
-            f."thumbUrl", f.slug, f.view,
-            ac_type."valueVi", ac_country."valueVi"
-          ORDER BY f.view DESC
-          LIMIT 10
-        `;
-          queryParams = [`%${intent.director_name || intent.keywords.join(' ')}%`];
-          break;
-
-        case 'director_info':
-          dbQuery = `
-          SELECT 
-            d.director_id,
-            d.director_name,
-            d.slug,
-            d.story,
-            d.birth_date,
-            ac_gender."valueVi" as gender,
-            ac_country."valueVi" as nationality,
-            d."avatarUrl" as avatar_url,
-            COUNT(DISTINCT fd.film_id) as film_count,
-            STRING_AGG(DISTINCT f.title, ', ') as films
-          FROM directors d
-          LEFT JOIN all_code ac_gender ON d.gender_code = ac_gender."keyMap"
-          LEFT JOIN all_code ac_country ON d.nationality_code = ac_country."keyMap"
-          LEFT JOIN film_directors fd ON d.director_id = fd.director_id
-          LEFT JOIN films f ON fd.film_id = f."filmId" AND f."deletedAt" IS NULL
-          WHERE 
-            d."deletedAt" IS NULL AND
-            d.director_name ILIKE $1
-          GROUP BY 
-            d.director_id, d.director_name, d.slug, d.story,
-            d.birth_date, ac_gender."valueVi", ac_country."valueVi", d."avatarUrl"
-          LIMIT 5
-        `;
-          queryParams = [`%${intent.keywords.join(' ')}%`];
-          break;
-
-        case 'info_plan':
-          dbQuery = `
-          SELECT 
-            sp."planId",
-            sp."planName",
-            sp."planDuration",
-            ac."valueVi" as duration_type,
-            sp.price,
-            sp."isActive"
-          FROM _subscriptionPlans sp
-          LEFT JOIN all_code ac ON sp."durationType_code" = ac."keyMap"
-          WHERE sp."isActive" = true AND sp."deletedAt" IS NULL
-          GROUP BY 
-            sp."planId", sp."planName", sp."planDuration", 
-            ac."valueVi", sp.price, sp."isActive"
-          ORDER BY sp.price ASC
-        `;
           break;
 
         default:
@@ -448,8 +188,10 @@ export class ChatbotService {
     - Nếu thiếu thông tin, nói rõ "Không có trong hệ thống"
     - Nếu là gói đăng ký, format giá tiền dễ đọc (VD: 49.000đ/tháng)
     - Trả lời ngắn gọn, súc tích nhưng đầy đủ thông tin
-    - Nếu là thông tin diễn viên/đạo diễn, đề cập tiểu sử và phim tham gia
-    - Nếu tìm phim theo diễn viên/đạo diễn, liệt kê tên phim và thể loại
+    - Nếu tìm phim theo diễn viên/đạo diễn, liệt kê thông tin có trong dữ liệu
+    - Nếu tìm phim theo quốc gia, liệt kê thông tin của các phim có trog dữ liệu ứng với quốc gia được hỏi
+    - Nếu câu trả lời là thông tin 1 phim nào đó, hay là một danh sách phim hãy thêm 1 dòng cuối vào dưới thông tin của mỗi phim 1 đoạn có nội dung là : "http://localhost:3000/film-detail/{slug}", trong đó slug là trường slug ứng với phim
+    đó trong dữ liệu, hãy thay thế giá trị thật của slug vào link trên, và đường link này phải nằm riêng ở dòng cuối cùng của kết quả
     
     Trả về JSON:
     {

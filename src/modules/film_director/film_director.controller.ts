@@ -23,7 +23,7 @@ import { Permission } from 'src/decorators/permission.decorator';
 @UseInterceptors(ClassSerializerInterceptor)
 @SerializeOptions({ excludeExtraneousValues: true, enableImplicitConversion: true })
 export class FilmDirectorController {
-  constructor(private readonly filmDirectorService: FilmDirectorService) { }
+  constructor(private readonly filmDirectorService: FilmDirectorService) {}
 
   @Post('create-film-director')
   @Permission('Create a film-director relation', 'FILM-DIRECTOR')
@@ -68,7 +68,10 @@ export class FilmDirectorController {
   @Get('by-director-slug/:directorSlug')
   @Permission('Get films by director slug', 'FILM-DIRECTOR')
   @ResponseMessage('Get films by director slug')
-  getFilmsByDirectorSlug(@Param('directorSlug') directorSlug: string, @Query() query: PaginationfdDto) {
+  getFilmsByDirectorSlug(
+    @Param('directorSlug') directorSlug: string,
+    @Query() query: PaginationfdDto,
+  ) {
     return this.filmDirectorService.getFilmsByDirectorSlug(directorSlug, query);
   }
 
