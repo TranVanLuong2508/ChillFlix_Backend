@@ -129,4 +129,9 @@ export class CommentGateway implements OnGatewayConnection {
       }
     }
   }
+
+  sendHiddenCommentNotification(userId: number, data: any) {
+    const userIdStr = String(userId);
+    this.emitToUser(userIdStr, 'hiddenCommentNotification', data);
+  }
 }

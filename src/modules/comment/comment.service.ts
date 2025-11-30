@@ -368,7 +368,7 @@ export class CommentService {
     try {
       const comment = await this.commentRepo.findOne({
         where: { commentId },
-        relations: ['children'],
+        relations: ['children', 'user', 'film'],
       });
 
       if (!comment) return { EC: 0, EM: 'Comment not found' };
@@ -386,6 +386,50 @@ export class CommentService {
       await this.commentRepo.save(comment);
       await this.toggleHideChildrenRecursive(commentId, newHiddenState, user.userId);
       this.commentGateway.broadcastHideComment(commentId, newHiddenState);
+
+      // gửi thông báo khi bị ẩn
+      if (newHiddenState && comment.user) {
+        const commentOwnerId = comment.user.userId;
+
+        try {
+          const filmTitle = comment.film?.title || 'Unknown';
+          const notification = await this.notificationsService.createNotification({
+            userId: commentOwnerId,
+            type: 'hidden_comment',
+            message: `Bình luận của bạn trong phim "${filmTitle}" đã bị ẩn do vi phạm nguyên tắc cộng đồng`,
+            result: {
+              commentId: comment.commentId,
+              commentContent: comment.content,
+              filmId: comment.film?.filmId,
+              filmTitle: filmTitle,
+              filmSlug: comment.film?.slug,
+              hiddenAt: new Date(),
+            },
+          });
+
+          // Gửi realtime notification
+          this.commentGateway.sendHiddenCommentNotification(commentOwnerId, {
+            notificationId: notification.notificationId,
+            commentId: comment.commentId,
+            message: `Bình luận của bạn trong phim "${filmTitle}" đã bị ẩn do vi phạm nguyên tắc cộng đồng`,
+            film: comment.film
+              ? {
+                  filmId: comment.film.filmId,
+                  title: comment.film.title,
+                  slug: comment.film.slug,
+                }
+              : null,
+            createdAt: new Date(),
+          });
+        } catch (notifError) {
+          console.error('[NOTIFICATION] Error creating hidden comment notification:', notifError);
+        }
+      }
+
+      // Cập nhật số bình luận
+      if (comment.film?.filmId) {
+        await this.countCommentsByFilm(comment.film.filmId);
+      }
 
       return {
         EC: 1,
