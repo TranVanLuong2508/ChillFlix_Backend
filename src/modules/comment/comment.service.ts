@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
+import { CommentReport } from './entities/report.entity';
 import { User } from '../users/entities/user.entity';
 import { IUser } from '../users/interface/user.interface';
 import aqp from 'api-query-params';
@@ -15,6 +16,8 @@ export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    @InjectRepository(CommentReport)
+    private readonly reportRepo: Repository<CommentReport>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly commentGateway: CommentGateway,
@@ -385,7 +388,25 @@ export class CommentService {
       comment.updatedBy = user.userId;
       await this.commentRepo.save(comment);
       await this.toggleHideChildrenRecursive(commentId, newHiddenState, user.userId);
-      this.commentGateway.broadcastHideComment(commentId, newHiddenState);
+
+      // Khi ẩn: broadcast hide event
+      if (newHiddenState) {
+        this.commentGateway.broadcastHideComment(commentId, newHiddenState);
+      } else {
+        // Khi hiện: broadcast full comment data kèm children
+        const fullComment = await this.commentRepo.findOne({
+          where: { commentId },
+          relations: ['user', 'parent', 'parent.user', 'film', 'reactions', 'reactions.user'],
+        });
+        if (fullComment) {
+          // Load children recursively
+          fullComment.children = await loadChildrenRecursive(
+            this.commentRepo,
+            fullComment.commentId,
+          );
+          this.commentGateway.broadcastUnhideComment(fullComment);
+        }
+      }
 
       // gửi thông báo khi bị ẩn
       if (newHiddenState && comment.user) {
@@ -509,6 +530,16 @@ export class CommentService {
         };
       }
 
+      // Save report to database
+      const report = this.reportRepo.create({
+        comment: { commentId } as any,
+        reporter: { userId: user.userId } as any,
+        reason,
+        description,
+        status: 'PENDING',
+      });
+      await this.reportRepo.save(report);
+
       const targetRoles = ['SYSTEM_ADMIN', 'ROLE_MOD', 'ADMIN_CLIENT'];
 
       const adminReceivers = await this.userRepo.find({
@@ -539,6 +570,7 @@ export class CommentService {
             filmSlug: comment.film?.slug,
             reason,
             description,
+            reportId: report.reportId,
           },
         });
 
@@ -567,6 +599,7 @@ export class CommentService {
             : null,
           reason,
           description,
+          reportId: report.reportId,
           createdAt: new Date(),
         });
       }
@@ -581,6 +614,154 @@ export class CommentService {
         EC: 0,
         EM: 'Error from reportComment service',
       });
+    }
+  }
+
+  // Get all reports for admin
+  async getReports(status?: string, page = 1, limit = 20) {
+    try {
+      const queryBuilder = this.reportRepo
+        .createQueryBuilder('report')
+        .withDeleted()
+        .leftJoinAndSelect('report.comment', 'comment')
+        .leftJoinAndSelect('comment.user', 'commentUser')
+        .leftJoinAndSelect('comment.film', 'film')
+        .leftJoinAndSelect('report.reporter', 'reporter')
+        .leftJoinAndSelect('report.reviewedBy', 'reviewer')
+        .orderBy('report.createdAt', 'DESC');
+
+      if (status && status !== 'ALL') {
+        queryBuilder.where('report.status = :status', { status });
+      }
+
+      const [reports, total] = await queryBuilder
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getManyAndCount();
+
+      // Count duplicates for each report
+      const enriched = await Promise.all(
+        reports.map(async (r) => {
+          if (!r.comment) {
+            return { ...r, duplicateCount: 0 };
+          }
+          const duplicates = await this.reportRepo.count({
+            where: {
+              comment: { commentId: r.comment.commentId },
+              status: 'PENDING',
+            },
+          });
+          return { ...r, duplicateCount: duplicates };
+        }),
+      );
+
+      return {
+        EC: 1,
+        reports: enriched,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      console.error('Error in getReports:', error);
+      throw new InternalServerErrorException('Error fetching reports');
+    }
+  }
+
+  async dismissReport(reportId: string, adminId: number, note?: string) {
+    try {
+      const report = await this.reportRepo.findOne({
+        where: { reportId },
+        relations: ['reporter', 'comment', 'comment.film'], 
+      });
+
+      if (!report) {
+        return { EC: 0, EM: 'Report not found' };
+      }
+
+      report.status = 'DISMISSED';
+      report.reviewedBy = { userId: adminId } as any;
+      report.reviewedAt = new Date();
+      report.reviewNote = note;
+      await this.reportRepo.save(report);
+
+      // Notification to reporter
+      await this.notificationsService.createNotification({
+        userId: report.reporter.userId,
+        type: 'report_result',
+        message: 'Bình luận bạn báo cáo không vi phạm tiêu chuẩn cộng đồng.',
+        result: {
+          reportId,
+          commentId: report.comment.commentId,
+          action: 'DISMISSED',
+          filmId: report.comment.film?.filmId,
+          slug: report.comment.film?.slug,
+          filmTitle: report.comment.film?.title,
+        },
+      });
+
+      // Mark admin's notification as read
+      await this.notificationsService.markAsReadByReportId(reportId, adminId);
+
+      return { EC: 1, EM: 'Report dismissed successfully' };
+    } catch (error) {
+      console.error('Error in dismissReport:', error);
+      throw new InternalServerErrorException('Error dismissing report');
+    }
+  }
+
+  async hideFromReport(reportId: string, user: IUser, reason: string, note?: string) {
+    try {
+      const report = await this.reportRepo.findOne({
+        where: { reportId },
+        relations: ['reporter', 'comment', 'comment.user', 'comment.film'],
+      });
+
+      if (!report) {
+        return { EC: 0, EM: 'Report not found' };
+      }
+      report.status = 'ACTIONED';
+      report.reviewedBy = { userId: user.userId } as any;
+      report.reviewedAt = new Date();
+      report.reviewNote = note;
+      await this.reportRepo.save(report);
+
+      if (!report.comment.isHidden) {
+        await this.toggleHideComment(report.comment.commentId, user);
+      }
+
+      await this.notificationsService.createNotification({
+        userId: report.comment.user.userId,
+        type: 'violation_warning',
+        message: `Bình luận của bạn đã bị ẩn vì vi phạm: ${reason}`,
+        result: {
+          commentId: report.comment.commentId,
+          reason,
+          filmId: report.comment.film?.filmId,
+          slug: report.comment.film?.slug,
+          filmTitle: report.comment.film?.title,
+        },
+      });
+
+      await this.notificationsService.createNotification({
+        userId: report.reporter.userId,
+        type: 'report_result',
+        message: 'Cảm ơn bạn đã báo cáo. Chúng tôi đã xử lý vi phạm.',
+        result: {
+          reportId,
+          action: 'HIDE',
+          filmId: report.comment.film?.filmId,
+          slug: report.comment.film?.slug,
+          filmTitle: report.comment.film?.title,
+        },
+      });
+
+      await this.notificationsService.markAsReadByReportId(reportId, user.userId);
+
+      return { EC: 1, EM: 'Comment hidden and warnings sent' };
+    } catch (error) {
+      console.error('Error in hideFromReport:', error);
+      throw new InternalServerErrorException('Error hiding comment from report');
     }
   }
 }

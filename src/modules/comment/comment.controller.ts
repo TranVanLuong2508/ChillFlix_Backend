@@ -106,4 +106,29 @@ export class CommentController {
       user,
     );
   }
+
+  @Get('reports')
+  @Permission('Get all reports', 'COMMENT')
+  @ResponseMessage('Get all reports')
+  getReports(@Query() query: { status?: string; page?: number; limit?: number }) {
+    return this.commentService.getReports(query.status, query.page, query.limit);
+  }
+
+  @Post('reports/:id/dismiss')
+  @Permission('Dismiss report', 'COMMENT')
+  @ResponseMessage('Dismiss report')
+  dismissReport(@Param('id') id: string, @Body() body: { note?: string }, @User() user: IUser) {
+    return this.commentService.dismissReport(id, user.userId, body.note);
+  }
+
+  @Post('reports/:id/hide')
+  @Permission('Hide comment from report', 'COMMENT')
+  @ResponseMessage('Hide comment and send warning')
+  hideFromReport(
+    @Param('id') id: string,
+    @Body() body: { reason: string; note?: string },
+    @User() user: IUser,
+  ) {
+    return this.commentService.hideFromReport(id, user, body.reason, body.note);
+  }
 }

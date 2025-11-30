@@ -102,6 +102,10 @@ export class CommentGateway implements OnGatewayConnection {
     this.server.emit('hideComment', { commentId, isHidden });
   }
 
+  broadcastUnhideComment(comment: any) {
+    this.server.emit('unhideComment', comment);
+  }
+
   broadcastUpdateComment(comment: any) {
     this.server.emit('updateComment', comment);
   }
