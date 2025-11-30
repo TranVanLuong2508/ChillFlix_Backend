@@ -6,10 +6,14 @@ import { Public, ResponseMessage, SkipCheckPermission, User } from 'src/decorato
 import type { RefundRequestDto } from './dto/refund-vnpay.dto';
 import type { IUser } from '../users/interface/user.interface';
 import { Permission } from 'src/decorators/permission.decorator';
+import { PaymentReportService } from './payment-report.service';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly paymentReportService: PaymentReportService,
+  ) {}
 
   @Post()
   @ResponseMessage('create payment url')
@@ -52,5 +56,21 @@ export class PaymentsController {
   @ResponseMessage('Find All Payments')
   GetAll() {
     return this.paymentsService.findAll();
+  }
+
+  @Post('export-pdf')
+  @Public()
+  @SkipCheckPermission()
+  async exportPaymentPDF(@Body() body: any, @Res() res: Response) {
+    const { payments } = body;
+
+    const pdf = await this.paymentReportService.generatePaymentReport(payments);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=payment-report.pdf`,
+    });
+
+    return res.send(pdf);
   }
 }

@@ -10,11 +10,18 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { EmailModule } from '../email/email.module';
+import { PaymentReportService } from './payment-report.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Payment, SubscriptionPlan, Subscription, User]), EmailModule],
   controllers: [PaymentsController],
-  providers: [PaymentsService, SubscriptionPlansService, SubscriptionsService, UsersService],
-  exports: [PaymentsService],
+  providers: [
+    PaymentsService,
+    SubscriptionPlansService,
+    SubscriptionsService,
+    UsersService,
+    PaymentReportService,
+  ],
+  exports: [PaymentsService, PaymentReportService],
 })
 export class PaymentsModule {}
