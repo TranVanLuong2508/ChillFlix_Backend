@@ -9,7 +9,7 @@ import { Permission } from 'src/decorators/permission.decorator';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) { }
+  constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
   @ResponseMessage('create payment url')
@@ -46,22 +46,11 @@ export class PaymentsController {
   }
 
   @Get()
-  findAll() {
+  @Public()
+  @SkipCheckPermission()
+  @Permission('Get all payments', 'PAYMENTS')
+  @ResponseMessage('Find All Payments')
+  GetAll() {
     return this.paymentsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-    return this.paymentsService.update(+id, updatePaymentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentsService.remove(+id);
   }
 }

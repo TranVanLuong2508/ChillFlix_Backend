@@ -176,7 +176,6 @@ export const BackenDBQuery = {
       "FilmGenre"."filmId" AS "FilmGenre_filmId",
       "FilmGenre"."genreCode" AS "FilmGenre_genreCode",
 
-      /* ---------------- FILM ---------------- */
       "FilmGenre__FilmGenre_film"."filmId" AS "film_filmId",
       "FilmGenre__FilmGenre_film"."originalTitle",
       "FilmGenre__FilmGenre_film"."title",

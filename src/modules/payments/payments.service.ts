@@ -21,6 +21,7 @@ import type { IUser } from '../users/interface/user.interface';
 import { SubscriptionStatus } from '../subscriptions/types/subscriptionStatus';
 import { PaymentMethod, PaymentStatus } from './types/enum';
 import { EmailService } from '../email/email.service';
+import _ from 'lodash';
 
 @Injectable()
 export class PaymentsService {
@@ -40,25 +41,6 @@ export class PaymentsService {
     @InjectRepository(Subscription)
     private subscriptionRepository: Repository<Subscription>,
   ) {}
-  create(createPaymentDto: CreatePaymentDto) {
-    return 'This action adds a new payment';
-  }
-
-  findAll() {
-    return `This action returns all payments`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} payment`;
-  }
-
-  update(id: number, updatePaymentDto: UpdatePaymentDto) {
-    return `This action updates a #${id} payment`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} payment`;
-  }
 
   async createPaymentUrl(
     @Req() req: Request,
@@ -500,6 +482,44 @@ export class PaymentsService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from active Vip Subscription for user',
+      });
+    }
+  }
+
+  async findAll() {
+    try {
+      const payments = await this.paymentRepository.find({
+        relations: ['user', 'subscription.plan'],
+      });
+
+      const clean = (obj) => _.omit(obj, ['user', 'updatedAt', 'subscription']);
+
+      const mapped = payments.map((pay) => {
+        return {
+          ...clean(pay),
+          user: {
+            userId: pay.user.userId,
+            email: pay.user.email,
+            avatarUrl: pay.user.avatarUrl,
+            fullName: pay.user.fullName,
+          },
+          plan: {
+            planName: pay.subscription.plan.planName,
+            planDuration: pay.subscription.plan.planDuration,
+            durationTypeCode: pay.subscription.plan.durationTypeCode,
+          },
+        };
+      });
+      return {
+        EC: 1,
+        EM: 'Get all payments success',
+        payments: mapped,
+      };
+    } catch (error) {
+      console.error('Error in get All payment:', error.message);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from get All payment service',
       });
     }
   }
