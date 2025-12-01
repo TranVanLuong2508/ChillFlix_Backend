@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
-import { CommentReport } from './entities/report.entity';
 import { User } from '../users/entities/user.entity';
 import { IUser } from '../users/interface/user.interface';
 import aqp from 'api-query-params';
@@ -16,8 +15,6 @@ export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
-    @InjectRepository(CommentReport)
-    private readonly reportRepo: Repository<CommentReport>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly commentGateway: CommentGateway,
@@ -149,13 +146,12 @@ export class CommentService {
         take: limit,
       });
 
-      // Load children comments recursively for each root comment
       for (const root of data) {
-        root.children = await loadChildrenRecursive(this.commentRepo, root.commentId);
+        root.children = await loadChildrenRecursive(this.commentRepo, root.commentId, true);
       }
 
       const userId = user?.userId || null;
-      const comments = data.map((comment) => buildTree(comment, userId));
+      const comments = data.map((comment) => buildTree(comment, userId, true));
 
       return {
         EC: 1,
@@ -348,14 +344,7 @@ export class CommentService {
       await this.commentRepo.update(commentId, { deletedBy: user.userId });
       await this.commentRepo.softDelete(commentId);
       this.commentGateway.broadcastDeleteComment(commentId);
-      const total = await this.commentRepo.count({
-        where: { film: { filmId }, deletedAt: IsNull() },
-      });
-
-      this.commentGateway.broadcastCountComments({
-        filmId,
-        total,
-      });
+      await this.countCommentsByFilm(filmId);
 
       return { EC: 1, EM: 'Delete comment successfully' };
     } catch (error) {
@@ -363,6 +352,62 @@ export class CommentService {
       throw new InternalServerErrorException({
         EC: 0,
         EM: 'Error from deleteComment service',
+      });
+    }
+  }
+
+  private async hardDeleteChildrenRecursive(commentId: string) {
+    const children = await this.commentRepo.find({
+      where: { parent: { commentId } },
+      relations: ['children'],
+      withDeleted: true,
+    });
+
+    for (const child of children) {
+      await this.hardDeleteChildrenRecursive(child.commentId);
+      await this.commentRepo.delete(child.commentId);
+      this.commentGateway.broadcastDeleteComment(child.commentId);
+    }
+  }
+
+  async hardDeleteComment(commentId: string, user: IUser) {
+    try {
+      const comment = await this.commentRepo.findOne({
+        where: { commentId },
+        relations: ['user', 'parent', 'film'],
+        withDeleted: true,
+      });
+
+      if (!comment) return { EC: 0, EM: 'Comment not found' };
+
+      if (user.roleName !== 'SYSTEM_ADMIN' && user.roleName !== 'ROLE_MOD') {
+        return {
+          EC: 0,
+          EM: 'Only admin/moderator can permanently delete comments',
+        };
+      }
+
+      const filmId = comment.film.filmId;
+
+      await this.hardDeleteChildrenRecursive(commentId);
+      if (comment.parent) {
+        await this.commentRepo.decrement(
+          { commentId: comment.parent.commentId },
+          'totalChildrenComment',
+          1,
+        );
+      }
+
+      await this.commentRepo.delete(commentId);
+      this.commentGateway.broadcastDeleteComment(commentId);
+      await this.countCommentsByFilm(filmId);
+
+      return { EC: 1, EM: 'Permanently deleted comment successfully' };
+    } catch (error) {
+      console.error('Error in hardDeleteComment:', error);
+      throw new InternalServerErrorException({
+        EC: 0,
+        EM: 'Error from hardDeleteComment service',
       });
     }
   }
@@ -388,18 +433,14 @@ export class CommentService {
       comment.updatedBy = user.userId;
       await this.commentRepo.save(comment);
       await this.toggleHideChildrenRecursive(commentId, newHiddenState, user.userId);
-
-      // Khi ẩn: broadcast hide event
       if (newHiddenState) {
         this.commentGateway.broadcastHideComment(commentId, newHiddenState);
       } else {
-        // Khi hiện: broadcast full comment data kèm children
         const fullComment = await this.commentRepo.findOne({
           where: { commentId },
           relations: ['user', 'parent', 'parent.user', 'film', 'reactions', 'reactions.user'],
         });
         if (fullComment) {
-          // Load children recursively
           fullComment.children = await loadChildrenRecursive(
             this.commentRepo,
             fullComment.commentId,
@@ -411,7 +452,6 @@ export class CommentService {
       // gửi thông báo khi bị ẩn
       if (newHiddenState && comment.user) {
         const commentOwnerId = comment.user.userId;
-
         try {
           const filmTitle = comment.film?.title || 'Unknown';
           const notification = await this.notificationsService.createNotification({
@@ -446,12 +486,9 @@ export class CommentService {
           console.error('[NOTIFICATION] Error creating hidden comment notification:', notifError);
         }
       }
-
-      // Cập nhật số bình luận
       if (comment.film?.filmId) {
         await this.countCommentsByFilm(comment.film.filmId);
       }
-
       return {
         EC: 1,
         EM: newHiddenState ? 'Comment hidden successfully' : 'Comment is now visible',
@@ -468,6 +505,11 @@ export class CommentService {
       });
     }
   }
+
+  async hideCommentAndChildren(commentId: string, userId: number) {
+    await this.toggleHideChildrenRecursive(commentId, true, userId);
+  }
+
   private async toggleHideChildrenRecursive(parentId: string, isHidden: boolean, userId: number) {
     const children = await this.commentRepo.find({
       where: { parent: { commentId: parentId } },
@@ -509,259 +551,110 @@ export class CommentService {
     }
   }
 
-  async reportComment(commentId: string, reason: string, description: string, user: IUser) {
+  async getStatistics() {
     try {
-      const comment = await this.commentRepo.findOne({
-        where: { commentId },
-        relations: ['user', 'film'],
+      const totalComments = await this.commentRepo.count({
+        where: { deletedAt: IsNull() },
       });
 
-      if (!comment) {
-        return {
-          EC: 0,
-          EM: 'Comment not found',
-        };
-      }
-
-      if (comment.user.userId === user.userId) {
-        return {
-          EC: 0,
-          EM: 'Bạn không thể báo cáo bình luận của chính mình',
-        };
-      }
-
-      // Save report to database
-      const report = this.reportRepo.create({
-        comment: { commentId } as any,
-        reporter: { userId: user.userId } as any,
-        reason,
-        description,
-        status: 'PENDING',
-      });
-      await this.reportRepo.save(report);
-
-      const targetRoles = ['SYSTEM_ADMIN', 'ROLE_MOD', 'ADMIN_CLIENT'];
-
-      const adminReceivers = await this.userRepo.find({
-        where: { role: { roleName: In(targetRoles) } },
-        relations: ['role'],
+      const visibleComments = await this.commentRepo.count({
+        where: { deletedAt: IsNull(), isHidden: false },
       });
 
-      if (adminReceivers.length === 0) {
-        console.warn('No admin/mod accounts found to receive report notifications');
-      }
+      const hiddenComments = await this.commentRepo.count({
+        where: { deletedAt: IsNull(), isHidden: true },
+      });
 
-      for (const admin of adminReceivers) {
-        const notification = await this.notificationsService.createNotification({
-          userId: admin.userId,
-          type: 'report',
-          message: `${user.fullName} đã báo cáo bình luận của ${comment.user.fullName} trong phim "${comment.film?.title || 'Unknown'}"`,
-          replierId: user.userId,
-          result: {
-            commentId: comment.commentId,
-            reporterId: user.userId,
-            reporterName: user.fullName,
-            reporterAvatar: user.avatarUrl,
-            commentContent: comment.content,
-            commentUserId: comment.user.userId,
-            commentUserName: comment.user.fullName,
-            filmId: comment.film?.filmId,
-            filmTitle: comment.film?.title,
-            filmSlug: comment.film?.slug,
-            reason,
-            description,
-            reportId: report.reportId,
-          },
-        });
+      const activeUsersResult = await this.commentRepo
+        .createQueryBuilder('comment')
+        .select('COUNT(DISTINCT comment.userId)', 'count')
+        .where('comment.deletedAt IS NULL')
+        .getRawOne();
 
-        // Gửi socket real-time cho đúng admin/mod
-        this.commentGateway.sendReportNotificationToSpecificAdmin(admin.userId, {
-          notificationId: notification.notificationId,
-          reporter: {
-            userId: user.userId,
-            fullName: user.fullName,
-            avatarUrl: user.avatarUrl,
-          },
-          comment: {
-            commentId: comment.commentId,
-            content: comment.content,
-            user: {
-              userId: comment.user.userId,
-              fullName: comment.user.fullName,
-            },
-          },
+      const activeUsers = parseInt(activeUsersResult?.count || '0');
+
+      const mostCommented = await this.commentRepo
+        .createQueryBuilder('comment')
+        .leftJoin('comment.film', 'film')
+        .select('film.filmId', 'filmId')
+        .addSelect('film.title', 'title')
+        .addSelect('COUNT(comment.commentId)', 'totalComments')
+        .where('comment.deletedAt IS NULL')
+        .andWhere('film.filmId IS NOT NULL')
+        .groupBy('film.filmId')
+        .addGroupBy('film.title')
+        .orderBy('"totalComments"', 'DESC')
+        .limit(10)
+        .getRawMany();
+
+      const topCommenters = await this.commentRepo
+        .createQueryBuilder('comment')
+        .leftJoin('comment.user', 'user')
+        .select('user.userId', 'userId')
+        .addSelect('user.fullName', 'fullName')
+        .addSelect('user.avatarUrl', 'avatarUrl')
+        .addSelect('COUNT(comment.commentId)', 'totalComments')
+        .where('comment.deletedAt IS NULL')
+        .groupBy('user.userId')
+        .addGroupBy('user.fullName')
+        .addGroupBy('user.avatarUrl')
+        .orderBy('"totalComments"', 'DESC')
+        .limit(10)
+        .getRawMany();
+
+      const mostReplied = await this.commentRepo
+        .createQueryBuilder('comment')
+        .leftJoinAndSelect('comment.user', 'user')
+        .leftJoinAndSelect('comment.film', 'film')
+        .where('comment.deletedAt IS NULL')
+        .andWhere('comment.totalChildrenComment > 0')
+        .orderBy('comment.totalChildrenComment', 'DESC')
+        .limit(10)
+        .getMany();
+
+      return {
+        EC: 1,
+        EM: 'Get statistics successfully',
+        totalComments,
+        visibleComments,
+        hiddenComments,
+        activeUsers,
+        mostCommented: mostCommented.map((item) => ({
+          filmId: item.filmId,
+          title: item.title,
+          totalComments: parseInt(item.totalComments),
+        })),
+        topCommenters: topCommenters.map((item) => ({
+          userId: item.userId,
+          fullName: item.fullName,
+          avatarUrl: item.avatarUrl,
+          totalComments: parseInt(item.totalComments),
+        })),
+        mostReplied: mostReplied.map((comment) => ({
+          commentId: comment.commentId,
+          content: comment.content,
+          totalChildrenComment: comment.totalChildrenComment,
+          user: comment.user
+            ? {
+                userId: comment.user.userId,
+                fullName: comment.user.fullName,
+                avatarUrl: comment.user.avatarUrl,
+              }
+            : null,
           film: comment.film
             ? {
                 filmId: comment.film.filmId,
                 title: comment.film.title,
-                slug: comment.film.slug,
               }
             : null,
-          reason,
-          description,
-          reportId: report.reportId,
-          createdAt: new Date(),
-        });
-      }
-
-      return {
-        EC: 1,
-        EM: 'Report submitted successfully',
+        })),
       };
     } catch (error) {
-      console.error('Error in reportComment:', error);
+      console.error('Error in getStatistics:', error);
       throw new InternalServerErrorException({
         EC: 0,
-        EM: 'Error from reportComment service',
+        EM: 'Error getting comment statistics',
       });
-    }
-  }
-
-  // Get all reports for admin
-  async getReports(status?: string, page = 1, limit = 20) {
-    try {
-      const queryBuilder = this.reportRepo
-        .createQueryBuilder('report')
-        .withDeleted()
-        .leftJoinAndSelect('report.comment', 'comment')
-        .leftJoinAndSelect('comment.user', 'commentUser')
-        .leftJoinAndSelect('comment.film', 'film')
-        .leftJoinAndSelect('report.reporter', 'reporter')
-        .leftJoinAndSelect('report.reviewedBy', 'reviewer')
-        .orderBy('report.createdAt', 'DESC');
-
-      if (status && status !== 'ALL') {
-        queryBuilder.where('report.status = :status', { status });
-      }
-
-      const [reports, total] = await queryBuilder
-        .skip((page - 1) * limit)
-        .take(limit)
-        .getManyAndCount();
-
-      // Count duplicates for each report
-      const enriched = await Promise.all(
-        reports.map(async (r) => {
-          if (!r.comment) {
-            return { ...r, duplicateCount: 0 };
-          }
-          const duplicates = await this.reportRepo.count({
-            where: {
-              comment: { commentId: r.comment.commentId },
-              status: 'PENDING',
-            },
-          });
-          return { ...r, duplicateCount: duplicates };
-        }),
-      );
-
-      return {
-        EC: 1,
-        reports: enriched,
-        total,
-        page,
-        totalPages: Math.ceil(total / limit),
-      };
-    } catch (error) {
-      console.error('Error in getReports:', error);
-      throw new InternalServerErrorException('Error fetching reports');
-    }
-  }
-
-  async dismissReport(reportId: string, adminId: number, note?: string) {
-    try {
-      const report = await this.reportRepo.findOne({
-        where: { reportId },
-        relations: ['reporter', 'comment', 'comment.film'], 
-      });
-
-      if (!report) {
-        return { EC: 0, EM: 'Report not found' };
-      }
-
-      report.status = 'DISMISSED';
-      report.reviewedBy = { userId: adminId } as any;
-      report.reviewedAt = new Date();
-      report.reviewNote = note;
-      await this.reportRepo.save(report);
-
-      // Notification to reporter
-      await this.notificationsService.createNotification({
-        userId: report.reporter.userId,
-        type: 'report_result',
-        message: 'Bình luận bạn báo cáo không vi phạm tiêu chuẩn cộng đồng.',
-        result: {
-          reportId,
-          commentId: report.comment.commentId,
-          action: 'DISMISSED',
-          filmId: report.comment.film?.filmId,
-          slug: report.comment.film?.slug,
-          filmTitle: report.comment.film?.title,
-        },
-      });
-
-      // Mark admin's notification as read
-      await this.notificationsService.markAsReadByReportId(reportId, adminId);
-
-      return { EC: 1, EM: 'Report dismissed successfully' };
-    } catch (error) {
-      console.error('Error in dismissReport:', error);
-      throw new InternalServerErrorException('Error dismissing report');
-    }
-  }
-
-  async hideFromReport(reportId: string, user: IUser, reason: string, note?: string) {
-    try {
-      const report = await this.reportRepo.findOne({
-        where: { reportId },
-        relations: ['reporter', 'comment', 'comment.user', 'comment.film'],
-      });
-
-      if (!report) {
-        return { EC: 0, EM: 'Report not found' };
-      }
-      report.status = 'ACTIONED';
-      report.reviewedBy = { userId: user.userId } as any;
-      report.reviewedAt = new Date();
-      report.reviewNote = note;
-      await this.reportRepo.save(report);
-
-      if (!report.comment.isHidden) {
-        await this.toggleHideComment(report.comment.commentId, user);
-      }
-
-      await this.notificationsService.createNotification({
-        userId: report.comment.user.userId,
-        type: 'violation_warning',
-        message: `Bình luận của bạn đã bị ẩn vì vi phạm: ${reason}`,
-        result: {
-          commentId: report.comment.commentId,
-          reason,
-          filmId: report.comment.film?.filmId,
-          slug: report.comment.film?.slug,
-          filmTitle: report.comment.film?.title,
-        },
-      });
-
-      await this.notificationsService.createNotification({
-        userId: report.reporter.userId,
-        type: 'report_result',
-        message: 'Cảm ơn bạn đã báo cáo. Chúng tôi đã xử lý vi phạm.',
-        result: {
-          reportId,
-          action: 'HIDE',
-          filmId: report.comment.film?.filmId,
-          slug: report.comment.film?.slug,
-          filmTitle: report.comment.film?.title,
-        },
-      });
-
-      await this.notificationsService.markAsReadByReportId(reportId, user.userId);
-
-      return { EC: 1, EM: 'Comment hidden and warnings sent' };
-    } catch (error) {
-      console.error('Error in hideFromReport:', error);
-      throw new InternalServerErrorException('Error hiding comment from report');
     }
   }
 }
@@ -769,26 +662,37 @@ export class CommentService {
 async function loadChildrenRecursive(
   repo: Repository<Comment>,
   parentId: string,
+  isAdmin: boolean = false,
 ): Promise<Comment[]> {
+  const whereClause: any = {
+    parent: { commentId: parentId },
+    deletedAt: IsNull(),
+  };
+  if (!isAdmin) {
+    whereClause.isHidden = false;
+  }
+
   const children = await repo.find({
-    where: {
-      parent: { commentId: parentId },
-      isHidden: false,
-      deletedAt: IsNull(),
-    },
+    where: whereClause,
     relations: ['user', 'film', 'reactions', 'reactions.user', 'parent', 'parent.user'],
     order: { createdAt: 'ASC' },
   });
   for (const child of children) {
-    child.children = await loadChildrenRecursive(repo, child.commentId);
+    child.children = await loadChildrenRecursive(repo, child.commentId, isAdmin);
   }
   return children;
 }
 
-function buildTree(comment: any, userId: string | number | null): any {
+function buildTree(comment: any, userId: string | number | null, isAdmin: boolean = false): any {
   const currentReaction = userId ? comment.reactions?.find((r) => r.user?.userId === userId) : null;
+  const children = comment.children || [];
+  const replies = isAdmin
+    ? children.map((child) => buildTree(child, userId, isAdmin))
+    : children.filter((child) => !child.isHidden).map((child) => buildTree(child, userId, isAdmin));
+
   return {
     id: comment.commentId,
+    commentId: comment.commentId,
     content: comment.content,
     createdAt: comment.createdAt,
     isHidden: comment.isHidden,
@@ -818,8 +722,6 @@ function buildTree(comment: any, userId: string | number | null): any {
           },
         }
       : null,
-    replies: (comment.children || [])
-      .filter((child) => !child.isHidden)
-      .map((child) => buildTree(child, userId)),
+    replies: replies,
   };
 }

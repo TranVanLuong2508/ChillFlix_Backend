@@ -118,24 +118,18 @@ export class CommentGateway implements OnGatewayConnection {
     this.server.emit('countComments', data);
   }
 
-  sendReportNotificationToAdmin(data: any) {
-    for (const socketId of this.adminSockets) {
-      this.server.to(socketId).emit('reportNotification', data);
-    }
-  }
-
-  sendReportNotificationToSpecificAdmin(userId: number, data: any) {
-    const userIdStr = String(userId);
-    const socketSet = this.userSockets.get(userIdStr);
-    if (socketSet && socketSet.size > 0) {
-      for (const socketId of socketSet) {
-        this.server.to(socketId).emit('reportNotification', data);
-      }
-    }
-  }
-
   sendHiddenCommentNotification(userId: number, data: any) {
     const userIdStr = String(userId);
     this.emitToUser(userIdStr, 'hiddenCommentNotification', data);
+  }
+
+  sendWarningNotification(userId: number, data: any) {
+    const userIdStr = String(userId);
+    this.emitToUser(userIdStr, 'warningNotification', data);
+  }
+
+  sendInfoNotification(userId: number, data: any) {
+    const userIdStr = String(userId);
+    this.emitToUser(userIdStr, 'infoNotification', data);
   }
 }

@@ -6,17 +6,34 @@ import {
   JoinColumn,
   CreateDateColumn,
 } from 'typeorm';
-import { Comment } from './comment.entity';
 import { User } from '../../users/entities/user.entity';
 
-@Entity('comment_reports')
-export class CommentReport {
+export enum ReportType {
+  COMMENT = 'COMMENT',
+  RATING = 'RATING',
+  FILM = 'FILM',
+  USER = 'USER',
+}
+
+export enum ReportStatus {
+  PENDING = 'PENDING',
+  DISMISSED = 'DISMISSED',
+  ACTIONED = 'ACTIONED',
+}
+
+@Entity('reports')
+export class Report {
   @PrimaryGeneratedColumn('uuid')
   reportId: string;
 
-  @ManyToOne(() => Comment, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'commentId' })
-  comment: Comment;
+  @Column({
+    type: 'enum',
+    enum: ReportType,
+  })
+  reportType: ReportType;
+
+  @Column({ type: 'varchar', length: 36 })
+  targetId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'reporterId' })
@@ -30,10 +47,10 @@ export class CommentReport {
 
   @Column({
     type: 'enum',
-    enum: ['PENDING', 'DISMISSED', 'ACTIONED'],
-    default: 'PENDING',
+    enum: ReportStatus,
+    default: ReportStatus.PENDING,
   })
-  status: string;
+  status: ReportStatus;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'reviewedBy' })

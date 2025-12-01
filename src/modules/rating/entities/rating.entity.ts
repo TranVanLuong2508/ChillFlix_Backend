@@ -27,6 +27,8 @@ export class Rating {
   ratingValue: number;
   @Column({ type: 'text', nullable: true })
   content: string;
+  @Column({ default: false })
+  isHidden: boolean;
   @CreateDateColumn()
   createdAt: Date;
   @UpdateDateColumn()

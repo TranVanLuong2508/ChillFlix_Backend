@@ -44,11 +44,12 @@ import { EmailModule } from './modules/email/email.module';
 
 import { CommentModule } from './modules/comment/comment.module';
 import { Comment } from './modules/comment/entities/comment.entity';
-import { CommentReport } from './modules/comment/entities/report.entity';
 import { CommentReactionModule } from './modules/comment-reaction/comment-reaction.module';
 import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
 import { RatingModule } from './modules/rating/rating.module';
 import { Rating } from './modules/rating/entities/rating.entity';
+import { ReportModule } from './modules/report/report.module';
+import { Report } from './modules/report/entities/report.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
@@ -106,9 +107,9 @@ import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entit
           SubscriptionPlan,
           Payment,
           Comment,
-          CommentReport,
           CommentReaction,
           Rating,
+          Report,
           Favorite,
           Playlist,
           PlaylistFilm,
@@ -143,6 +144,7 @@ import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entit
     CommentModule,
     CommentReactionModule,
     RatingModule,
+    ReportModule,
     ChatbotModule,
     SearchModule,
     FavoritesModule,

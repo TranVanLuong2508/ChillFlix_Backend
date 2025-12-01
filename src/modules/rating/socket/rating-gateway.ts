@@ -18,9 +18,7 @@ export class RatingGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  handleConnection(client: Socket) {
-    // Connection handling 
-  }
+  handleConnection(client: Socket) {}
 
   broadcastRatingUpdate(data: {
     filmId: string;
@@ -33,5 +31,9 @@ export class RatingGateway implements OnGatewayConnection {
 
   broadcastRatingDelete(data: { filmId: string; ratingId: string }) {
     this.server.emit('ratingDeleted', data);
+  }
+
+  broadcastHideRating(ratingId: string, isHidden: boolean) {
+    this.server.emit('hideRating', { ratingId, isHidden });
   }
 }

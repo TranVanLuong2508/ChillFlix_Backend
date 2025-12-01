@@ -79,6 +79,13 @@ export class CommentController {
     return this.commentService.deleteComment(commentId, user);
   }
 
+  @Delete('hard-delete-comment/:commentId')
+  @Permission('Hard delete comment', 'COMMENT')
+  @ResponseMessage('Hard delete comment by ID')
+  hardDeleteComment(@Param('commentId') commentId: string, @User() user: IUser) {
+    return this.commentService.hardDeleteComment(commentId, user);
+  }
+
   @Patch('toggle-hide/:commentId')
   @Permission('Toggle hide comment', 'COMMENT')
   toggleHideComment(@Param('commentId') id: string, @User() user: IUser) {
@@ -92,43 +99,10 @@ export class CommentController {
     return this.commentService.countCommentsByFilm(filmId);
   }
 
-  @Post('report-comment')
-  @Permission('Report comment', 'COMMENT')
-  @ResponseMessage('Report comment')
-  reportComment(
-    @Body() body: { commentId: string; reason: string; description?: string },
-    @User() user: IUser,
-  ) {
-    return this.commentService.reportComment(
-      body.commentId,
-      body.reason,
-      body.description || '',
-      user,
-    );
-  }
-
-  @Get('reports')
-  @Permission('Get all reports', 'COMMENT')
-  @ResponseMessage('Get all reports')
-  getReports(@Query() query: { status?: string; page?: number; limit?: number }) {
-    return this.commentService.getReports(query.status, query.page, query.limit);
-  }
-
-  @Post('reports/:id/dismiss')
-  @Permission('Dismiss report', 'COMMENT')
-  @ResponseMessage('Dismiss report')
-  dismissReport(@Param('id') id: string, @Body() body: { note?: string }, @User() user: IUser) {
-    return this.commentService.dismissReport(id, user.userId, body.note);
-  }
-
-  @Post('reports/:id/hide')
-  @Permission('Hide comment from report', 'COMMENT')
-  @ResponseMessage('Hide comment and send warning')
-  hideFromReport(
-    @Param('id') id: string,
-    @Body() body: { reason: string; note?: string },
-    @User() user: IUser,
-  ) {
-    return this.commentService.hideFromReport(id, user, body.reason, body.note);
+  @Get('statistics')
+  @Permission('Get comment statistics', 'COMMENT')
+  @ResponseMessage('Get comment statistics')
+  getStatistics() {
+    return this.commentService.getStatistics();
   }
 }
