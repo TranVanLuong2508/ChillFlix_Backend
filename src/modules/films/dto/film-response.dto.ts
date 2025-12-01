@@ -47,6 +47,9 @@ export class FilmResponseDto {
   releaseDate: string;
 
   @Expose()
+  isVip: boolean;
+
+  @Expose()
   year: string;
 
   @Expose()
@@ -122,6 +125,9 @@ export class FilmPaginationDto {
 
   @Expose()
   description: string;
+
+  @Expose()
+  isVip: boolean;
 
   @Expose()
   title: string;

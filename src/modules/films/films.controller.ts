@@ -45,6 +45,17 @@ export class FilmsController {
   }
 
   @Public()
+  @Get('/admin/deleted')
+  @ResponseMessage('Get Film Deleted Paginate')
+  findAllAdminDeleted(
+    @Query('current') page: number,
+    @Query('pageSize') limit: number,
+    @Query() qs: string,
+  ) {
+    return this.adminFilmService.getAllFilmDeleted(page, limit, qs);
+  }
+
+  @Public()
   @Get()
   @Permission('Get all films', 'FILMS')
   findAll(@Query('current') page: number, @Query('pageSize') limit: number, @Query() qs: string) {
@@ -72,11 +83,26 @@ export class FilmsController {
     return this.adminFilmService.update(id, updateFilmDto, user);
   }
 
+  @SkipCheckPermission()
+  @Patch('admin/restore/:id')
+  @Permission('Restore data film', 'FILMS')
+  @ResponseMessage('Restore data film')
+  restore(@Param('id') id: string) {
+    return this.adminFilmService.restoreFilm(id);
+  }
+
   @Delete(':id')
   @Permission('Delete film', 'FILMS')
   @ResponseMessage('Soft delete film')
   remove(@Param('id') id: string, @User() user: IUser) {
     return this.adminFilmService.remove(id, user);
+  }
+
+  @Delete('admin/hard_delete/:id')
+  @Permission('Hard Delete film', 'FILMS')
+  @ResponseMessage('Hard delete film')
+  hardDelete(@Param('id') id: string) {
+    return this.adminFilmService.hardDelete(id);
   }
 
   @Public()

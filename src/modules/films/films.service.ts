@@ -72,8 +72,6 @@ export class FilmsService {
         }),
       );
 
-      console.log('>>Check all: ', data);
-
       return {
         EC: 0,
         EM: 'Get film with query paginate success',

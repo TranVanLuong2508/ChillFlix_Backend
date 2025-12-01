@@ -2,6 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   IsArray,
+  IsBoolean,
   IsDate,
   IsEnum,
   IsNotEmpty,
@@ -61,6 +62,11 @@ export class CreateFilmDto {
   @IsOptional()
   @IsNumber({}, { message: 'duration must be Number format' })
   duration?: number;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean({ message: 'duration must be Boolean format' })
+  isVip?: boolean;
 
   @Expose()
   @IsNotEmpty({ message: 'thumbUrl must not be empty' })
