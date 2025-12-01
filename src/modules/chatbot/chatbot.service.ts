@@ -80,7 +80,6 @@ export class ChatbotService {
         .replace(/```json|```/g, '')
         .trim();
       const intent = JSON.parse(analysisText);
-      console.log('Check Intent: ', intent);
 
       let dbQuery = '';
       let queryParams: (string | number)[] = [];
@@ -159,10 +158,8 @@ export class ChatbotService {
         return { error: 'Không xác định được ý định truy vấn' };
       }
 
-      console.log('check dbQuery: ', dbQuery);
       // const dbResult = await this.databaseService.query(dbQuery, queryParams);
       const dbResult = await this.query(dbQuery, queryParams);
-      console.log(`Tìm thấy ${dbResult.rows.length} kết quả`);
 
       if (dbResult.rows.length === 0) {
         return {
@@ -215,17 +212,13 @@ export class ChatbotService {
     `;
 
       const finalResult = await this.model.generateContent(responsePrompt);
-      console.log('check rs', finalResult.response);
       let finalText = finalResult.response
         .text()
         .replace(/```json|```/g, '')
         .trim();
       const response = JSON.parse(finalText);
 
-      console.log('check response', response);
       return response;
-    } catch (error) {
-      console.log();
-    }
+    } catch (error) {}
   }
 }

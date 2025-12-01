@@ -8,11 +8,10 @@ import { Permission } from 'src/decorators/permission.decorator';
 
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) { }
+  constructor(private readonly permissionsService: PermissionsService) {}
 
   @Post()
   @Permission('Create a permission', 'PERMISSIONS')
-  @SkipCheckPermission()
   @ResponseMessage('Create a new permission')
   create(@Body() createPermissionDto: CreatePermissionDto, @User() user: IUser) {
     return this.permissionsService.create(createPermissionDto, user);
@@ -20,7 +19,6 @@ export class PermissionsController {
 
   @Get()
   @Permission('Get all permissions', 'PERMISSIONS')
-  @SkipCheckPermission()
   @ResponseMessage('Fetch all permission')
   findAll() {
     return this.permissionsService.findAll();

@@ -76,6 +76,7 @@ export class PermissionsService {
           permissionId: true,
           name: true,
           method: true,
+          apiPath: true,
           module: true,
           createdBy: true,
         },
@@ -124,7 +125,7 @@ export class PermissionsService {
       return {
         EC: 1,
         EM: 'Update permission success',
-        ...updateResult,
+        permissionId: id,
       };
     } catch (error: any) {
       console.error('Error in update permission:', error.message);
@@ -157,7 +158,7 @@ export class PermissionsService {
         return {
           EC: 1,
           EM: `permission is deleted`,
-          ...result,
+          permissionId: id,
         };
       }
     } catch (error: any) {

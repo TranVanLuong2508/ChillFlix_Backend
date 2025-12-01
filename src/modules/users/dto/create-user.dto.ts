@@ -7,6 +7,7 @@ import {
   MinLength,
   Length,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -28,6 +29,12 @@ export class CreateUserDto {
   @IsString({ message: 'phoneNumber must be STRING format' })
   phoneNumber: string;
 
+  @IsOptional()
+  @IsNotEmpty({ message: 'age must not be empty' })
+  @IsNumber({}, { message: 'age must be number format' })
+  age: number;
+
+  @IsOptional()
   @IsString({ message: 'avatarUrl must be STRING format' })
   avatarUrl: string;
 
@@ -40,15 +47,17 @@ export class CreateUserDto {
   @Type(() => Number)
   roleId: number;
 
+  @IsOptional()
   @IsNotEmpty({ message: 'isVip must not be empty' })
   @IsBoolean({ message: 'isVip must be BOOLEAN format' })
   @Type(() => Boolean)
   isVip: boolean;
 
-  @IsNotEmpty({ message: 'statusCode must not be empty' })
+  @IsOptional()
   @IsString({ message: 'statusCode must be STRING format' })
   statusCode: string;
 
+  @IsOptional()
   @IsNotEmpty({ message: 'isDeleted must not be empty' })
   @IsBoolean({ message: 'isDeleted must be BOOLEAN format' })
   @Type(() => Boolean)

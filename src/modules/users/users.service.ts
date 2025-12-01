@@ -26,10 +26,10 @@ export class UsersService {
       });
 
       if (isUserExist) {
-        throw new BadRequestException({
-          EC: 0,
+        return {
+          EC: 2,
           EM: `Email: ${createUserDto.email} already exists in the system. Please use a different email.`,
-        });
+        };
       } else {
         const hasedPassword = this.getHashPassword(createUserDto.password);
 
