@@ -318,17 +318,19 @@ export class ReportService {
           case ReportType.COMMENT:
             const comment = await this.commentRepo.findOne({
               where: { commentId: report.targetId },
-              relations: ['user'],
+              relations: ['user', 'film'],
             });
-            thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận của ${comment?.user?.fullName || 'người dùng'}. Chúng tôi đã xử lý báo cáo của bạn. Kết quả: Không vi phạm`;
+            const commentfilmTitle = comment?.film?.title || 'không xác định';
+            thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận của ${comment?.user?.fullName || 'người dùng'} trong phim "${commentfilmTitle}". Chúng tôi đã xử lý báo cáo của bạn. Kết quả: Không vi phạm`;
             break;
 
           case ReportType.RATING:
             const rating = await this.ratingRepo.findOne({
               where: { ratingId: report.targetId },
-              relations: ['user'],
+              relations: ['user', 'film'],
             });
-            thankYouMessage = `Cảm ơn bạn đã báo cáo đánh giá của ${rating?.user?.fullName || 'người dùng'}. Chúng tôi đã xử lý báo cáo của bạn. Kết quả: Không vi phạm`;
+            const ratingfilmTitle = rating?.film?.title || 'không xác định';
+            thankYouMessage = `Cảm ơn bạn đã báo cáo đánh giá của ${rating?.user?.fullName || 'người dùng'} trong phim "${ratingfilmTitle}". Chúng tôi đã xử lý báo cáo của bạn. Kết quả: Không vi phạm`;
             break;
         }
 
@@ -415,17 +417,18 @@ export class ReportService {
             await this.commentService.countCommentsByFilm(comment.film.filmId);
           }
           if (comment.user && reason) {
+            const filmTitle = comment.film?.title || 'không xác định';
             const notification = await this.notificationsService.createNotification({
               userId: comment.user.userId,
               type: 'warning',
-              message: `Bình luận của bạn đã bị ẩn do vi phạm: ${reason}`,
+              message: `Bình luận trong phim "${filmTitle}" của bạn đã bị ẩn do vi phạm: ${reason}`,
               replierId: user.userId,
               result: { reason, note },
             });
             this.commentGateway.sendWarningNotification(comment.user.userId, {
               notificationId: notification.notificationId,
               type: 'warning',
-              message: `Bình luận của bạn đã bị ẩn do vi phạm: ${reason}`,
+              message: `Bình luận trong phim "${filmTitle}" của bạn đã bị ẩn do vi phạm: ${reason}`,
               reason,
               note,
               commentId: comment.commentId,
@@ -453,10 +456,11 @@ export class ReportService {
             await this.ratingService.getRatingsByFilm(rating.film.filmId);
           }
           if (rating.user && reason) {
+            const filmTitle = rating.film?.title || 'không xác định';
             const notification = await this.notificationsService.createNotification({
               userId: rating.user.userId,
               type: 'warning',
-              message: `Đánh giá của bạn đã bị xóa do vi phạm: ${reason}`,
+              message: `Đánh giá trong phim "${filmTitle}" của bạn đã bị ẩn do vi phạm: ${reason}`,
               replierId: user.userId,
               result: { reason, note },
             });
@@ -511,17 +515,19 @@ export class ReportService {
             case ReportType.COMMENT:
               const commentData = await this.commentRepo.findOne({
                 where: { commentId: report.targetId },
-                relations: ['user'],
+                relations: ['user', 'film'],
               });
-              thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận vi phạm của ${commentData?.user?.fullName || 'người dùng'}. Chúng tôi đã xử lý báo cáo của bạn.`;
+              const commentfilmTitle = commentData?.film?.title || 'không xác định';
+              thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận vi phạm của ${commentData?.user?.fullName || 'người dùng'} trong phim "${commentfilmTitle}". Chúng tôi đã xử lý báo cáo của bạn.`;
               break;
 
             case ReportType.RATING:
               const ratingData = await this.ratingRepo.findOne({
                 where: { ratingId: report.targetId },
-                relations: ['user'],
+                relations: ['user', 'film'],
               });
-              thankYouMessage = `Cảm ơn bạn đã báo cáo đánh giá vi phạm của ${ratingData?.user?.fullName || 'người dùng'}. Chúng tôi đã xử lý báo cáo của bạn.`;
+              const ratingfilmTitle = ratingData?.film?.title || 'không xác định';
+              thankYouMessage = `Cảm ơn bạn đã báo cáo đánh giá vi phạm của ${ratingData?.user?.fullName || 'người dùng'} trong phim "${ratingfilmTitle}". Chúng tôi đã xử lý báo cáo của bạn.`;
               break;
           }
 
@@ -590,6 +596,8 @@ export class ReportService {
       }
 
       let actionResult: any;
+      let targetUserFullName: string = 'người dùng';
+      let targetFilmTitle: string = 'không xác định';
 
       switch (report.reportType) {
         case ReportType.COMMENT:
@@ -602,6 +610,9 @@ export class ReportService {
           if (!comment) {
             return { EC: 0, EM: 'Comment not found' };
           }
+          targetUserFullName = comment.user?.fullName || 'người dùng';
+          targetFilmTitle = comment.film?.title || 'không xác định';
+
           const hardDeleteResult = await this.commentService.hardDeleteComment(
             comment.commentId,
             user,
@@ -613,10 +624,11 @@ export class ReportService {
 
           actionResult = { type: 'comment', commentId: comment.commentId, action: 'hard_deleted' };
           if (comment.user) {
+            const filmTitle = comment.film?.title || 'không xác định';
             const notification = await this.notificationsService.createNotification({
               userId: comment.user.userId,
               type: 'warning',
-              message: `Bình luận của bạn đã bị xóa vĩnh viễn do vi phạm nghiêm trọng quy định cộng đồng`,
+              message: `Bình luận trong phim "${filmTitle}" của bạn đã bị xóa vĩnh viễn do vi phạm nghiêm trọng quy định cộng đồng`,
               replierId: user.userId,
               result: { note, action: 'hard_deleted' },
             });
@@ -624,11 +636,11 @@ export class ReportService {
             this.commentGateway.sendWarningNotification(comment.user.userId, {
               notificationId: notification.notificationId,
               type: 'warning',
-              message: `Bình luận của bạn đã bị xóa vĩnh viễn do vi phạm nghiêm trọng quy định cộng đồng`,
+              message: `Bình luận trong phim "${filmTitle}" của bạn đã bị xóa vĩnh viễn do vi phạm nghiêm trọng quy định cộng đồng`,
               note,
               commentId: comment.commentId,
               filmId: comment.film?.filmId,
-              filmTitle: comment.film?.title,
+              filmTitle: filmTitle,
               createdAt: new Date().toISOString(),
             });
           }
@@ -644,16 +656,20 @@ export class ReportService {
           if (!rating) {
             return { EC: 0, EM: 'Rating not found' };
           }
+          targetUserFullName = rating.user?.fullName || 'người dùng';
+          targetFilmTitle = rating.film?.title || 'không xác định';
+
           const hardDeleteRatingResult = await this.ratingService.hardDeleteRating(rating.ratingId);
           if (hardDeleteRatingResult.EC !== 1) {
             return { EC: 0, EM: 'Failed to hard delete rating' };
           }
           actionResult = { type: 'rating', ratingId: rating.ratingId, action: 'hard_deleted' };
           if (rating.user) {
+            const filmTitle = rating.film?.title || 'không xác định';
             const notification = await this.notificationsService.createNotification({
               userId: rating.user.userId,
               type: 'warning',
-              message: `Đánh giá của bạn đã bị xóa vĩnh viễn do vi phạm nghiêm trọng quy định cộng đồng`,
+              message: `Đánh giá trong phim "${filmTitle}" của bạn đã bị xóa vĩnh viễn do vi phạm nghiêm trọng quy định cộng đồng`,
               replierId: user.userId,
               result: { note, action: 'hard_deleted' },
             });
@@ -707,11 +723,11 @@ export class ReportService {
 
           switch (report.reportType) {
             case ReportType.COMMENT:
-              thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận vi phạm nghiêm trọng. Nội dung đã được xóa vĩnh viễn.`;
+              thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận của ${targetUserFullName} trong phim "${targetFilmTitle}" vi phạm nghiêm trọng. Nội dung đã được xóa vĩnh viễn.`;
               break;
 
             case ReportType.RATING:
-              thankYouMessage = `Cảm ơn bạn đã báo cáo đánh giá vi phạm nghiêm trọng. Nội dung đã được xóa vĩnh viễn.`;
+              thankYouMessage = `Cảm ơn bạn đã báo cáo đánh giá của ${targetUserFullName} trong phim "${targetFilmTitle}" vi phạm nghiêm trọng. Nội dung đã được xóa vĩnh viễn.`;
               break;
           }
 

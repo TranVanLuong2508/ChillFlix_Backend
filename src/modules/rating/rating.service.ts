@@ -113,6 +113,7 @@ export class RatingService {
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });
+
     const average =
       ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.ratingValue, 0) / ratings.length : 0;
 
@@ -226,17 +227,22 @@ export class RatingService {
       });
 
       const total = allRatings.length;
-      const average = total > 0 ? allRatings.reduce((sum, r) => sum + r.ratingValue, 0) / total : 0;
+      const hiddenCount = allRatings.filter((r) => r.isHidden).length;
+      const visibleRatings = allRatings.filter((r) => !r.isHidden);
+      const average =
+        visibleRatings.length > 0
+          ? visibleRatings.reduce((sum, r) => sum + r.ratingValue, 0) / visibleRatings.length
+          : 0;
 
       const distribution = {
-        '1': allRatings.filter((r) => r.ratingValue >= 1 && r.ratingValue < 2).length,
-        '2': allRatings.filter((r) => r.ratingValue >= 2 && r.ratingValue < 3).length,
-        '3': allRatings.filter((r) => r.ratingValue >= 3 && r.ratingValue < 4).length,
-        '4': allRatings.filter((r) => r.ratingValue >= 4 && r.ratingValue < 5).length,
-        '5': allRatings.filter((r) => r.ratingValue === 5).length,
+        '1': visibleRatings.filter((r) => r.ratingValue >= 1 && r.ratingValue < 2).length,
+        '2': visibleRatings.filter((r) => r.ratingValue >= 2 && r.ratingValue < 3).length,
+        '3': visibleRatings.filter((r) => r.ratingValue >= 3 && r.ratingValue < 4).length,
+        '4': visibleRatings.filter((r) => r.ratingValue >= 4 && r.ratingValue < 5).length,
+        '5': visibleRatings.filter((r) => r.ratingValue === 5).length,
       };
 
-      const filmRatings = allRatings.reduce((acc, r) => {
+      const filmRatings = visibleRatings.reduce((acc, r) => {
         const filmId = r.film.filmId;
         if (!acc[filmId]) {
           acc[filmId] = {
@@ -267,7 +273,8 @@ export class RatingService {
         EC: 1,
         EM: 'Get statistics successfully',
         result: {
-          totalRatings: total,
+          totalRatings: visibleRatings.length,
+          hiddenRatings: hiddenCount,
           averageRating: Number(average.toFixed(2)),
           distribution,
           topRated,
