@@ -83,12 +83,19 @@ export class FilmsController {
     return this.adminFilmService.update(id, updateFilmDto, user);
   }
 
-  @SkipCheckPermission()
   @Patch('admin/restore/:id')
   @Permission('Restore data film', 'FILMS')
   @ResponseMessage('Restore data film')
   restore(@Param('id') id: string) {
     return this.adminFilmService.restoreFilm(id);
+  }
+
+  @SkipCheckPermission()
+  @Patch('admin/restore_list')
+  @Permission('Restore list data film', 'FILMS')
+  @ResponseMessage('Restore list data film')
+  restoreList(@Body('filmIds') filmIds: string[]) {
+    return this.adminFilmService.restoreListFilm(filmIds);
   }
 
   @Delete(':id')
@@ -98,11 +105,26 @@ export class FilmsController {
     return this.adminFilmService.remove(id, user);
   }
 
+  @SkipCheckPermission()
+  @Delete('admin/sort_delete')
+  @Permission('Delete List film', 'FILMS')
+  @ResponseMessage('Soft delete list film')
+  bulkRemove(@Body('filmIds') filmIds: string[], @User() user: IUser) {
+    return this.adminFilmService.bulkRemove(filmIds, user);
+  }
+
   @Delete('admin/hard_delete/:id')
   @Permission('Hard Delete film', 'FILMS')
   @ResponseMessage('Hard delete film')
   hardDelete(@Param('id') id: string) {
     return this.adminFilmService.hardDelete(id);
+  }
+
+  @Delete('admin/hard_delete_list')
+  @Permission('Hard Delete List Film', 'FILMS')
+  @ResponseMessage('Hard delete list film')
+  hardDeleteList(@Body('filmIds') filmIds: string[]) {
+    return this.adminFilmService.hardDeleteList(filmIds);
   }
 
   @Public()

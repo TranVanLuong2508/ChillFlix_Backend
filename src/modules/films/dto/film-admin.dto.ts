@@ -14,6 +14,9 @@ class User {
 
   @Expose()
   avatarUrl: string;
+
+  @Expose()
+  email: string;
 }
 
 @Exclude()

@@ -25,6 +25,7 @@ import { CreateFilmDto } from '../dto/create-film.dto';
 import { IUser } from 'src/modules/users/interface/user.interface';
 import { SlugUtil } from 'src/common/utils/slug.util';
 import { UpdateFilmDto } from '../dto/update-film.dto';
+import { count } from 'console';
 
 @Injectable()
 export class AdminFilmService {
@@ -400,6 +401,62 @@ export class AdminFilmService {
     }
   }
 
+  async bulkRemove(filmIds: string[], user: IUser) {
+    try {
+      const invalidIds = filmIds.filter((id) => !isUUID(id));
+      if (invalidIds.length > 0) {
+        return {
+          EC: 1,
+          EM: `Invalid UUID format for: ${invalidIds.join(', ')}`,
+          deletedCount: 0,
+          deletedIds: [],
+          deleted: false,
+        };
+      }
+
+      const existingFilms = await this.filmsRepository
+        .createQueryBuilder('film')
+        .withDeleted()
+        .where('film.filmId IN (:...filmIds)', { filmIds })
+        .select('film.filmId')
+        .getMany();
+
+      const existingIds = existingFilms.map((film) => film.filmId);
+      const notfoundIds = filmIds.filter((id) => !existingIds.includes(id));
+
+      if (notfoundIds.length > 0) {
+        return {
+          EC: 2,
+          EM: `Films not found: ${notfoundIds.join(', ')}`,
+          deletedCount: 0,
+          deletedIds: [],
+          deleted: false,
+        };
+      }
+
+      await this.filmsRepository.update(filmIds, { deletedById: user.userId.toString() });
+      await this.filmsRepository.softDelete(filmIds);
+      await filmIds.forEach(async (filmId) => {
+        await this.searchService.removeFilmFromIndex(filmId);
+      });
+
+      return {
+        EC: 0,
+        EM: 'Xóa danh sách phim thành công',
+        deletedCount: filmIds.length,
+        deletedIds: filmIds,
+        deleted: true,
+      };
+    } catch (error) {
+      console.log('Error in film service bulk remove film: ', error || error.message);
+      throw new InternalServerErrorException({
+        EC: 3,
+        EM: 'Error in film service bulk remove film',
+        deleted: false,
+      });
+    }
+  }
+
   async hardDelete(filmId: string) {
     try {
       if (!isUUID(filmId)) {
@@ -426,6 +483,7 @@ export class AdminFilmService {
       }
 
       await this.filmsRepository.delete({ filmId: filmId });
+      await this.searchService.removeFilmFromIndex(filmId);
 
       return {
         EC: 0,
@@ -441,6 +499,60 @@ export class AdminFilmService {
     }
   }
 
+  async hardDeleteList(filmIds: string[]) {
+    try {
+      const invalidIds = filmIds.filter((id) => !isUUID(id));
+      if (invalidIds.length > 0) {
+        return {
+          EC: 1,
+          EM: `Invalid UUID format for: ${invalidIds.join(', ')}`,
+          deletedCount: 0,
+          deletedIds: [],
+          deleted: false,
+        };
+      }
+
+      const existingFilms = await this.filmsRepository
+        .createQueryBuilder('film')
+        .withDeleted()
+        .where('film.filmId IN (:...filmIds)', { filmIds })
+        .select('film.filmId')
+        .getMany();
+
+      const existingIds = existingFilms.map((film) => film.filmId);
+      const notfoundIds = filmIds.filter((id) => !existingIds.includes(id));
+
+      if (notfoundIds.length > 0) {
+        return {
+          EC: 2,
+          EM: `Films not found: ${notfoundIds.join(', ')}`,
+          deletedCount: 0,
+          deletedIds: [],
+          deleted: false,
+        };
+      }
+
+      await this.filmsRepository.delete(filmIds);
+      await filmIds.forEach(async (filmId) => {
+        await this.searchService.removeFilmFromIndex(filmId);
+      });
+
+      return {
+        EC: 0,
+        EM: 'Xóa thông tin phim vĩnh viễn thành công',
+        deletedCount: filmIds.length,
+        deletedIds: filmIds,
+        deleted: true,
+      };
+    } catch (error) {
+      console.log('Error in film service hard delete list film: ', error?.message || error);
+      throw new InternalServerErrorException({
+        EC: 3,
+        EM: 'Error in film service hard delete list film',
+      });
+    }
+  }
+
   async restoreFilm(filmId: string) {
     try {
       if (!isUUID(filmId)) {
@@ -452,12 +564,13 @@ export class AdminFilmService {
         };
       }
 
-      const isExist = await this.filmsRepository
+      const isExistFilm = await this.filmsRepository
         .createQueryBuilder('film')
         .withDeleted()
-        .getExists();
+        .where('film.filmId = :filmId', { filmId })
+        .getOne();
 
-      if (!isExist) {
+      if (!isExistFilm) {
         return {
           EC: 2,
           EM: `Film with filmId ${filmId} not found`,
@@ -467,6 +580,7 @@ export class AdminFilmService {
       }
 
       await this.filmsRepository.restore({ filmId: filmId });
+      await this.searchService.indexFilm(isExistFilm);
 
       return {
         EC: 0,
@@ -478,6 +592,67 @@ export class AdminFilmService {
       throw new InternalServerErrorException({
         EC: 3,
         EM: 'Error in film service restore film',
+      });
+    }
+  }
+
+  async restoreListFilm(filmIds: string[]) {
+    try {
+      const invalidIds = filmIds.filter((id) => !isUUID(id));
+      if (invalidIds.length > 0) {
+        return {
+          EC: 1,
+          EM: `Invalid UUID format for: ${invalidIds.join(', ')}`,
+          restoredCount: 0,
+          restoredIds: [],
+          restore: false,
+        };
+      }
+
+      const existingFilms = await this.filmsRepository
+        .createQueryBuilder('film')
+        .withDeleted()
+        .where('film.filmId IN (:...filmIds)', { filmIds })
+        .select('film.filmId')
+        .getMany();
+
+      const existingIds = existingFilms.map((film) => film.filmId);
+      const notfoundIds = filmIds.filter((id) => !existingIds.includes(id));
+
+      if (notfoundIds.length > 0) {
+        return {
+          EC: 2,
+          EM: `Films not found: ${notfoundIds.join(', ')}`,
+          restoredCount: 0,
+          restoredIds: [],
+          restore: false,
+        };
+      }
+
+      await this.filmsRepository.restore(filmIds);
+      await this.filmsRepository
+        .createQueryBuilder()
+        .update()
+        .set({ deletedById: () => 'NULL' })
+        .where('filmId IN (:...filmIds)', { filmIds })
+        .execute();
+
+      await existingFilms.forEach(async (film) => {
+        await this.searchService.indexFilm(film);
+      });
+
+      return {
+        EC: 0,
+        EM: 'Khôi phục thông tin phim thành công',
+        restoredCount: filmIds.length,
+        restoredIds: filmIds,
+        restore: true,
+      };
+    } catch (error) {
+      console.log('Error in film service restore list film: ', error?.message || error);
+      throw new InternalServerErrorException({
+        EC: 3,
+        EM: 'Error in film service restore list film',
       });
     }
   }
