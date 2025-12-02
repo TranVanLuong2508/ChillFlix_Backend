@@ -196,10 +196,7 @@ export class UsersService {
       }
 
       if (foundUser && foundUser.email === 'admin@gmail.com') {
-        throw new BadRequestException({
-          EC: 0,
-          EM: 'CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com',
-        });
+        return { EC: 0, EM: 'CAN NOT DELETE ADMIN ACCOUNT : admin@gmail.com' };
       }
 
       const deleted = await this.usersRepository.update(
@@ -219,8 +216,8 @@ export class UsersService {
       } else {
         return {
           EC: 1,
-          EM: `Role is deleted`,
-          ...deleted,
+          EM: `user is deleted`,
+          userId: id,
         };
       }
     } catch (error) {

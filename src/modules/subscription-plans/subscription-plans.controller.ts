@@ -8,7 +8,7 @@ import type { IUser } from '../users/interface/user.interface';
 
 @Controller('subscription-plans')
 export class SubscriptionPlansController {
-  constructor(private readonly subscriptionPlansService: SubscriptionPlansService) { }
+  constructor(private readonly subscriptionPlansService: SubscriptionPlansService) {}
 
   @Post()
   @Permission('Create a subscription-plan relation', 'SUBSCRIPTION-PLANS')
@@ -34,7 +34,11 @@ export class SubscriptionPlansController {
   @Patch(':id')
   @Permission('Update a subscription-plan relation', 'SUBSCRIPTION-PLANS')
   @ResponseMessage('Update a subscription plan by id')
-  update(@Param('id') id: string, @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto, @User() user: IUser) {
+  update(
+    @Param('id') id: string,
+    @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto,
+    @User() user: IUser,
+  ) {
     return this.subscriptionPlansService.update(+id, updateSubscriptionPlanDto, user);
   }
 
