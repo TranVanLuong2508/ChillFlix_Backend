@@ -28,6 +28,27 @@ export class FilmsService {
     private ratingService: RatingService,
   ) {}
 
+  async findAllVip() {
+    try {
+      const data = await this.filmsRepository.find({
+        where: { isVip: true },
+        relations: ['filmImages'],
+      });
+      console.log('Check data: ', data);
+      return {
+        EC: 0,
+        EM: 'Get all film vip',
+        result: plainToInstance(FilmPaginationDto, data),
+      };
+    } catch (error) {
+      console.error('Error in film service get film vip:', error);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in film service get film vip',
+      });
+    }
+  }
+
   async findAll(page: number, limit: number, queryString: string) {
     try {
       const { filter, projection } = aqp(queryString);
@@ -84,7 +105,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, data),
       };
     } catch (error) {
-      console.error('Error in film service get film paginate:', error.message);
+      console.error('Error in film service get film paginate:', error);
       throw new InternalServerErrorException({
         EC: 1,
         EM: 'Error in film service get film paginate',
@@ -155,7 +176,7 @@ export class FilmsService {
         producers: producersRes.result,
       };
     } catch (error) {
-      console.error('Error in film service get film by Id:', error.message);
+      console.error('Error in film service get film by Id:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get film by Id',
@@ -219,7 +240,7 @@ export class FilmsService {
         actors: actorsRes.result,
       };
     } catch (error) {
-      console.error('Error in film service get film by Id:', error.message);
+      console.error('Error in film service get film by Id:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get film by Id',
@@ -358,7 +379,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films by country:', error.message);
+      console.error('Error in film service get films by country:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films by country',
@@ -498,7 +519,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films by genre:', error.message);
+      console.error('Error in film service get films by genre:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films by genre',
@@ -595,7 +616,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films by type:', error.message);
+      console.error('Error in film service get films by type:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films by type',
@@ -853,7 +874,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films with filters:', error.message);
+      console.error('Error in film service get films with filters:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films with filters',
@@ -883,7 +904,7 @@ export class FilmsService {
 
       return allCode?.keyMap || null;
     } catch (error) {
-      console.log('Error in film service get all code key map: ', error || error.message);
+      console.log('Error in film service get all code key map: ', error || error);
       return null;
     }
   }

@@ -63,6 +63,12 @@ export class FilmsController {
   }
 
   @Public()
+  @Get('film-vip')
+  findAllVIP() {
+    return this.filmsService.findAllVip();
+  }
+
+  @Public()
   @SkipCheckPermission()
   @Get(':id')
   @Permission('Get film by ID', 'FILMS')

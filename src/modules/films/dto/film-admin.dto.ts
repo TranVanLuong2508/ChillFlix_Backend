@@ -40,6 +40,9 @@ export class FilmPaginationDto {
   view: string;
 
   @Expose()
+  isVip: boolean;
+
+  @Expose()
   @Type(() => AllCodeDto)
   language: AllCodeDto;
 
