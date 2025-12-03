@@ -99,6 +99,7 @@ export class SearchService implements OnModuleInit {
           filmId: film.filmId,
           title: film.title,
           originalTitle: film.originalTitle,
+          isVip: film.isVip,
           thumbUrl: film.thumbUrl,
           slug: film.slug,
           year: film.year,
@@ -355,6 +356,7 @@ export class SearchService implements OnModuleInit {
     return {
       filmId: film.filmId,
       title: film.title,
+      isVip: film.isVip,
       originalTitle: film.originalTitle,
       thumbUrl: film.thumbUrl,
       slug: film.slug,
