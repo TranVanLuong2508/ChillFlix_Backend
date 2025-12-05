@@ -338,7 +338,7 @@ export class RatingService {
       rating.updatedBy = userId;
       await this.ratingRepo.save(rating);
 
-      this.ratingGateway.broadcastHideRating(ratingId, true);
+      this.ratingGateway.broadcastHideRating(ratingId, true, rating.film.filmId);
 
       return {
         EC: 1,
@@ -369,7 +369,7 @@ export class RatingService {
       rating.updatedBy = userId;
       await this.ratingRepo.save(rating);
 
-      this.ratingGateway.broadcastHideRating(ratingId, false);
+      this.ratingGateway.broadcastHideRating(ratingId, false, rating.film.filmId);
 
       return {
         EC: 1,

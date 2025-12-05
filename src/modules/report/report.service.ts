@@ -451,7 +451,7 @@ export class ReportService {
           rating.isHidden = true;
           await this.ratingRepo.save(rating);
           actionResult = { type: 'rating', ratingId: rating.ratingId, action: 'hidden' };
-          this.ratingGateway.broadcastHideRating(rating.ratingId, true);
+          this.ratingGateway.broadcastHideRating(rating.ratingId, true, rating.film?.filmId);
           if (rating.film?.filmId) {
             await this.ratingService.getRatingsByFilm(rating.film.filmId);
           }

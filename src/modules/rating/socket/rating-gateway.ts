@@ -33,7 +33,7 @@ export class RatingGateway implements OnGatewayConnection {
     this.server.emit('ratingDeleted', data);
   }
 
-  broadcastHideRating(ratingId: string, isHidden: boolean) {
-    this.server.emit('hideRating', { ratingId, isHidden });
+  broadcastHideRating(ratingId: string, isHidden: boolean, filmId: string) {
+    this.server.emit('hideRating', { ratingId, isHidden, filmId });
   }
 }
