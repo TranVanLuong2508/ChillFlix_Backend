@@ -1,11 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryResponse } from './cloudinary/cloudinary-response';
 import fs, { createReadStream } from 'fs';
+import Redis from 'ioredis';
+import { InjectQueue } from '@nestjs/bull';
+import type { Queue } from 'bull';
 
 @Injectable()
 export class FileService {
   private readonly logger = new Logger(FileService.name);
+
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    @InjectQueue('file-upload') private readonly fileQueue: Queue,
+  ) {}
 
   async uploadFile(file: Express.Multer.File) {
     const filePath = file.path;

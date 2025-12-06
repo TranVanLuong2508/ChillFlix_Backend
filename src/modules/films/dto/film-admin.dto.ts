@@ -2,6 +2,24 @@ import { Exclude, Expose, Type } from 'class-transformer';
 import { AllCodeDto } from './film-response.dto';
 
 @Exclude()
+class User {
+  @Expose()
+  userId: string;
+
+  @Expose()
+  fullName: string;
+
+  @Expose()
+  phoneNumber: string;
+
+  @Expose()
+  avatarUrl: string;
+
+  @Expose()
+  email: string;
+}
+
+@Exclude()
 export class FilmPaginationDto {
   @Expose()
   filmId: string;
@@ -22,6 +40,9 @@ export class FilmPaginationDto {
   view: string;
 
   @Expose()
+  isVip: boolean;
+
+  @Expose()
   @Type(() => AllCodeDto)
   language: AllCodeDto;
 
@@ -38,4 +59,22 @@ export class FilmPaginationDto {
 
   @Expose()
   updatedAt: string;
+
+  @Expose()
+  @Type(() => User)
+  createdBy: User;
+
+  @Expose()
+  @Type(() => User)
+  updatedBy: User;
+}
+
+@Exclude()
+export class FilmDeletedPaginationDto extends FilmPaginationDto {
+  @Expose()
+  deletedAt: string;
+
+  @Expose()
+  @Type(() => User)
+  deletedBy: User;
 }

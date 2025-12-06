@@ -52,12 +52,19 @@ export class EpisodesService {
         };
       }
 
+      const episodeNumber = await this.episodeRepository.count({
+        where: { partId: createEpisodeDto.partId },
+      });
+
+      console.log('Check episode number: ', episodeNumber);
+
       if (!createEpisodeDto.title) {
-        createEpisodeDto.title = `Tập ${createEpisodeDto.episodeNumber}`;
+        createEpisodeDto.title = `Tập ${episodeNumber + 1}`;
       }
 
       const newEpisode = this.episodeRepository.create({
         ...createEpisodeDto,
+        episodeNumber: episodeNumber + 1,
         createdBy: user.userId.toString(),
       });
       await this.episodeRepository.save(newEpisode);

@@ -4,46 +4,55 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateFilmDto } from './dto/create-film.dto';
-import { UpdateFilmDto } from './dto/update-film.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { Repository } from 'typeorm';
-import { SlugUtil } from 'src/common/utils/slug.util';
 import { isEmpty, isUUID } from 'class-validator';
 import aqp from 'api-query-params';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { FilmPaginationDto, FilmResponseDto } from './dto/film-response.dto';
-import { IUser } from '../users/interface/user.interface';
 import { allcodeCommonFields } from 'src/common/utils/CommonField';
-import { FilmGenre } from './entities/film_genre.entity';
-import { FilmImage } from './entities/film_image.entity';
-import { FilmDirector } from '../film_director/entities/film_director.entity';
-import { FilmActor } from '../film_actor/entities/film_actor.entity';
-import { FilmProducer } from '../film_producer/entities/film_producer.entity';
 import { FilmDirectorService } from '../film_director/film_director.service';
 import { FilmActorService } from '../film_actor/film_actor.service';
 import { FilmSearchService } from '../search/filmSearch.service';
 import { FilmProducerService } from '../film_producer/film_producer.service';
 import { RatingService } from '../rating/rating.service';
 import _ from 'lodash';
+import { FilmGenre } from './entities/film_genre.entity';
 
 @Injectable()
 export class FilmsService {
   constructor(
-    @InjectRepository(Film) private filmsRepository: Repository<Film>,
     @InjectRepository(FilmGenre) private filmGenreRepository: Repository<FilmGenre>,
-    @InjectRepository(FilmImage) private filmImageRepository: Repository<FilmImage>,
-    @InjectRepository(FilmDirector) private filmDirectorRepository: Repository<FilmDirector>,
-    @InjectRepository(FilmProducer) private filmProducerRepository: Repository<FilmProducer>,
-    @InjectRepository(FilmActor) private filmActorRepository: Repository<FilmActor>,
+    @InjectRepository(Film) private filmsRepository: Repository<Film>,
     private filmDirectorService: FilmDirectorService,
     private filmActorService: FilmActorService,
     private fiosearchService: FilmSearchService, //luong add
     private filmProducerService: FilmProducerService,
     private ratingService: RatingService,
   ) {}
+
+  async findAllVip() {
+    try {
+      const data = await this.filmsRepository.find({
+        where: { isVip: true },
+        relations: ['filmImages'],
+      });
+      console.log('Check data: ', data);
+      return {
+        EC: 0,
+        EM: 'Get all film vip',
+        result: plainToInstance(FilmPaginationDto, data),
+      };
+    } catch (error) {
+      console.error('Error in film service get film vip:', error);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in film service get film vip',
+      });
+    }
+  }
 
   async findAll(page: number, limit: number, queryString: string) {
     try {
@@ -89,8 +98,6 @@ export class FilmsService {
         }),
       );
 
-      console.log('>>Check all: ', data);
-
       return {
         EC: 0,
         EM: 'Get film with query paginate success',
@@ -103,7 +110,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, data),
       };
     } catch (error) {
-      console.error('Error in film service get film paginate:', error.message);
+      console.error('Error in film service get film paginate:', error);
       throw new InternalServerErrorException({
         EC: 1,
         EM: 'Error in film service get film paginate',
@@ -174,7 +181,7 @@ export class FilmsService {
         producers: producersRes.result,
       };
     } catch (error) {
-      console.error('Error in film service get film by Id:', error.message);
+      console.error('Error in film service get film by Id:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get film by Id',
@@ -238,7 +245,7 @@ export class FilmsService {
         actors: actorsRes.result,
       };
     } catch (error) {
-      console.error('Error in film service get film by Id:', error.message);
+      console.error('Error in film service get film by Id:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get film by Id',
@@ -377,7 +384,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films by country:', error.message);
+      console.error('Error in film service get films by country:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films by country',
@@ -517,7 +524,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films by genre:', error.message);
+      console.error('Error in film service get films by genre:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films by genre',
@@ -614,7 +621,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films by type:', error.message);
+      console.error('Error in film service get films by type:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films by type',
@@ -872,7 +879,7 @@ export class FilmsService {
         result: plainToInstance(FilmPaginationDto, films),
       };
     } catch (error) {
-      console.error('Error in film service get films with filters:', error.message);
+      console.error('Error in film service get films with filters:', error);
       throw new InternalServerErrorException({
         EC: 5,
         EM: 'Error in film service get films with filters',
@@ -902,7 +909,7 @@ export class FilmsService {
 
       return allCode?.keyMap || null;
     } catch (error) {
-      console.log('Error in film service get all code key map: ', error || error.message);
+      console.log('Error in film service get all code key map: ', error || error);
       return null;
     }
   }

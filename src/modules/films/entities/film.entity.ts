@@ -21,6 +21,7 @@ import { FilmImage } from './film_image.entity';
 import { Favorite } from 'src/modules/favorites/entities/favorite.entity';
 import { PlaylistFilm } from 'src/modules/playlist-film/entities/playlist-film.entity';
 import { FilmProducer } from 'src/modules/film_producer/entities/film_producer.entity';
+import { User } from 'src/modules/users/entities/user.entity';
 
 @Entity({ name: 'films' })
 export class Film {
@@ -51,8 +52,11 @@ export class Film {
   @Column({ type: 'int', default: 0 })
   duration?: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 0, nullable: false })
   view: number;
+
+  @Column({ nullable: false, default: false })
+  isVip: boolean;
 
   @OneToMany(() => FilmGenre, (filmgenre) => filmgenre.film, { cascade: true })
   filmGenres: FilmGenre[];
@@ -105,13 +109,25 @@ export class Film {
   deletedAt?: Date;
 
   @Column({ nullable: true })
-  createdBy: string;
+  createdById: string;
 
   @Column({ nullable: true })
-  updatedBy: string;
+  updatedById: string;
 
   @Column({ nullable: true })
-  deletedBy: string;
+  deletedById: string;
+
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'createdById' })
+  createdBy: User;
+
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'updatedById' })
+  updatedBy: User;
+
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'deletedById' })
+  deletedBy: User;
 
   @OneToMany(() => Part, (part) => part.film, { cascade: true })
   parts: Part[];
