@@ -48,6 +48,8 @@ import { CommentReactionModule } from './modules/comment-reaction/comment-reacti
 import { CommentReaction } from './modules/comment-reaction/entities/comment-reaction.entity';
 import { RatingModule } from './modules/rating/rating.module';
 import { Rating } from './modules/rating/entities/rating.entity';
+import { ReportModule } from './modules/report/report.module';
+import { Report } from './modules/report/entities/report.entity';
 import { FilmImage } from './modules/films/entities/film_image.entity';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { SearchModule } from './modules/search/search.module';
@@ -110,6 +112,7 @@ import { VideoModule } from './modules/video/video.module';
           Comment,
           CommentReaction,
           Rating,
+          Report,
           Favorite,
           Playlist,
           PlaylistFilm,
@@ -143,6 +146,7 @@ import { VideoModule } from './modules/video/video.module';
     CommentModule,
     CommentReactionModule,
     RatingModule,
+    ReportModule,
     ChatbotModule,
     SearchModule,
     FavoritesModule,

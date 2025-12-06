@@ -329,12 +329,11 @@ export class DirectorService {
         where: { directorId },
       });
       if (!director) return { EC: 0, EM: `Director ${directorId} not found!` };
-      await this.directorRepo.update(directorId, { deletedBy: user.userId });
-      await this.directorRepo.softDelete({ directorId });
+      const directorIdStr = director.directorId.toString();
+      await this.directorRepo.remove(director);
       // search
-      await this.commonSearchService.removeFromIndex(director.directorId.toString(), 'directors');
+      await this.commonSearchService.removeFromIndex(directorIdStr, 'directors');
       // search
-
       return { EC: 1, EM: 'Delete director successfully' };
     } catch (error: any) {
       console.error('Error in deleteDirectorById:', error);

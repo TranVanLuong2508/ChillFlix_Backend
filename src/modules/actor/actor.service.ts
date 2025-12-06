@@ -342,12 +342,11 @@ export class ActorService {
     try {
       const actor = await this.actorRepo.findOne({ where: { actorId } });
       if (!actor) return { EC: 0, EM: `Actor ${actorId} not found!` };
-      await this.actorRepo.update(actorId, { deletedBy: user.userId });
-      await this.actorRepo.softDelete({ actorId });
+      const actorIdStr = actor.actorId.toString();
+      await this.actorRepo.remove(actor);
       // search
-      await this.searchService.removeFromIndex(actor.actorId.toString(), 'actors');
+      await this.searchService.removeFromIndex(actorIdStr, 'actors');
       // search
-
       return { EC: 1, EM: 'Delete actor successfully' };
     } catch (error: any) {
       console.error('Error in deleteActorById:', error.message);

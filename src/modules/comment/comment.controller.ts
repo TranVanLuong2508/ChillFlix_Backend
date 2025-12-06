@@ -16,11 +16,17 @@ import type { IUser } from '../users/interface/user.interface';
 import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import { Permission } from 'src/decorators/permission.decorator';
 import { PaginationDto } from './dto/pagination.dto';
-import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
+
+  @Get('all-comments')
+  @Permission('Get all comments for admin', 'COMMENT')
+  @ResponseMessage('Get all comments')
+  getAllComments(@Query() query: PaginationDto, @User() user: IUser) {
+    return this.commentService.getAllComments(query, user);
+  }
 
   @Post('create-comment')
   @Permission('Create a new comment', 'COMMENT')
@@ -73,6 +79,13 @@ export class CommentController {
     return this.commentService.deleteComment(commentId, user);
   }
 
+  @Delete('hard-delete-comment/:commentId')
+  @Permission('Hard delete comment', 'COMMENT')
+  @ResponseMessage('Hard delete comment by ID')
+  hardDeleteComment(@Param('commentId') commentId: string, @User() user: IUser) {
+    return this.commentService.hardDeleteComment(commentId, user);
+  }
+
   @Patch('toggle-hide/:commentId')
   @Permission('Toggle hide comment', 'COMMENT')
   toggleHideComment(@Param('commentId') id: string, @User() user: IUser) {
@@ -84,5 +97,12 @@ export class CommentController {
   @Permission('Count comments by film', 'COMMENT')
   countComments(@Param('filmId') filmId: string) {
     return this.commentService.countCommentsByFilm(filmId);
+  }
+
+  @Get('statistics')
+  @Permission('Get comment statistics', 'COMMENT')
+  @ResponseMessage('Get comment statistics')
+  getStatistics() {
+    return this.commentService.getStatistics();
   }
 }

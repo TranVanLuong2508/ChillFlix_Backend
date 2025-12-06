@@ -9,7 +9,15 @@ export class CreateNotificationDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['reply', 'reaction', 'system'])
+  @IsIn([
+    'reply',
+    'reaction',
+    'system',
+    'report',
+    'hidden_comment',
+    'report_result',
+    'violation_warning',
+  ])
   type: string;
 
   @IsString()

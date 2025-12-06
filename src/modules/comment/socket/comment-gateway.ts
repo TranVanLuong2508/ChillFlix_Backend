@@ -19,6 +19,7 @@ export class CommentGateway implements OnGatewayConnection {
   server: Server;
 
   private userSockets = new Map<string, Set<string>>();
+  private adminSockets = new Set<string>();
 
   handleConnection(client: Socket) {
     client.on('disconnect', () => {
@@ -31,11 +32,28 @@ export class CommentGateway implements OnGatewayConnection {
           break;
         }
       }
+
+      if (this.adminSockets.has(client.id)) {
+        this.adminSockets.delete(client.id);
+      }
     });
   }
 
   @SubscribeMessage('register')
   handleRegister(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
+    if (data?.userId) {
+      const userIdStr = String(data.userId);
+      if (!this.userSockets.has(userIdStr)) {
+        this.userSockets.set(userIdStr, new Set());
+      }
+      this.userSockets.get(userIdStr)!.add(client.id);
+    }
+  }
+
+  @SubscribeMessage('registerAdmin')
+  handleRegisterAdmin(@ConnectedSocket() client: Socket, @MessageBody() data: { userId: string }) {
+    this.adminSockets.add(client.id);
+
     if (data?.userId) {
       const userIdStr = String(data.userId);
       if (!this.userSockets.has(userIdStr)) {
@@ -84,6 +102,10 @@ export class CommentGateway implements OnGatewayConnection {
     this.server.emit('hideComment', { commentId, isHidden });
   }
 
+  broadcastUnhideComment(comment: any) {
+    this.server.emit('unhideComment', comment);
+  }
+
   broadcastUpdateComment(comment: any) {
     this.server.emit('updateComment', comment);
   }
@@ -94,5 +116,20 @@ export class CommentGateway implements OnGatewayConnection {
 
   broadcastCountComments(data: { filmId: string; total: number }) {
     this.server.emit('countComments', data);
+  }
+
+  sendHiddenCommentNotification(userId: number, data: any) {
+    const userIdStr = String(userId);
+    this.emitToUser(userIdStr, 'hiddenCommentNotification', data);
+  }
+
+  sendWarningNotification(userId: number, data: any) {
+    const userIdStr = String(userId);
+    this.emitToUser(userIdStr, 'warningNotification', data);
+  }
+
+  sendInfoNotification(userId: number, data: any) {
+    const userIdStr = String(userId);
+    this.emitToUser(userIdStr, 'infoNotification', data);
   }
 }

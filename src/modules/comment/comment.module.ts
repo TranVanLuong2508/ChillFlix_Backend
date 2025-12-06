@@ -14,6 +14,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
   controllers: [CommentController],
   imports: [TypeOrmModule.forFeature([Comment, User, Film, Part, Episode]), NotificationsModule],
   providers: [CommentService, CommentGateway],
-  exports: [CommentModule, CommentGateway],
+  exports: [CommentService, CommentGateway],
 })
 export class CommentModule {}

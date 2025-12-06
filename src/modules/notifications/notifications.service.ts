@@ -115,4 +115,52 @@ export class NotificationsService {
       EM: 'Delete notification successfully',
     };
   }
+
+  async markAsReadByReportId(reportId: string, userId: number) {
+    const notifications = await this.notificationRepo
+      .createQueryBuilder('notification')
+      .where('notification.userId = :userId', { userId })
+      .andWhere('notification.isRead = :isRead', { isRead: false })
+      .andWhere('notification.type = :type', { type: 'report' })
+      .getMany();
+
+    const targetNotifications = notifications.filter((n) => {
+      const res = typeof n.result === 'string' ? JSON.parse(n.result) : n.result;
+      return res && res.reportId === reportId;
+    });
+
+    if (targetNotifications.length > 0) {
+      for (const n of targetNotifications) {
+        n.isRead = true;
+        await this.notificationRepo.save(n);
+      }
+    }
+  }
+
+  async markAsReadByTargetId(targetId: string, reportType: string, userId: number) {
+    const notifications = await this.notificationRepo
+      .createQueryBuilder('notification')
+      .where('notification.userId = :userId', { userId })
+      .andWhere('notification.isRead = :isRead', { isRead: false })
+      .andWhere('notification.type = :type', { type: 'report' })
+      .getMany();
+
+    const targetNotifications = notifications.filter((n) => {
+      const res = typeof n.result === 'string' ? JSON.parse(n.result) : n.result;
+      if (!res) return false;
+      if (reportType === 'COMMENT') {
+        return res.commentId === targetId;
+      } else if (reportType === 'RATING') {
+        return res.ratingId === targetId;
+      }
+      return false;
+    });
+
+    if (targetNotifications.length > 0) {
+      for (const n of targetNotifications) {
+        n.isRead = true;
+        await this.notificationRepo.save(n);
+      }
+    }
+  }
 }
