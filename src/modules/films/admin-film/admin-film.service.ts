@@ -437,7 +437,7 @@ export class AdminFilmService {
       await this.filmsRepository.update(filmIds, { deletedById: user.userId.toString() });
       await this.filmsRepository.softDelete(filmIds);
       await filmIds.forEach(async (filmId) => {
-        await this.searchService.removeFilmFromIndex(filmId);
+        await this.filmSearchService.removeFilmFromIndex(filmId);
       });
 
       return {
@@ -483,7 +483,7 @@ export class AdminFilmService {
       }
 
       await this.filmsRepository.delete({ filmId: filmId });
-      await this.searchService.removeFilmFromIndex(filmId);
+      await this.filmSearchService.removeFilmFromIndex(filmId);
 
       return {
         EC: 0,
@@ -534,7 +534,7 @@ export class AdminFilmService {
 
       await this.filmsRepository.delete(filmIds);
       await filmIds.forEach(async (filmId) => {
-        await this.searchService.removeFilmFromIndex(filmId);
+        await this.filmSearchService.removeFilmFromIndex(filmId);
       });
 
       return {
@@ -580,7 +580,7 @@ export class AdminFilmService {
       }
 
       await this.filmsRepository.restore({ filmId: filmId });
-      await this.searchService.indexFilm(isExistFilm);
+      await this.filmSearchService.indexFilm(isExistFilm);
 
       return {
         EC: 0,
@@ -638,7 +638,7 @@ export class AdminFilmService {
         .execute();
 
       await existingFilms.forEach(async (film) => {
-        await this.searchService.indexFilm(film);
+        await this.filmSearchService.indexFilm(film);
       });
 
       return {
