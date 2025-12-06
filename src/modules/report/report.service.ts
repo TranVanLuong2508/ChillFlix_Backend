@@ -382,6 +382,76 @@ export class ReportService {
     }
   }
 
+  private async autoResolveChildCommentReports(
+    parentCommentId: string,
+    user: IUser,
+    action: 'hidden' | 'hard_deleted',
+  ) {
+    const childComments = await this.getAllChildComments(parentCommentId);
+
+    if (childComments.length === 0) return;
+    const childCommentIds = childComments.map((c) => c.commentId);
+    const childReports = await this.reportRepo.find({
+      where: {
+        targetId: In(childCommentIds),
+        reportType: ReportType.COMMENT,
+        status: ReportStatus.PENDING,
+      },
+      relations: ['reporter'],
+    });
+
+    for (const childReport of childReports) {
+      childReport.status = ReportStatus.ACTIONED;
+      childReport.reviewedBy = { userId: user.userId } as any;
+      childReport.reviewNote = `Auto-resolved: Parent comment was ${action}`;
+      childReport.reviewedAt = new Date();
+      await this.reportRepo.save(childReport);
+      if (childReport.reporter) {
+        const childComment = childComments.find((c) => c.commentId === childReport.targetId);
+        const filmTitle = childComment?.film?.title || 'không xác định';
+        const actionText = action === 'hidden' ? 'đã được ẩn' : 'đã bị xóa';
+
+        const thankYouMessage = `Cảm ơn bạn đã báo cáo bình luận vi phạm trong phim "${filmTitle}". Bình luận ${actionText} cùng với bình luận gốc.`;
+
+        const notification = await this.notificationsService.createNotification({
+          userId: childReport.reporter.userId,
+          type: 'info',
+          message: thankYouMessage,
+          replierId: user.userId,
+          result: {
+            reportId: childReport.reportId,
+            action: 'auto_resolved',
+          },
+        });
+
+        this.commentGateway.sendInfoNotification(childReport.reporter.userId, {
+          notificationId: notification.notificationId,
+          type: 'info',
+          message: thankYouMessage,
+          reportId: childReport.reportId,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      this.reportGateway.broadcastReportProcessed(childReport.reportId);
+    }
+  }
+
+  private async getAllChildComments(parentId: string): Promise<Comment[]> {
+    const children = await this.commentRepo.find({
+      where: { parent: { commentId: parentId } },
+      relations: ['user', 'film', 'children'],
+    });
+
+    let allChildren = [...children];
+    for (const child of children) {
+      const grandChildren = await this.getAllChildComments(child.commentId);
+      allChildren = [...allChildren, ...grandChildren];
+    }
+
+    return allChildren;
+  }
+
   async deleteTargetFromReport(reportId: string, user: IUser, reason?: string, note?: string) {
     try {
       const report = await this.reportRepo.findOne({
@@ -412,6 +482,9 @@ export class ReportService {
           await this.commentRepo.save(comment);
           actionResult = { type: 'comment', commentId: comment.commentId, action: 'hidden' };
           await this.commentService.hideCommentAndChildren(comment.commentId, user.userId);
+
+          await this.autoResolveChildCommentReports(comment.commentId, user, 'hidden');
+
           this.commentGateway.broadcastHideComment(comment.commentId, true);
           if (comment.film?.filmId) {
             await this.commentService.countCommentsByFilm(comment.film.filmId);
@@ -612,6 +685,8 @@ export class ReportService {
           }
           targetUserFullName = comment.user?.fullName || 'người dùng';
           targetFilmTitle = comment.film?.title || 'không xác định';
+
+          await this.autoResolveChildCommentReports(comment.commentId, user, 'hard_deleted');
 
           const hardDeleteResult = await this.commentService.hardDeleteComment(
             comment.commentId,
