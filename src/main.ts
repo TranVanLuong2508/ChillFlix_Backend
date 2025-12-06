@@ -16,7 +16,9 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }),
+  );
 
   //cookie confi
   app.use(cookieParser());
@@ -36,6 +38,6 @@ async function bootstrap() {
     defaultVersion: ['1', '2'],
   });
 
-  await app.listen(port || 3000);
+  await app.listen(port || 3000, '0.0.0.0');
 }
 void bootstrap();
