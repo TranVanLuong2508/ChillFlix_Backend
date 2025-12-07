@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Film } from 'src/modules/films/entities/film.entity';
 import { Repository } from 'typeorm';
-import { isEmpty, isUUID } from 'class-validator';
+import { isEmpty, isUUID, Length } from 'class-validator';
 import aqp from 'api-query-params';
 import { joinWithCommonFields } from 'src/common/utils/join-allcode';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
@@ -932,9 +932,9 @@ export class FilmsService {
           'createdAt',
           'updatedAt',
           'deletedAt',
-          'createdBy',
-          'updatedBy',
-          'deletedBy',
+          'createdById',
+          'updatedById',
+          'deletedById',
           'view',
           'age',
           'type',
@@ -1000,9 +1000,9 @@ export class FilmsService {
           'createdAt',
           'updatedAt',
           'deletedAt',
-          'createdBy',
-          'updatedBy',
-          'deletedBy',
+          'createdById',
+          'updatedById',
+          'deletedById',
           'view',
           'age',
           'type',
@@ -1029,11 +1029,6 @@ export class FilmsService {
             return {
               ...clean(film),
               genres: genres,
-              // ...clean(film),
-              // type: film.type?.valueVi,
-              // country: film.country?.valueVi,
-              // language: film.language?.valueVi,
-              // publicStatus: film.publicStatus?.valueVi,
             };
           }),
         }))
@@ -1048,6 +1043,66 @@ export class FilmsService {
       return {
         EC: 0,
         EM: 'Error from film service getFilmForChatBotData',
+      };
+    }
+  }
+
+  async getChartDataGenre() {
+    try {
+      const dataRaw = await this.filmsRepository.find({
+        relations: ['filmGenres', 'filmGenres.genre'],
+      });
+
+      const grouped = {};
+
+      dataRaw.forEach((item) => {
+        item.filmGenres.forEach((fg) => {
+          const key = fg.genre.valueVi;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(item);
+        });
+      });
+
+      const result = Object.keys(grouped).map((key) => ({
+        name: key,
+        value: grouped[key].length,
+      }));
+
+      return {
+        EC: 0,
+        EM: 'Get value chart genre success',
+        result: instanceToPlain(result),
+      };
+    } catch (error) {
+      console.log('Error in film service getChartDataGenre: ', error || error.message);
+      return {
+        EC: 0,
+        EM: 'Error from film service getChartDataGenre',
+      };
+    }
+  }
+
+  async getChartDataAllCode(type: string) {
+    try {
+      const dataRaw = await this.filmsRepository.find({
+        relations: [type],
+      });
+
+      const result = _(dataRaw)
+        .groupBy((item) => item[type].valueVi)
+        .map((arr, key) => ({ name: key, value: arr.length }))
+        .value();
+
+      return {
+        EC: 0,
+        EM: `Get value chart ${type} success`,
+        result: instanceToPlain(result),
+      };
+    } catch (error) {
+      console.log('Error in film service getChartDataAllCode: ', error || error.message);
+      return {
+        EC: 0,
+        EM: 'Error from film service getChartDataAllCode',
       };
     }
   }

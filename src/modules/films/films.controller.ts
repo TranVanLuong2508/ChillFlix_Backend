@@ -202,4 +202,18 @@ export class FilmsController {
   getFilmDataForChatBotByCountry() {
     return this.filmsService.getFilmByCountryForChatBotData();
   }
+
+  @SkipCheckPermission()
+  @Permission('Get data genre chart', 'FILMS')
+  @Get('/chart/genre')
+  getChartDataGenre() {
+    return this.filmsService.getChartDataGenre();
+  }
+
+  @SkipCheckPermission()
+  @Permission('Get data chart', 'FILMS')
+  @Get('/chart/allcode')
+  getChartDataAge(@Query('type') type: string) {
+    return this.filmsService.getChartDataAllCode(type);
+  }
 }
