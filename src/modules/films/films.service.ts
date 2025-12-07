@@ -1051,4 +1051,37 @@ export class FilmsService {
       };
     }
   }
+
+  async getAllFilmBYAgeForDashBoard() {
+    try {
+      const dataRows = await this.filmsRepository.find({
+        select: {
+          age: {
+            valueVi: true,
+          },
+          originalTitle: true,
+          title: true,
+        },
+        relations: ['age'],
+      });
+
+      let mapped = dataRows.map((item) => {
+        return {
+          age: item.age.valueVi,
+          film: item.title,
+        };
+      });
+      return {
+        EC: 1,
+        EM: 'Fetch film for chatbot data by getAllFilmForDashBoard sucess',
+        result: instanceToPlain(mapped),
+      };
+    } catch (error) {
+      console.log('Error in film service getAllFilmForDashBoard: ', error || error.message);
+      return {
+        EC: 0,
+        EM: 'Error from film service getAllFilmForDashBoard',
+      };
+    }
+  }
 }

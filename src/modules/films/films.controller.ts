@@ -202,4 +202,10 @@ export class FilmsController {
   getFilmDataForChatBotByCountry() {
     return this.filmsService.getFilmByCountryForChatBotData();
   }
+
+  @Public()
+  @Get('/list-film-by-age/dashboard')
+  getFilmForDashBoardByAge() {
+    return this.filmsService.getAllFilmBYAgeForDashBoard();
+  }
 }
