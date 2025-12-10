@@ -46,6 +46,7 @@ export class FilmsService {
 
       const recentlyViewed = await this.redisService.exists(guardKey);
       if (recentlyViewed) {
+        console.log('>> Check Guard');
         return { EC: 0, EM: 'View already counted recently' };
       }
 
