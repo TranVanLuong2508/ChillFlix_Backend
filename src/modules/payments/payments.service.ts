@@ -495,19 +495,25 @@ export class PaymentsService {
       const clean = (obj) => _.omit(obj, ['user', 'updatedAt', 'subscription']);
 
       const mapped = payments.map((pay) => {
+        const subscription = pay.subscription;
+        const plan = subscription?.plan;
         return {
           ...clean(pay),
-          user: {
-            userId: pay.user.userId,
-            email: pay.user.email,
-            avatarUrl: pay.user.avatarUrl,
-            fullName: pay.user.fullName,
-          },
-          plan: {
-            planName: pay.subscription.plan.planName,
-            planDuration: pay.subscription.plan.planDuration,
-            durationTypeCode: pay.subscription.plan.durationTypeCode,
-          },
+          user: pay.user
+            ? {
+                userId: pay.user.userId,
+                email: pay.user.email,
+                avatarUrl: pay.user.avatarUrl,
+                fullName: pay.user.fullName,
+              }
+            : null,
+          plan: plan
+            ? {
+                planName: plan.planName,
+                planDuration: plan.planDuration,
+                durationTypeCode: plan.durationTypeCode,
+              }
+            : null,
         };
       });
       return {
