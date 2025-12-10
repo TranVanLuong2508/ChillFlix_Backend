@@ -72,9 +72,11 @@ import { RoomCoWatching } from './modules/co-watching/entities/co-watching.entit
 import { BullModule } from '@nestjs/bull';
 import { BullConfigService } from './config/bull.config';
 import { VideoModule } from './modules/video/video.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
