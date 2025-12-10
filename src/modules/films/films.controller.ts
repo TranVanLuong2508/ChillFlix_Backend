@@ -216,4 +216,11 @@ export class FilmsController {
   getChartDataAge(@Query('type') type: string) {
     return this.filmsService.getChartDataAllCode(type);
   }
+
+  @SkipCheckPermission()
+  @Permission('Update Views Film', 'FILMS')
+  @Post('/:filmId/view')
+  updateView(@Param('filmId') filmId: string, @User() user: IUser) {
+    return this.filmsService.updateView(filmId, user.userId.toString());
+  }
 }

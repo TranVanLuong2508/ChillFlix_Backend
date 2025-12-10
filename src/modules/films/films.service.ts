@@ -20,9 +20,13 @@ import { FilmProducerService } from '../film_producer/film_producer.service';
 import { RatingService } from '../rating/rating.service';
 import _ from 'lodash';
 import { FilmGenre } from './entities/film_genre.entity';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class FilmsService {
+  private readonly REDIS_TTL = 600;
+  private readonly REIDS_TTL_GUARD = 180;
+
   constructor(
     @InjectRepository(FilmGenre) private filmGenreRepository: Repository<FilmGenre>,
     @InjectRepository(Film) private filmsRepository: Repository<Film>,
@@ -31,7 +35,51 @@ export class FilmsService {
     private fiosearchService: FilmSearchService, //luong add
     private filmProducerService: FilmProducerService,
     private ratingService: RatingService,
+
+    private redisService: RedisService,
   ) {}
+
+  async updateView(filmId: string, userId: string) {
+    try {
+      const pendingKey = `view:film:${filmId}:pending`;
+      const guardKey = `view:film:${filmId}:user:${userId}`;
+
+      const recentlyViewed = await this.redisService.exists(guardKey);
+      if (recentlyViewed) {
+        return { EC: 0, EM: 'View already counted recently' };
+      }
+
+      await this.redisService.set(guardKey, '1', this.REIDS_TTL_GUARD);
+
+      await this.redisService.incr(pendingKey);
+      await this.redisService.expire(pendingKey, this.REDIS_TTL);
+
+      await this.logViewEvent(filmId, userId);
+
+      return {
+        EC: 0,
+        EM: 'View counted successfully',
+      };
+    } catch (error) {
+      console.log('Error in film service updateView: ', error || error.message);
+      return {
+        EC: 1,
+        EM: 'Error from film service updateView',
+      };
+    }
+  }
+
+  private async logViewEvent(filmId: string, userId: string) {
+    const logKey = `view:logs:${new Date().toISOString().split('T')[0]}`;
+    const logData = JSON.stringify({
+      filmId,
+      userId,
+      timestamp: Date.now(),
+    });
+
+    await this.redisService.lpush(logKey, logData);
+    await this.redisService.expire(logKey, 86400 * 7);
+  }
 
   async findAllVip() {
     try {
