@@ -25,7 +25,7 @@ export class ChatbotService {
     const genAI = new GoogleGenerativeAI(
       this.configService.get<string>('GEMINI_API_KEY') as string,
     );
-    this.model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   async query(sql: string, params: any[] = []) {
@@ -219,6 +219,8 @@ export class ChatbotService {
       const response = JSON.parse(finalText);
 
       return response;
-    } catch (error) {}
+    } catch (error) {
+      console.log('Check error chatbot: ', error);
+    }
   }
 }
