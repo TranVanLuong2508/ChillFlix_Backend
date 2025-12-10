@@ -191,6 +191,14 @@ export class RatingService {
       delete filter.limit;
       delete filter.skip;
       delete filter.sort;
+      if (filter.filmId) {
+        filter.film = { filmId: filter.filmId };
+        delete filter.filmId;
+      }
+      if (filter.userId) {
+        filter.user = { userId: filter.userId };
+        delete filter.userId;
+      }
 
       const [data, total] = await this.ratingRepo.findAndCount({
         where: filter,
