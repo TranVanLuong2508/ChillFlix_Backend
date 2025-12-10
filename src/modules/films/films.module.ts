@@ -19,12 +19,10 @@ import { RatingModule } from '../rating/rating.module';
 import { FilmProducerModule } from '../film_producer/film_producer.module';
 import { AdminFilmService } from './admin-film/admin-film.service';
 import { RedisModule } from '../redis/redis.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { SyncViewsJob } from './jobs/sync-view.job';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Film, FilmDirector, FilmGenre, FilmActor, FilmImage, FilmProducer]),
-    ScheduleModule.forRoot(),
     FilmDirectorModule,
     FilmActorModule,
     forwardRef(() => SearchModule), // luong add

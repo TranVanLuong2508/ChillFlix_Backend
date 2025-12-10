@@ -162,4 +162,153 @@ export class RedisService {
   getClient(): Redis {
     return this.redis;
   }
+
+  async incr(key: string): Promise<number> {
+    try {
+      return await this.redis.incr(key);
+    } catch (error) {
+      this.logger.error(`Error incrementing key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async incrby(key: string, increment: number): Promise<number> {
+    try {
+      return await this.redis.incrby(key, increment);
+    } catch (error) {
+      this.logger.error(`Error incrementing key ${key} by ${increment}:`, error);
+      throw error;
+    }
+  }
+
+  async decr(key: string): Promise<number> {
+    try {
+      return await this.redis.decr(key);
+    } catch (error) {
+      this.logger.error(`Error decrementing key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    try {
+      return await this.redis.keys(pattern);
+    } catch (error) {
+      this.logger.error(`Error scanning keys with pattern ${pattern}:`, error);
+      throw error;
+    }
+  }
+
+  async delMultiple(...keys: string[]): Promise<number> {
+    try {
+      if (keys.length === 0) return 0;
+      return await this.redis.del(...keys);
+    } catch (error) {
+      this.logger.error(`Error deleting multiple keys:`, error);
+      throw error;
+    }
+  }
+
+  pipeline() {
+    return this.redis.pipeline();
+  }
+
+  multi() {
+    return this.redis.multi();
+  }
+
+  async lpush(key: string, ...values: string[]): Promise<number> {
+    try {
+      return await this.redis.lpush(key, ...values);
+    } catch (error) {
+      this.logger.error(`Error lpush to key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async rpush(key: string, ...values: string[]): Promise<number> {
+    try {
+      return await this.redis.rpush(key, ...values);
+    } catch (error) {
+      this.logger.error(`Error rpush to key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async lrange(key: string, start: number, stop: number): Promise<string[]> {
+    try {
+      return await this.redis.lrange(key, start, stop);
+    } catch (error) {
+      this.logger.error(`Error lrange from key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async llen(key: string): Promise<number> {
+    try {
+      return await this.redis.llen(key);
+    } catch (error) {
+      this.logger.error(`Error getting length of list ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async sadd(key: string, ...members: string[]): Promise<number> {
+    try {
+      return await this.redis.sadd(key, ...members);
+    } catch (error) {
+      this.logger.error(`Error sadd to key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    try {
+      return await this.redis.smembers(key);
+    } catch (error) {
+      this.logger.error(`Error getting members from set ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async scard(key: string): Promise<number> {
+    try {
+      return await this.redis.scard(key);
+    } catch (error) {
+      this.logger.error(`Error getting cardinality of set ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async sismember(key: string, member: string): Promise<boolean> {
+    try {
+      const result = await this.redis.sismember(key, member);
+      return result === 1;
+    } catch (error) {
+      this.logger.error(`Error checking membership in set ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async mget(...keys: string[]): Promise<(string | null)[]> {
+    try {
+      return await this.redis.mget(...keys);
+    } catch (error) {
+      this.logger.error(`Error getting multiple keys:`, error);
+      throw error;
+    }
+  }
+
+  async mset(keyValues: Record<string, string>): Promise<string> {
+    try {
+      const args: string[] = [];
+      for (const [key, value] of Object.entries(keyValues)) {
+        args.push(key, value);
+      }
+      return await this.redis.mset(...args);
+    } catch (error) {
+      this.logger.error(`Error setting multiple keys:`, error);
+      throw error;
+    }
+  }
 }

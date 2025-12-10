@@ -72,11 +72,6 @@ export class FileProcessor {
       await job.progress(100);
       this.logger.log(`[Job ${job.id}] Upload completed: ${result.url}`);
 
-      // return {
-      //   success: true,
-      //   result,
-      //   processedAt: new Date(),
-      // };
       return { ...result };
     } catch (error) {
       this.logger.error(`[Job ${job.id}] Error:`, error.message);
@@ -97,7 +92,6 @@ export class FileProcessor {
       }
     } catch (cleanupError) {
       this.logger.error(`[Job ${jobId}] Failed to cleanup temp file: ${cleanupError.message}`);
-      // Don't throw - cleanup failure shouldn't fail the job
     }
   }
 
