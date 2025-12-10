@@ -63,6 +63,12 @@ export class FilmsController {
   }
 
   @Public()
+  @Get('/suggest-list')
+  filmSuggest() {
+    return this.filmsService.getFilmSuggest();
+  }
+
+  @Public()
   @Get('film-vip')
   findAllVIP() {
     return this.filmsService.findAllVip();

@@ -82,6 +82,30 @@ export class FilmsService {
     await this.redisService.expire(logKey, 86400 * 7);
   }
 
+  async getFilmSuggest() {
+    try {
+      const data = await this.filmsRepository.find({
+        order: {
+          view: 'DESC',
+        },
+        relations: ['filmImages', 'country', 'age'],
+        take: 10,
+      });
+
+      return {
+        EC: 0,
+        EM: 'Get film suggest success',
+        result: plainToInstance(FilmResponseDto, data),
+      };
+    } catch (error) {
+      console.error('Error in getFilmSuggest:', error);
+      throw new InternalServerErrorException({
+        EC: 1,
+        EM: 'Error in getFilmSuggest',
+      });
+    }
+  }
+
   async findAllVip() {
     try {
       const data = await this.filmsRepository.find({
