@@ -32,6 +32,20 @@ export class CoWatchingService {
 
   async create(createCoWatchingDto: CreateCoWatchingDto, user: IUser) {
     try {
+      const hasLive = await this.coWatchingRepository.find({
+        where: {
+          hostId: user.userId,
+          isLive: true,
+        },
+      });
+
+      if (hasLive) {
+        return {
+          EC: 1,
+          EM: 'Hãy đóng phòng live đang hoạt động trước khi tạo phòng live mới nhé!',
+        };
+      }
+
       const roomData = this.coWatchingRepository.create({
         ...createCoWatchingDto,
         hostId: user.userId,
