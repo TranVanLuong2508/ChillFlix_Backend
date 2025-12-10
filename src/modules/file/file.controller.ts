@@ -24,13 +24,6 @@ export class FileController {
     @InjectQueue('file-upload') private readonly fileQueue: Queue,
   ) {}
 
-  // @Post('upload')
-  // @Permission('Upload file', 'FILE')
-  // @UseInterceptors(FileInterceptor('file'))
-  // uploadFile(@UploadedFile() file: Express.Multer.File) {
-  //   return this.fileService.uploadFile(file);
-  // }
-
   @Post('upload')
   @Permission('Upload file', 'FILE')
   @UseInterceptors(FileInterceptor('file'))
@@ -68,7 +61,7 @@ export class FileController {
           jobId,
           filename: file.originalname,
           mimetype: file.mimetype,
-          buffer: file.buffer.toString('base64'), // Convert buffer to base64
+          buffer: file.buffer.toString('base64'),
           size: file.size,
           uploadedAt: new Date().toISOString(),
         },
@@ -85,20 +78,12 @@ export class FileController {
             age: 3600,
             count: 1000,
           },
-          removeOnFail: false, // Keep failed jobs for debugging
+          removeOnFail: false,
         },
       );
 
       const result = await job.finished();
 
-      // return {
-      //   success: true,
-      //   message: 'File uploaded successfully',
-      //   jobId: job.id,
-      //   url: result?.result?.url ?? null,
-      //   processedAt: result?.processedAt ?? null,
-      //   rawResult: result,
-      // };
       return { ...result };
     } catch (error) {
       throw new BadRequestException(`Failed to process job: ${error.message}`);
@@ -227,7 +212,7 @@ export class FileController {
   async cleanQueue() {
     await Promise.all([
       this.fileQueue.clean(3600 * 1000, 'completed'),
-      this.fileQueue.clean(24 * 3600 * 1000, 'failed'), // Giữ failed jobs lâu hơn
+      this.fileQueue.clean(24 * 3600 * 1000, 'failed'),
     ]);
 
     return { message: 'Queue cleaned successfully' };

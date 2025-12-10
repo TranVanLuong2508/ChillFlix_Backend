@@ -368,7 +368,7 @@ export class FilmActorService {
       });
     }
   }
-   async getFilmsByActorSlug(slug: string, query: any = {}) {
+  async getFilmsByActorSlug(slug: string, query: any = {}) {
     try {
       query = query || {};
       const { filter, sort } = aqp(query);
@@ -514,9 +514,9 @@ export class FilmActorService {
           'createdAt',
           'updatedAt',
           'deletedAt',
-          'createdBy',
-          'updatedBy',
-          'deletedBy',
+          'createdById',
+          'updatedById',
+          'deletedById',
           'view',
           'age',
           'type',

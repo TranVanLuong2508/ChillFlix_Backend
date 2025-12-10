@@ -63,6 +63,12 @@ export class FilmsController {
   }
 
   @Public()
+  @Get('/suggest-list')
+  filmSuggest() {
+    return this.filmsService.getFilmSuggest();
+  }
+
+  @Public()
   @Get('film-vip')
   findAllVIP() {
     return this.filmsService.findAllVip();
@@ -215,5 +221,12 @@ export class FilmsController {
   @Get('/chart/allcode')
   getChartDataAge(@Query('type') type: string) {
     return this.filmsService.getChartDataAllCode(type);
+  }
+
+  @SkipCheckPermission()
+  @Permission('Update Views Film', 'FILMS')
+  @Post('/:filmId/view')
+  updateView(@Param('filmId') filmId: string, @User() user: IUser) {
+    return this.filmsService.updateView(filmId, user.userId.toString());
   }
 }

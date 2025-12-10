@@ -18,6 +18,8 @@ import { RatingModule } from '../rating/rating.module';
 
 import { FilmProducerModule } from '../film_producer/film_producer.module';
 import { AdminFilmService } from './admin-film/admin-film.service';
+import { RedisModule } from '../redis/redis.module';
+import { SyncViewsJob } from './jobs/sync-view.job';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Film, FilmDirector, FilmGenre, FilmActor, FilmImage, FilmProducer]),
@@ -27,9 +29,10 @@ import { AdminFilmService } from './admin-film/admin-film.service';
     forwardRef(() => CoWatchingModule),
     FilmProducerModule,
     RatingModule,
+    RedisModule,
   ],
   controllers: [FilmsController],
-  providers: [FilmsService, AdminFilmService],
+  providers: [FilmsService, AdminFilmService, SyncViewsJob],
   exports: [FilmsService], //luong add
 })
 export class FilmsModule {}
